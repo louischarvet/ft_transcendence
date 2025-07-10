@@ -9,14 +9,14 @@ services:
     ports:
       - "3000:3000"
     restart: on-failure
-  auth:
-    container_name: auth
+  user:
+    container_name: user
     depends_on:
       - proxy
     networks:
       - transcendence
     build:
-      context: ./01_auth
+      context: ./01_user
       dockerfile: Dockerfile
     expose:
       - "3001"

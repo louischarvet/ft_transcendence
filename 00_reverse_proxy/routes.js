@@ -1,8 +1,16 @@
+import fastifyHttpProxy from '@fastify/http-proxy'
+
 async function routesPlugin(fastify, options) {
+	// page d'accueil, route standard
 	fastify.get('/', async (request, reply) => {
         return { hello: 'world' }
     })
-	fastify.get('/auth', async (request, reply) => {
+	fastify.register(fastifyHttpProxy, {
+		upstream: "http://user:3001",
+		prefix: '/user',
+		rewritePrefix: '/',
+	});
+/*	fastify.get('/auth', async (request, reply) => {
 		try {
 			const response = await fetch('http://auth:3001/data');
 			const data = await response.json();
@@ -13,6 +21,8 @@ async function routesPlugin(fastify, options) {
 			reply.status(500).send({ error: 'Internal Server Error' });
 		}
 	})
+*/
+	
 }
 
 export default routesPlugin;

@@ -11,6 +11,8 @@ COPY ./package.json ./package.json
 
 RUN npm install
 RUN npm i fastify
+RUN npm install @fastify/http-proxy
+
 
 RUN apt-get install openssl -y
 
@@ -20,4 +22,4 @@ RUN mkdir -p ./ssl && openssl req -x509 -nodes \
 	-keyout ./ssl/proxy.key \
 	-subj "/C=FR/ST+NA/L=Angouleme/O=42/OU=42/CN=locharve.42.fr/UID=locharve"
 
-CMD [ "node", "reverse_proxy.js" ]
+CMD [ "node", "reverse_proxy_v2.js" ]
