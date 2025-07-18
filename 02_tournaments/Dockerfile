@@ -5,12 +5,11 @@ EXPOSE 3001
 RUN mkdir -p /usr/src/app/
 WORKDIR /usr/src/app
 
-COPY ./*.js ./
-COPY ./common_tools/*.js ./
-COPY ./routes/*.js ./
-COPY ./package.json ./package.json
+COPY ./. .
+COPY ./* .
 
 RUN npm install
 RUN npm i fastify
 
 CMD [ "node", "index.js" ]
+

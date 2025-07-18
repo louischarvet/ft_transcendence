@@ -1,9 +1,10 @@
-
+import { getDataTournaments } from './controllers/tournaments.js';
 
 async function routesPlugin(fastify, options) {
-	fastify.get('/data', async (request, reply) => {
-		return { message: "Hello from auth", test: { testA: "Blob", testB: "Blub" } };
-	})
+	fastify.get('/data_tournaments', async (request, reply) => {
+    	const data = await getDataTournaments();
+    	return (data);
+	});
 }
 
 export default routesPlugin;
