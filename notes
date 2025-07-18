@@ -1,0 +1,18 @@
+potentiel structure du dossier :
+
+transcendence/
+├── docker-compose.yml
+├── tournoi/
+│   ├── Dockerfile
+│   ├── index.js
+│   ├── controllers/
+│   ├── models/
+│   └── ...
+├── match/
+│   ├── Dockerfile
+│   ├── index.js
+│   └── ...
+├── game/
+│   └── ...
+├── score/
+│   └── ...

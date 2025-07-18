@@ -34,3 +34,32 @@ export async function getDataTournaments(request, reply) {
 		}))
 	};
 }
+
+export function getNextMatch() {
+	for (const pool of pools) {
+		const players = pool.getPlayers();
+		if (players.length >= 2){
+			const player1 = players.shift();
+			const player2 = players.shift();
+
+			return {
+				poolId: pool.id,
+				player1,
+				player2
+			};
+		}
+	}
+	return null;
+}
+
+/*Dessous depuis un docker match ?? */
+//import fetch from 'node-fetch';
+
+//async function sendMatchToMatchService(match) {
+//	await fetch('http://match_docker:3002/new_match', {
+//		method: 'POST',
+//		headers: { 'Content-Type': 'application/json' },
+//		body: JSON.stringify(match)
+//	});
+//}
+
