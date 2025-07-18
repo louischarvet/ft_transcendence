@@ -7,9 +7,10 @@ WORKDIR /usr/src/app
 
 COPY ./*.js ./
 COPY ./common_tools/*.js ./
+COPY ./routes/*.js ./
 COPY ./package.json ./package.json
 
 RUN npm install
 RUN npm i fastify
 
-CMD [ "node", "user.js" ]
+CMD [ "node", "index.js" ]
