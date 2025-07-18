@@ -3,5 +3,8 @@
 	"dependencies": {
 		"fastify": "^5.4.0",
 		"fastify-plugin": "^5.0.1"
+	},
+	"scripts": {
+  		"test": "jest"
 	}
 }

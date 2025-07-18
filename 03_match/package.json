@@ -1,0 +1,17 @@
+{
+	"name": "match",
+	"version": "1.0.0",
+	"description": "Premiere version du micro-service match",	
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+  		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+	},
+	"dependencies": {
+		"fastify": "^5.4.0",
+		"fastify-plugin": "^5.0.1"
+	},
+	"devDependencies": {
+		"jest": "^29.0.0"
+	}
+}

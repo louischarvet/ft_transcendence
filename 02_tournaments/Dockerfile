@@ -10,6 +10,7 @@ COPY ./* .
 
 RUN npm install
 RUN npm i fastify
+#RUN npm install --save-dev jest
 
 CMD [ "node", "index.js" ]
 
