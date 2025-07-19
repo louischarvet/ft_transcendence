@@ -53,13 +53,17 @@ export function getNextMatch() {
 }
 
 /*Dessous depuis un docker match ?? */
-//import fetch from 'node-fetch';
-
 //async function sendMatchToMatchService(match) {
-//	await fetch('http://match_docker:3002/new_match', {
-//		method: 'POST',
-//		headers: { 'Content-Type': 'application/json' },
-//		body: JSON.stringify(match)
-//	});
+//    try {
+//        const response = await fetch('http://match_docker:3002/new_match', {
+//            method: 'POST',
+//            headers: { 'Content-Type': 'application/json' },
+//            body: JSON.stringify(match)
+//        });
+//        const data = await response.json();
+//        console.log('Success:', data);
+//    } catch (error) {
+//        console.error('Error:', error);
+//    }
 //}
 

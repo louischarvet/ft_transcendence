@@ -1,7 +1,10 @@
 //routes/match/js
 import { addMatch, getNextMatch } from '../controllers/match.js';
 
+
+
 export default async function routes(fastify, options) {
+	
   	// Route pour ajouter un nouveau match
 	fastify.post('/new_match', async (request, reply) => {
 	try {

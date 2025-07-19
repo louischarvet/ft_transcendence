@@ -1,7 +1,6 @@
 import Fastify from 'fastify';
 import routes from './routes/routes.js';
 import shutdown from './common_tools/shutdown.js';
-import { initializeDatabase } from './models/match.js';
 
 const fastify = Fastify({ logger: true });
 
