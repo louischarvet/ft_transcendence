@@ -1,38 +1,44 @@
-const { createMatch } = require('../../controllers/match.js');
-const Match = require('../../models/match.js');
+import { Match } from '../../models/match.js';
 
-// Mock the Match model
-jest.mock('../../models/match.js');
+describe('Match Model', () => {
+	let db;
 
-describe('Match Controller', () => {
-	describe('createMatch', () => {
-		it('should create and save a match', async () => {
-			const matchData = {
-				team1: 'Team A',
-				team2: 'Team B',
-				date: '2023-10-10'
-			};
+	beforeAll(async () => {
+		const sqlite = await import('sqlite');
+		const sqlite3Module = await import('sqlite3');
+		const sqlite3 = sqlite3Module.default || sqlite3Module;
 
-			// Mock the save function to resolve successfully
-			Match.prototype.save = jest.fn().mockResolvedValue(matchData);
-
-			const result = await createMatch(matchData);
-
-			expect(Match).toHaveBeenCalledWith(matchData);
-			expect(result).toEqual(matchData);
+		db = await sqlite.open({
+			filename: './mydatabase.db',
+			driver: sqlite3.Database
 		});
 
-		it('should throw an error if match creation fails', async () => {
-			const matchData = {
-				team1: 'Team A',
-				team2: 'Team B',
-				date: '2023-10-10'
-			};
+		await Match.initializeDatabase();
+	});
 
-			// Mock the save function to throw an error
-			Match.prototype.save = jest.fn().mockRejectedValue(new Error('Error saving match'));
+	afterEach(async () => {
+		await db.run('DELETE FROM matches');
+	});
 
-			await expect(createMatch(matchData)).rejects.toThrow('Error creating match');
-		});
+	test('✅ createMatch should insert and return match with id', async () => {
+		const match = await Match.createMatch(1, 'Alice', 'Bob');
+		expect(match).toHaveProperty('id');
+		expect(match.poolId).toBe(1);
+		expect(match.player1).toBe('Alice');
+		expect(match.player2).toBe('Bob');
+
+		// Vérifie en base
+		const row = await db.get('SELECT * FROM matches WHERE id = ?', match.id);
+		expect(row).not.toBeUndefined();
+		expect(row.poolId).toBe(1);
+		expect(row.player1).toBe('Alice');
+		expect(row.player2).toBe('Bob');
+	});
+
+	test('✅ initializeDatabase should create the matches table', async () => {
+		const tableInfo = await db.all("PRAGMA table_info('matches')");
+		expect(tableInfo.some(col => col.name === 'poolId')).toBe(true);
+		expect(tableInfo.some(col => col.name === 'player1')).toBe(true);
+		expect(tableInfo.some(col => col.name === 'player2')).toBe(true);
 	});
 });

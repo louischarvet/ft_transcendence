@@ -1,40 +1,57 @@
-// tests/controllers/matchController.test.js
-const { createMatch } = require('../../controllers/match.js');
-const { Match } = require('../../models/match.js');
+// Import nécessaire pour Jest avec ESM
+import { jest } from '@jest/globals';
 
-// On se moque du modèle
-jest.mock('../../models/match.js', () => {
-  return {
-    Match: jest.fn().mockImplementation(() => ({
-      save: jest.fn()
-    }))
-  };
-});
+// 🧪 On simule le module 'models/match.js'
+jest.unstable_mockModule('../../models/match.js', () => ({
+  Match: {
+    createMatch: jest.fn().mockResolvedValue({
+      id: 1,
+      poolId: 101,
+      player1: 'Alice',
+      player2: 'Bob'
+    }),
+    dbPromise: Promise.resolve({
+      get: jest.fn((query, params, cb) => {
+        cb(null, {
+          id: 1,
+          poolId: 101,
+          player1: 'Alice',
+          player2: 'Bob'
+        });
+      })
+    })
+  }
+}));
 
-describe('Match Controller', () => {
-	const matchData = {
-		team1: 'Team A',
-		team2: 'Team B',
-		date: '2023-10-10'
-	};
+// ⬇️ Chargement dynamique du module à tester
+const { addMatch, getNextMatch } = await import('../../controllers/match.js');
 
-	it('should create and save a match', async () => {
-		// Mock save()
-		Match.mockImplementation(() => ({
-		save: jest.fn().mockResolvedValue(matchData)
-		}));
+describe('Match Controller (ESM)', () => {
+  it('✅ addMatch should return created match', async () => {
+    const matchData = {
+      poolId: 101,
+      player1: 'Alice',
+      player2: 'Bob'
+    };
 
-		const result = await createMatch(matchData);
+    const result = await addMatch(matchData);
 
-		expect(Match).toHaveBeenCalledWith(matchData);
-		expect(result).toEqual(matchData);
-	});
+    expect(result).toEqual({
+      id: 1,
+      poolId: 101,
+      player1: 'Alice',
+      player2: 'Bob'
+    });
+  });
 
-	it('should throw an error if match creation fails', async () => {
-		Match.mockImplementation(() => ({
-		save: jest.fn().mockRejectedValue(new Error('Error saving match'))
-		}));
+  it('✅ getNextMatch should return the first match in DB', async () => {
+    const result = await getNextMatch();
 
-		await expect(createMatch(matchData)).rejects.toThrow('Error creating match');
-	});
+    expect(result).toEqual({
+      id: 1,
+      poolId: 101,
+      player1: 'Alice',
+      player2: 'Bob'
+    });
+  });
 });
