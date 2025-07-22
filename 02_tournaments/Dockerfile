@@ -2,9 +2,9 @@ FROM node:24
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY ./package.json ./package-lock.json* ./
 
-RUN npm install
+RUN npm install && npm install -g nodemon
 
 COPY . .
 

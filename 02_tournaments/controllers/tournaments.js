@@ -1,6 +1,15 @@
 import { Player } from '../models/players.js';
 import { Pool } from '../models/tournaments.js';
 
+import fetch from 'node-fetch';
+
+async function fetchUserByName(name) {
+  const res = await fetch(`http://user-service:3000/api/users/${name}`);
+  if (!res.ok) throw new Error('User not found');
+  return await res.json();
+}
+
+
 const pools = [];
 
 /* 1  tournament sera cree si un user veux rejoindre un tournoi*/

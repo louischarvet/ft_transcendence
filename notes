@@ -16,3 +16,33 @@ transcendence/
 │   └── ...
 ├── score/
 │   └── ...
+
+
+Rôle de chaque service et modèle dans ta stack
+
+1. Le service 01_user (User-service)
+But : Gérer les utilisateurs "authentification / données utilisateurs".
+
+Base de données : users_db — contient la table users (id, name, status, etc).
+
+Modèles dans models/*.js :
+
+Gestion des utilisateurs dans la table users (ex: models/players.js dans user-service est en fait le modèle User).
+
+Le service expose une API HTTP (ex: /api/users/:name) qui renvoie les données utilisateur.
+
+Fonction dans l’architecture :
+C’est la source de vérité des utilisateurs. Tout ce qui concerne la validation, la création, le statut des users passe par ce service.
+
+2. Le service 02_tournament (Tournament-service)
+But : Gérer les tournois, pools, joueurs dans un contexte tournoi.
+
+Base de données : tournaments.db — contient tables pools, pool_players, et aussi players (liste des joueurs impliqués dans les tournois).
+
+Modèles dans models/*.js :
+
+Gestion des pools, joueurs dans le tournoi (classe Pool, table players locale).
+
+Mais les joueurs sont créés via une requête HTTP vers le service 01_user pour récupérer les infos utilisateurs.
+
+La table players locale sert à stocker une copie des joueurs (avec id, nom, statut) présents dans le contexte tournoi, pour les manipuler et les relier aux pools.

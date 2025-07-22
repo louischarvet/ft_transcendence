@@ -22,14 +22,18 @@ export default async function routes(fastify, options) {
 	fastify.get('/next_match', async (request, reply) => {
 	try {
 		const nextMatch = await getNextMatch();
-		if (nextMatch) {
-		reply.send(nextMatch);
-		} else {
-		reply.status(404).send({ error: 'No matches found' });
-		}
+		if (nextMatch)
+			reply.send(nextMatch);
+		else
+			reply.status(404).send({ error: 'No matches found' });
 	} catch (error) {
 		fastify.log.error(error);
 		reply.status(500).send({ error: 'Internal Server Error' });
 	}
 	});
+
+	// route de test
+	fastify.get('/test', async (request, reply) => {
+    return { message: "Test route is working!" };
+});
 }

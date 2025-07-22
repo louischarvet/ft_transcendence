@@ -12,30 +12,33 @@ services:
     networks:
       - transcendence-net
     restart: unless-stopped
+    command: npm run dev
 
   tournoi:
     build: ./02_tournaments
     container_name: tournament-service
     ports:
-      - "3001:3001"
+      - "3001:3000"
     working_dir: /usr/src/app
     volumes:
       - ./02_tournaments:/usr/src/app
     networks:
       - transcendence-net
     restart: unless-stopped
+    command: npm run dev
 
   match:
     build: ./03_match
     container_name: match-service
     ports:
-      - "3002:3002"
+      - "3002:3000"
     working_dir: /usr/src/app
     volumes:
       - ./03_match:/usr/src/app
     networks:
       - transcendence-net
     restart: unless-stopped
+    command: npm run dev
 
 networks:
   transcendence-net:

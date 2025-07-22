@@ -1,4 +1,4 @@
-import { checkNameFormat, isInDatabase, insertInDatabase } from '../models/userModel.js'
+import { checkNameFormat, isInDatabase, insertInDatabase } from '../models/user.js'
 
 export async function checkUserExists(request, reply) {
 	const { name } = request.query;
