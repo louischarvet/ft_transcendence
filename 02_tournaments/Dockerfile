@@ -1,8 +1,5 @@
 FROM node:24
 
-EXPOSE 3001
-
-RUN mkdir -p /usr/src/app/
 WORKDIR /usr/src/app
 
 COPY package*.json ./
@@ -11,4 +8,5 @@ RUN npm install
 
 COPY . .
 
+EXPOSE 3001
 CMD ["node", "index.js"]

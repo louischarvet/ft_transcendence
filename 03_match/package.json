@@ -1,19 +1,19 @@
 {
-	"name": "match",
-	"version": "1.0.0",
-	"description": "Premiere version du micro-service match",	
-	"main": "index.js",
-	"type": "module",
-	"scripts": {
-  		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
-	},
-	"dependencies": {
-		"fastify": "^5.4.0",
-		"fastify-plugin": "^5.0.1",
-		"sqlite3": "^5.1.6",
-		"sqlite": "^4.0.23"
-	},
-	"devDependencies": {
-		"jest": "^29.0.0"
-	}
+  "name": "03_match_service",
+  "version": "1.0.0",
+  "description": "Fastify match service example",
+  "type": "module",
+  "main": "index.js",
+  "author": "TRIJAUD Nathan",
+  "dependencies": {
+	"fastify": "^5.4.0",
+	"fastify-plugin": "^5.0.1",
+	"sqlite3": "^5.1.6",
+	"sqlite": "^4.2.1",
+	"node-fetch": "^3.3.2"
+  },
+  "scripts": {
+	"start": "node index.js",
+	"test": "jest"
+  }
 }

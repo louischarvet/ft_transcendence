@@ -1,12 +1,19 @@
 {
+  "name": "02_tournaments",
+  "version": "1.0.0",
+  "description": "Fastify tournaments service example",
   "type": "module",
+  "main": "index.js",
+  "author": "TRIJAUD Nathan",
   "dependencies": {
-    "fastify": "^5.4.0",
-    "fastify-plugin": "^5.0.1",
-    "node-fetch": "^3.3.2"
+	"fastify": "^5.4.0",
+	"fastify-plugin": "^5.0.1",
+	"sqlite3": "^5.1.6",
+	"sqlite": "^4.2.1",
+	"node-fetch": "^3.3.2"
   },
   "scripts": {
-    "start": "node index.js",
-    "test": "jest"
+	"start": "node index.js",
+	"test": "jest"
   }
 }

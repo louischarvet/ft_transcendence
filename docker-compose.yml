@@ -1,10 +1,42 @@
 version: '3.9'
+
 services:
+  user:
+    build: ./01_user
+    container_name: user-service
+    ports:
+      - "3000:3000"
+    working_dir: /usr/src/app
+    volumes:
+      - ./01_user:/usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+
   tournoi:
     build: ./02_tournaments
+    container_name: tournament-service
     ports:
       - "3001:3001"
+    working_dir: /usr/src/app
+    volumes:
+      - ./02_tournaments:/usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+
   match:
     build: ./03_match
+    container_name: match-service
     ports:
       - "3002:3002"
+    working_dir: /usr/src/app
+    volumes:
+      - ./03_match:/usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+
+networks:
+  transcendence-net:
+    driver: bridge
