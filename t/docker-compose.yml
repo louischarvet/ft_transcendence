@@ -1,0 +1,37 @@
+services:
+# base_image build is not necessary (it is already built, and
+# must be pulled as: FROM: louischarvet/ft_transcendence_backend_base:1.0)
+
+#  base_image:
+#    container_name: base_image
+#    image: louischarvet/ft_transcendence_backend_base:1.0
+#    build:
+#      context: ./00_base_image
+#      dockerfile: Dockerfile
+  proxy:
+    container_name: proxy
+    networks:
+      - transcendence
+    build:
+      context: ./01_reverse_proxy
+      dockerfile: Dockerfile
+#    depends_on:
+#      - base_image
+    ports:
+      - "3000:3000"
+    restart: on-failure
+  user:
+    container_name: user
+    depends_on:
+      - proxy
+    networks:
+      - transcendence
+    build:
+      context: ./02_user
+      dockerfile: Dockerfile
+    expose:
+      - "3001"
+    restart: on-failure
+networks:
+  transcendence:
+    driver: bridge

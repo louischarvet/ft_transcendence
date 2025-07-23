@@ -4,7 +4,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = __dirname + '/db';
+const dbPath = __dirname + '/db.db';
 
 export async function getDb() {
 	return open({
@@ -26,3 +26,5 @@ export async function initializeDatabase() {
 
 	return db;
 }
+
+//echo 'CREATE TABLE' | sqlite3 mydb

@@ -1,37 +1,37 @@
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
-const userDbFile = '/usr/src/app/users_db'; // DB du user-service (users)
-const tournamentDbFile = './tournaments.db'; // DB tournoi (players, pools...)
+//const userDbFile = '/usr/src/app/users_db'; // DB du user-service (users)
+const tournamentDbFile = '../database/db.js'; // DB tournoi (players, pools...)
 
-function checkNameFormat(name) {
-  	return /^[A-Z]$/i.test(name[0]) && /^[a-zA-Z0-9]+$/.test(name);
-}
+//function checkNameFormat(name) {
+//  	return /^[A-Z]$/i.test(name[0]) && /^[a-zA-Z0-9]+$/.test(name);
+//}
 
-async function getUserDB() {
-	return open({
-		filename: userDbFile,
-		driver: sqlite3.Database,
-	});
-}
+////async function getUserDB() {
+////	return open({
+////		filename: userDbFile,
+////		driver: sqlite3.Database,
+////	});
+////}
 
-async function getTournamentDB() {
-	return open({
-		filename: tournamentDbFile,
-		driver: sqlite3.Database,
-	});
-}
+// Connexion SQLite pour tournaments.db
+const getTournamentDB = open({
+	filename: '../database/db.js',
+	driver: sqlite3.Database,
+});
 
-async function isInUserDatabase(name) {
-	const db = await getUserDB();
-	const user = await db.get('SELECT * FROM users WHERE name = ?', [name]);
-	return !!user;
-}
 
-async function insertInUserDatabase(name) {
-	const db = await getUserDB();
-	await db.run("INSERT INTO users VALUES(?, 'available')", name);
-}
+////async function isInUserDatabase(name) {
+////	const db = await getUserDB();
+////	const user = await db.get('SELECT * FROM users WHERE name = ?', [name]);
+////	return !!user;
+////}
+
+////async function insertInUserDatabase(name) {
+////	const db = await getUserDB();
+////	await db.run("INSERT INTO users VALUES(?, 'available')", name);
+////}
 
 export class Player {
 	constructor(userData) {
@@ -60,4 +60,4 @@ export class Player {
 	}
 }
 
-export { checkNameFormat, isInUserDatabase, insertInUserDatabase };
+//export { checkNameFormat};

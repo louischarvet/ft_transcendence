@@ -19,7 +19,7 @@ export async function initializeDatabase() {
 	await db.exec(`
 		CREATE TABLE IF NOT EXISTS matches (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		tournament_id INTEGER NOT NULL,
+		tournament_id INTEGER,
 		player1 TEXT NOT NULL,
 		player2 TEXT NOT NULL,
 		winner TEXT,

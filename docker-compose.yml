@@ -9,7 +9,7 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./01_user:/usr/src/app
-      - ./01_user/database/:/usr/src/app/db
+      #- ./01_user/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./02_tournaments:/usr/src/app
-      - ./02_tournaments/database/:/usr/src/app/db
+      #- ./02_tournaments/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
@@ -39,7 +39,7 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./03_match:/usr/src/app
-      - ./03_match/database/:/usr/src/app/db
+      #- ./03_match/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
