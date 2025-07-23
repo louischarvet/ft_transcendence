@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  user:
+  user-service:
     build: ./01_user
     container_name: user-service
     ports:
@@ -9,12 +9,13 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./01_user:/usr/src/app
+      - ./01_user/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
     command: npm run dev
 
-  tournoi:
+  tournament-service:
     build: ./02_tournaments
     container_name: tournament-service
     ports:
@@ -22,12 +23,15 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./02_tournaments:/usr/src/app
+      - ./02_tournaments/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
+    depends_on:
+      - user-service
     command: npm run dev
 
-  match:
+  match-service:
     build: ./03_match
     container_name: match-service
     ports:
@@ -35,9 +39,13 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./03_match:/usr/src/app
+      - ./03_match/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
+    depends_on:
+      - user-service
+      - tournament-service
     command: npm run dev
 
 networks:

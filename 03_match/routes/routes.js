@@ -1,39 +1,24 @@
-//routes/match/js
-import { addMatch, getNextMatch } from '../controllers/match.js';
+import { addMatch } from '../controllers/match.js';
 
+export default async function (fastify, opts) {
+	// Route POST pour créer un match
+	fastify.post('/matches', async (request, reply) => {
+		try {
+			const { poolId, player1, player2 } = request.body;
 
+			if (!poolId || !player1 || !player2)
+				return reply.code(400).send({ error: 'poolId, player1 et player2 sont requis' });
 
-export default async function routes(fastify, options) {
-	
-  	// Route pour ajouter un nouveau match
-	fastify.post('/new_match', async (request, reply) => {
-	try {
-		const match = request.body;
-		// Valide les données d'entrée ici si nécessaire
-		const result = await addMatch(match);
-		reply.send(result);
-	} catch (error) {
-		fastify.log.error(error);
-		reply.status(500).send({ error: 'Internal Server Error' });
-	}
-  	});
-
-  	// Route pour obtenir le prochain match
-	fastify.get('/next_match', async (request, reply) => {
-	try {
-		const nextMatch = await getNextMatch();
-		if (nextMatch)
-			reply.send(nextMatch);
-		else
-			reply.status(404).send({ error: 'No matches found' });
-	} catch (error) {
-		fastify.log.error(error);
-		reply.status(500).send({ error: 'Internal Server Error' });
-	}
+			const match = await addMatch({ poolId, player1, player2 });
+			return reply.code(201).send(match);
+		} catch (err) {
+			console.error('Erreur création match:', err.message);
+			return reply.code(500).send({ error: err.message });
+		}
 	});
 
-	// route de test
-	fastify.get('/test', async (request, reply) => {
-    return { message: "Test route is working!" };
-});
+	// Route GET pour tester 
+	fastify.get('/prout', async (request, reply) => {
+		return { status: 'ok' };
+	});
 }

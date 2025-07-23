@@ -2,6 +2,7 @@ import shutdown from './common_tools/shutdown.js';
 import routes from './routes/routes.js';
 import { Pool } from './models/tournaments.js';
 import Fastify from 'fastify';
+import { initializeDatabase } from './database/db.js';
 //npm install @fastify/cors
 //const cors = require('@fastify/cors');
 
@@ -20,6 +21,7 @@ fastify.get('/api/data', async (request, reply) => {
 async function start() {
   	await Pool.initializeDatabase();
 	try {
+		await initializeDatabase();
 		await fastify.listen({ port: 3001, host: '0.0.0.0' });
 		console.log('Server listening on port 3001');
 	} catch (err) {

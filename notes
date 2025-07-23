@@ -46,3 +46,80 @@ Gestion des pools, joueurs dans le tournoi (classe Pool, table players locale).
 Mais les joueurs sont créés via une requête HTTP vers le service 01_user pour récupérer les infos utilisateurs.
 
 La table players locale sert à stocker une copie des joueurs (avec id, nom, statut) présents dans le contexte tournoi, pour les manipuler et les relier aux pools.
+
+
+
+
+-------------------------------------------
+
+multi-service-project/
+│
+├── docker-compose.yml
+│
+├── 01_user/
+│   ├── Dockerfile
+│   ├── index.js            # Point d'entrée Fastify
+│   ├── /routes             # Routes REST de l'API
+│   ├── /controllers        # Logique métier
+│   ├── /models             # Schéma des données
+│   └── /db                 # Initialisation et accès à SQLite
+│
+├── 02_tournament/
+│   ├── ... (idem user)
+│
+├── 03_match/
+│   ├── ... (idem user)
+
+
+---
+🧩 Architecture REST
+
+Chaque service possède :
+
+Son propre serveur Fastify
+
+Sa base SQLite
+
+Une API REST pour être appelé par d'autres services ou par un frontend
+
+Communication inter-services via HTTP REST avec les noms des services Docker :
+
+http://match-service:3002/matches
+http://user-service:3000/users
+
+----
+
+📊 Bases de données (SQLite)
+Service	Base SQLite	Tables principales
+01_user	user.db	users
+02_tournament	tournament.db	tournaments, pools
+03_match	match.db	matches
+
+Les bases sont créées au démarrage via des scripts dans /db/init.js ou /models/init.js.
+
+🔁 Exemple de flux REST
+Créer un match manuellement :
+
+	POST /matches
+	Content-Type: application/json
+
+	{
+	"player1": 1,
+	"player2": 2,
+	"mode": "duel"
+	}
+
+📂 Exemple de modèle Fastify (models/tournaments.js)
+Créer un tournoi qui appelle le match-service :
+
+	// tournament-service
+	await fetch('http://match-service:3002/matches', {
+	method: 'POST',
+	headers: { 'Content-Type': 'application/json' },
+	body: JSON.stringify({
+		player1: 5,
+		player2: 8,
+		mode: 'pool'
+	})
+	});
+

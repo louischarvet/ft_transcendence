@@ -14,3 +14,15 @@ export default async function routesPlugin(fastify, options) {
 			reply.send({ message: "Plus de matchs à jouer pour le moment." });
 	});
 }
+
+
+//voir dichier routes/routes.js du docker 03_match
+const response = await fetch('http://match-service:3002/matches', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    player1: 1,
+    player2: 2,
+    mode: 'pool'
+  })
+});

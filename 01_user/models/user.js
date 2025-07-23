@@ -1,7 +1,7 @@
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
-const dbFile = '/usr/src/app/users_db';
+const dbFile = '/usr/src/app/db';
 
 function checkNameFormat(name) {
 	return /^[A-Z]$/i.test(name[0]) && /^[a-zA-Z0-9]+$/.test(name);
