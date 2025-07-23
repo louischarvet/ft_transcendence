@@ -12,6 +12,6 @@ RUN npm install sqlite
 
 COPY . .
 
-EXPOSE 3002
+EXPOSE 3001
 #CMD ["node", "index.js"]
 CMD ["nodemon", "index.js"]

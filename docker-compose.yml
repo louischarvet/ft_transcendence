@@ -1,52 +1,73 @@
-version: '3.9'
-
 services:
-  user-service:
-    build: ./01_user
-    container_name: user-service
+  proxy-service:
+
+    container_name: proxy-service
+
+    build:
+      context: ./01_reverse_proxy
+      dockerfile: Dockerfile
+#    depends_on:
+#      - base_image
     ports:
       - "3000:3000"
+    networks:
+      - transcendence-net  
+    restart: on-failure
+
+
+  user-service:
+  
+    build: ./02_user
+    container_name: user-service
+    expose:
+      - "3001"
     working_dir: /usr/src/app
-    volumes:
-      - ./01_user:/usr/src/app
-      #- ./01_user/database/:/usr/src/app/db
+    #volumes:
+      #- ./02_user:/usr/src/app
+      #- ./02_user/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
     command: npm run dev
 
-  tournament-service:
-    build: ./02_tournaments
-    container_name: tournament-service
-    ports:
-      - "3001:3000"
-    working_dir: /usr/src/app
-    volumes:
-      - ./02_tournaments:/usr/src/app
-      #- ./02_tournaments/database/:/usr/src/app/db
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    depends_on:
-      - user-service
-    command: npm run dev
 
   match-service:
+
     build: ./03_match
     container_name: match-service
-    ports:
-      - "3002:3000"
+    expose:
+      - "3002"
     working_dir: /usr/src/app
-    volumes:
-      - ./03_match:/usr/src/app
+    #volumes:
+      #- ./03_match:/usr/src/app
       #- ./03_match/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
     depends_on:
       - user-service
-      - tournament-service
+   #  - tournament-service
     command: npm run dev
+
+
+  tournament-service:
+
+    build: ./04_tournaments
+    container_name: tournament-service
+    expose:
+      - "3003"
+    working_dir: /usr/src/app
+    #volumes:
+      #- ./04_tournaments:/usr/src/app
+      #- ./02_tournaments/database/:/usr/src/app/db
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+    depends_on:
+      - user-service
+      - match-service
+    command: npm run dev
+
 
 networks:
   transcendence-net:
