@@ -9,6 +9,36 @@ rm-common-tools:
 	@chmod +x ./scripts/rm_common_tools.sh
 	@./scripts/rm_common_tools.sh
 	@chmod -x ./scripts/rm_common_tools.sh
+
+rmi:
+	@IMAGES=$$(docker images -qa); \
+	if [ -n "$$IMAGES" ]; then \
+		docker rmi -f $$IMAGES; \
+	else \
+		echo "Pas d'images !"; \
+	fi
+
+build:
+	@docker compose build
+
+start:
+	@docker compose start
+
+stop:
+	@docker compose stop
+
+restart:
+	@docker compose restart
+
+img:
+	@docker compose images
+
+logs:
+	@docker compose logs -f
+
+ps:
+	@docker compose ps
+
 down: # rm-common-tools
 	@docker compose down
 

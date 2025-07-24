@@ -14,7 +14,7 @@ const pools = [];
 
 /* 1  tournament sera cree si un user veux rejoindre un tournoi*/
 /* 2  un user rejoindra le tournoi si asser de place sinon creer un nouveau tournament*/
-function createSampleData() {
+export async function createSampleData() {
   const pool1 = new Pool(1, 16);
   const pool2 = new Pool(2, 16);
 
@@ -27,7 +27,6 @@ function createSampleData() {
   pools.push(pool1, pool2);
 }
 
-// createSampleData();
 
 export async function getDataTournaments(request, reply) {
 	return {

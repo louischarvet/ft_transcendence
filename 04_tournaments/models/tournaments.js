@@ -30,7 +30,7 @@ export  class Pool {
 		this.remainingPlaces = remainingPlaces;
 		this.players = [];
 	}
-//	// Ajoute un joueur au pool ET dans la DB tournoi
+	// Ajoute un joueur au pool ET dans la DB tournoi
 	async addPlayer(player) {
 		const db = await getDB();
 		if (!(player instanceof Player))
@@ -44,7 +44,7 @@ export  class Pool {
 		);
 	}
 
-//	// Récupère les joueurs du pool depuis DB tournoi
+	// Récupère les joueurs du pool depuis DB tournoi
 	async getPlayers() {
 		const db = await getDB();
 		const players = await db.all(
@@ -55,5 +55,4 @@ export  class Pool {
 		return players;
 	}
 
-//  // Initialise la base de données du tournoi (players, pools, pool_players)
 }

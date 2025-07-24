@@ -1,28 +1,35 @@
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+//./models/user.js
+import { getDB } from '../common_tools/db.js';	
 
-const dbFile = '/usr/src/app/db';
-
+// Vérifie si le format du nom est correct
 function checkNameFormat(name) {
+	/*  /^[a-zA-Z][a-zA-Z0-9]*$/.test(name)*/
 	return /^[A-Z]$/i.test(name[0]) && /^[a-zA-Z0-9]+$/.test(name);
 }
-
-async function getDB() {
-	return open({
-		filename: dbFile,
-		driver: sqlite3.Database
-	});
+	
+// Récupère tous les utilisateurs
+async function getUsers() {
+	const db = await getDB();
+	return db.all('SELECT * FROM users');
 }
 
+// Vérifie si l'utilisateur existe dans la base de données
 async function isInDatabase(name) {
 	const db = await getDB();
 	const user = await db.get('SELECT * FROM users WHERE name = ?', [name]);
 	return !!user;
 }
 
-async function insertInDatabase(name) {
+// Récupère un utilisateur par son nom
+async function getUserByName(name) {
 	const db = await getDB();
-	await db.run("INSERT INTO users VALUES(?, 'available')", name);
+	return db.get('SELECT * FROM users WHERE name = ?', [name]);
 }
 
-export { checkNameFormat, isInDatabase, insertInDatabase };
+// Insère un nouvel utilisateur dans la base de données
+async function insertInDatabase(name) {
+	const db = await getDB();
+	await db.run("INSERT INTO users (name, status) VALUES (?, ?)", [name, 'available']);
+}
+
+export { checkNameFormat, isInDatabase, insertInDatabase, getUserByName, getUsers };

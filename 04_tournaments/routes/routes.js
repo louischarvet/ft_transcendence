@@ -17,19 +17,19 @@ export default async function routesPlugin(fastify, options) {
 			reply.send({ message: "Plus de matchs à jouer pour le moment." });
 	});
 
-	fastify.get('/prout', async (request, reply) => {
-	//	const data = await getDataTournaments(request, reply);
-		const response = await fetch('http://match-service:3002/prout', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-			player1: 1,
-			player2: 2,
-			mode: 'pool'
-		})
-	});
-		reply.send(response);
-	});
+	//fastify.get('/prout', async (request, reply) => {
+	////	const data = await getDataTournaments(request, reply);
+	//	const response = await fetch('http://match-service:3002/prout', {
+	//		method: 'POST',
+	//		headers: { 'Content-Type': 'application/json' },
+	//		body: JSON.stringify({
+	//		player1: 1,
+	//		player2: 2,
+	//		mode: 'pool'
+	//	})
+	//});
+	//	reply.send(response);
+	//});
 }
 
 

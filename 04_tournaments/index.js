@@ -5,6 +5,7 @@ import routes from './routes/routes.js';
 import { Pool } from './models/tournaments.js';
 import Fastify from 'fastify';
 import { initializeDatabase } from './database/db.js';
+import { createSampleData } from './controllers/tournaments.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -19,6 +20,7 @@ async function start() {
   	//await Pool.initializeDatabase();
 	try {
 		await initializeDatabase();
+		//await createSampleData();
 		await fastify.listen({ port: 3003, host: '0.0.0.0' });
 		console.log('Server listening on port 3001');
 	} catch (err) {
