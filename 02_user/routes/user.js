@@ -1,4 +1,6 @@
-import { checkUserExists, sayHello, createUser, fetchUserByName, fetchUsers, fetchUserStatus } from '../controllers/user.js';
+import { checkUserExists, createUser, fetchUserByName, fetchUsers,
+	fetchUserStatus, getRandomUser, changeState }
+	from '../controllers/user.js';
 
 // On définit les routes pour l'API user
 async function userRoutes(fastify, options) {
@@ -10,6 +12,9 @@ async function userRoutes(fastify, options) {
 	fastify.get('/users/:name', fetchUserByName);
 	fastify.get('/users/:name/status', fetchUserStatus);
 	fastify.post('/users', createUser);
+
+	fastify.get('/random', getRandomUser);
+	fastify.put('/match', changeState);
 }
 
 export default userRoutes;

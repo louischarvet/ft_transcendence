@@ -16,6 +16,9 @@ export async function getDb() {
 export async function initializeDatabase() {
 	const db = await getDb();
 
+	// ID du match ?
+	// FOREIGN KEY et REFERENCES ne marchent que si la table referencee
+	// existe dans la meme database
 	await db.exec(`
 		CREATE TABLE IF NOT EXISTS matches (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,4 +31,20 @@ export async function initializeDatabase() {
 	`);
 
 	return db;
+}
+
+export async function createMatch(p1Name, p2Name) {
+	const db = await getDb();
+
+	console.log('player1:', p1Name, typeof p1Name, ' player2:', p2Name, typeof p2Name);
+
+	if (!p1Name || !p2Name) {
+		console.log('player1 ou player2 NULL');
+    //    throw new Error('Player names cannot be null or empty');
+    }
+
+	// autres valeurs ?
+	await db.run(`
+		INSERT INTO matches(player1, player2) VALUES(?, ?);
+	`, [p1Name, p2Name]);
 }

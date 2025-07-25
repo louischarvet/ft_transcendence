@@ -12,5 +12,17 @@ export async function initializeDatabase() {
 		);
 	`);
 
+	// test users
+	await db.exec(`
+		INSERT INTO users(name, status) VALUES("pipo", "available");
+		INSERT INTO users(name, status) VALUES("toto", "available");
+		INSERT INTO users(name, status) VALUES("grugru", "available");
+		INSERT INTO users(name, status) VALUES("zouzou", "available");
+	`);
+
 	return db;
 }
+
+//		INSERT INTO users(name, status) VALUES("toto", "available");
+//		INSERT INTO users(name, status) VALUES("grugru", "available");
+//		INSERT INTO users(name, status) VALUES("zouzou", "available");

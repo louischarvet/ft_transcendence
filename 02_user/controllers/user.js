@@ -63,3 +63,29 @@ export async function checkUserExists(request, reply) {
 	} else
 		return { error: 'Name is already taken. Please choose another one.' };
 }
+
+export async function getRandomUser(request, reply) {
+	const db = await getDB();
+	// pas vraiment random: le premier qui vient (le plus ancien?)
+	// ne pas prendre le name du joueur qui cherche! OK
+	const randomUser = await db.get('SELECT * FROM users WHERE status = "available" AND name != ?', [request.query.name]);
+
+	if (randomUser === undefined)
+		return { error: "No player available." };
+	return (randomUser);
+}
+
+export async function changeState(request, reply) {
+	const db = await getDB();
+
+	const reqBody = request.body;
+	const p1Name = reqBody.player1;
+	const p2Name = reqBody.player2;
+	const newStateP1 = reqBody.type + ":" + p2Name;
+	const newStateP2 = reqBody.type + ":" + p1Name;
+
+	// verifier si l'etat n'a pas change entre temps ?
+	// et si les deux jouerus concernes cherchent a /random en meme temps?
+	await db.run('UPDATE users SET status = ? WHERE name = ?', [newStateP1, p1Name]);
+	await db.run('UPDATE users SET status = ? WHERE name = ?', [newStateP2, p2Name]);
+}
