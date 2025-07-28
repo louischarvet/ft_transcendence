@@ -25,6 +25,7 @@ export default async function (fastify, opts) {
 		const playerName = request.body.name;
 		
 		// GET random player from user-service
+		// le param query name est le nom du joueur qui cherche
 		const opponent = await fetch('http://user-service:3001/random?name=' + playerName, {
 			method: 'GET',
 		});
@@ -32,7 +33,8 @@ export default async function (fastify, opts) {
 		// recuperer le json de la reponse (fetch)
 		const oppBody = await opponent.json();
 
-		if (oppBody === undefined) { // aucun joueur trouve
+	//	if (oppBody === undefined) { // aucun joueur trouve
+		if (oppBody.error) {
 			console.log('///match/random: undefined');
 			console.log(oppBody.error); //
 			return (oppBody.error);
@@ -42,7 +44,7 @@ export default async function (fastify, opts) {
 
 			const p2Name = oppBody.name;
 			// Mise a jour des etats des joueurs dans user-service (PUT)
-			const response = await fetch('http://user-service:3001/match', {
+			const response = await fetch('http://user-service:3001/update', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -59,6 +61,69 @@ export default async function (fastify, opts) {
 			return (response);
 			// si erreur (player1 ou player2 non available) retourner erreur
 		}
+	});
+
+	// Route PUT pour match avec un joueur en particulier
+	fastify.put('/vs', async (request, reply) => {
+		// nom du joueur qui cherche
+		const playerName = request.body.name;
+
+		const query = request.query;
+		if (!query)
+			return { error: 'Name is undefined' };
+		const opponentName = query.name;
+		if (!opponentName)
+			return { error: 'Name is undefined' };
+
+		// Check l'existence du joueur et sa disponibilite
+		const opponent = await fetch ('http://user-service:3001/users/' + opponentName, {
+			method: 'GET',
+		});
+		const oppBody = await opponent.json();
+//		console.log("////////// vs oppBody: ", oppBody);
+		if (oppBody.error) {
+			console.log(oppBody.error);
+			return (oppBody.error);
+		} else if (oppBody.status === 'available') {
+			// Envoyer invitation (faire le service !) au joueur trouve
+			//	const invitation = await fetch();
+
+			// if invitation accepted
+			const response = await fetch('http://user-service:3001/update', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					player1: playerName,
+					player2: opponentName,
+					type: 'match'
+				})
+			});
+			createMatch(playerName, opponentName);
+			// que faire de la response?
+			// Faire les JSON Schemas !!!
+			return (response);
+		} else {
+			return { error: opponentName + ' is not available.' };
+		}
+	});
+
+	// Route PUT pour match contre l'IA
+	fastify.put('/ia', async (request, reply) => {
+		const playerName = request.body.name;
+
+		// Mise a jour de la DB user (match:IA)
+		// Traite-t-on l'IA comme un joueur dans la DB ?
+		const response = await fetch('http://user-service:3001/update', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				player1: playerName,
+				player2: p2Name,
+				type: 'match'
+			})
+		})
+
+		// Creation du match dans la db matches
 	});
 
 	// Route GET pour tester 

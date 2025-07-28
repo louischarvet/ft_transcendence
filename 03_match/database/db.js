@@ -19,6 +19,8 @@ export async function initializeDatabase() {
 	// ID du match ?
 	// FOREIGN KEY et REFERENCES ne marchent que si la table referencee
 	// existe dans la meme database
+
+	// player2 doit il etre obligatoire ? Si c'est un match contre l'IA ?
 	await db.exec(`
 		CREATE TABLE IF NOT EXISTS matches (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
