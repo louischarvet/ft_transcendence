@@ -6,7 +6,7 @@ async function routesPlugin(fastify, options) {
         return { hello: 'world' }
     })
 	fastify.register(fastifyHttpProxy, {
-		upstream: "http://user-service:3001",
+		upstream: "http://user-service:3000",
 		prefix: '/user',
 		rewritePrefix: '/',
 	});

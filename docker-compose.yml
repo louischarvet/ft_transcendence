@@ -20,7 +20,7 @@ services:
     build: ./02_user
     container_name: user-service
     expose:
-      - "3001"
+      - "3000"
     working_dir: /usr/src/app
     #volumes:
       #- ./02_user:/usr/src/app

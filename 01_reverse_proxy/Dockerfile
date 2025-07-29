@@ -22,6 +22,6 @@ RUN mkdir -p ./ssl && openssl req -x509 -nodes \
 -keyout ./ssl/proxy.key \
 -subj "/C=FR/ST+NA/L=Angouleme/O=42/OU=42/CN=locharve.42.fr/UID=locharve"
 
-COPY ./*.js ./
+COPY . .
 
-CMD [ "nodemon", "reverse_proxy.js" ]
+CMD [ "nodemon", "app.js" ]

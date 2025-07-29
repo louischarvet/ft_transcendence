@@ -3,8 +3,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
 //import fastifyHttpProxy from '@fastify/http-proxy'
-import routesPlugin from './routes.js'
-import shutdownPlugin from './shutdown.js'
+import routesPlugin from './routes/routes.js'
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -20,7 +19,6 @@ const server = Fastify({
 })
 
 server.register(routesPlugin)
-server.register(shutdownPlugin)
 
 server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) {

@@ -12,6 +12,8 @@ RUN npm install sqlite
 
 COPY . .
 
-EXPOSE 3001
+RUN cat ./database/initDatabase.sqlite | sqlite3 users_database
+
+EXPOSE 3000
 #CMD ["node", "index.js"]
-CMD ["nodemon", "index.js"]
+CMD ["nodemon", "app.js"]

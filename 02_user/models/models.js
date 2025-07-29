@@ -1,12 +1,6 @@
 //./models/user.js
-import { getDB } from '../common_tools/db.js';	
+import { getDB } from '../common_tools/getDB.js';	
 
-// Vérifie si le format du nom est correct
-function checkNameFormat(name) {
-	/*  /^[a-zA-Z][a-zA-Z0-9]*$/.test(name)*/
-	return /^[A-Z]$/i.test(name[0]) && /^[a-zA-Z0-9]+$/.test(name);
-}
-	
 // Récupère tous les utilisateurs
 async function getUsers() {
 	const db = await getDB();
@@ -32,4 +26,18 @@ async function insertInDatabase(name) {
 	await db.run("INSERT INTO users (name, status) VALUES (?, ?)", [name, 'available']);
 }
 
-export { checkNameFormat, isInDatabase, insertInDatabase, getUserByName, getUsers };
+// Get un user disponible pour jouer
+async function getAvailableUser(name){
+	const db = await getDB();
+	const user = await db.get('SELECT * FROM users WHERE status = "available" AND name != ?', [name]);
+	console.log("From getAvailableUser :", user);
+	return user;
+}
+
+// Update States
+async function updateState(name, newState) {
+	const db = await getDB();
+	await db.run('UPDATE users SET status = ? WHERE name = ?', [newState, name]);
+}
+
+export { isInDatabase, insertInDatabase, getUserByName, getUsers, getAvailableUser, updateState};

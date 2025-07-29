@@ -76,7 +76,7 @@ export default async function (fastify, opts) {
 			return { error: 'Name is undefined' };
 
 		// Check l'existence du joueur et sa disponibilite
-		const opponent = await fetch ('http://user-service:3001/users/' + opponentName, {
+		const opponent = await fetch ('http://user-service:3001/find/' + opponentName, {
 			method: 'GET',
 		});
 		const oppBody = await opponent.json();
@@ -89,6 +89,7 @@ export default async function (fastify, opts) {
 			//	const invitation = await fetch();
 
 			// if invitation accepted
+			// envoyer dans le bodynom du joueur + nouvel etat
 			const response = await fetch('http://user-service:3001/update', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },

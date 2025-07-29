@@ -1,27 +1,27 @@
-import { checkUserExists, createUser, fetchUserByName, fetchUsers,
+import { createUser, fetchUserByName,
 	fetchUserStatus, getRandomUser, changeState }
-	from '../controllers/user.js';
+	from '../controllers/controllers.js';
 
 // On définit les routes pour l'API user
 async function userRoutes(fastify, options) {
 	fastify.get('/', (request, reply) => {
 		reply.send({ message: 'Hello from user' });
 	});
-	fastify.get('/users', fetchUsers);
-
-	// a la creation du pseudo 
-	fastify.get('/exists', checkUserExists);
+	
+	// Route pour creer un nouvel utilisateur
+	fastify.post('/register', createUser);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs
 	// + retirer le /users ici, car l'url finale ressemble a ca sinon:
 	// http://localhost:3000/user/users/:name (c'est redondant)
 	// remplacer par search ou fetch ?
-	fastify.get('/users/:name', fetchUserByName);
-	fastify.get('/users/:name/status', fetchUserStatus);
+	fastify.get('/find/:name', fetchUserByName);
 
-	fastify.post('/users', createUser);
+	fastify.get('/find/:name/status', fetchUserStatus);
 
+
+	// Dédié aux autres dockers 
 	fastify.get('/random', getRandomUser);
 	fastify.put('/update', changeState);
 //	fastify.get('/vs', checkAvailability)
