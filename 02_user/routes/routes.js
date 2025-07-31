@@ -1,4 +1,4 @@
-import { createUser, fetchUserByName,
+import { testJWT, createUser, fetchUserByName,
 	fetchUserStatus, getRandomUser, changeState }
 	from '../controllers/controllers.js';
 
@@ -8,6 +8,9 @@ async function userRoutes(fastify, options) {
 		reply.send({ message: 'Hello from user' });
 	});
 	
+	// Route pour tester les JWT (en genere un pour un user)
+	fastify.post('/jwt', testJWT);
+
 	// Route pour creer un nouvel utilisateur
 	fastify.post('/register', createUser);
 

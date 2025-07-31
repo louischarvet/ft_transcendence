@@ -14,6 +14,19 @@ services:
       - transcendence-net  
     restart: on-failure
 
+  frontend-service:
+    build: ./TransFront
+    container_name: frontend-service
+    expose:
+      - "5173"
+    working_dir: /usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+    depends_on:
+      - proxy-service
+    command: npm run dev -- --host 0.0.0.0
+
 
   user-service:
   
@@ -36,7 +49,7 @@ services:
     build: ./03_match
     container_name: match-service
     expose:
-      - "3002"
+      - "3000"
     working_dir: /usr/src/app
     #volumes:
       #- ./03_match:/usr/src/app

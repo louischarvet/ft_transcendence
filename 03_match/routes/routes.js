@@ -1,23 +1,51 @@
-import { addMatch } from '../controllers/match.js';
+import { addMatch } from '../controllers/controllers.js';
 import { createMatch } from '../database/db.js'
 
-export default async function (fastify, opts) {
+export default async function matchRoutes (fastify, opts) {
+	// Differents types de matches
+//	fastify.put('/random', randomMatch);
+//	fastify.put('/vs', vsMatch);
+//	fastify.put('/ia', iaMatch);
+//	fastify.put('/local', localMatch); // to do
+//
+//	fastify.patch('/result/:id', updateResult);
+//	fastify.get('/:id', getMatchID);
+	
 	// Route POST pour créer un match
-	fastify.post('/matches', async (request, reply) => {
-		try {
-			const { poolId, player1, player2 } = request.body;
+	//fastify.post('/matches', async (request, reply) => {
+	//	try {
+	//		const { poolId, player1, player2 } = request.body;
 
-			if (!poolId || !player1 || !player2)
-				return reply.code(400).send({ error: 'poolId, player1 et player2 sont requis' });
+	//		if (!poolId || !player1 || !player2)
+	//			return reply.code(400).send({ error: 'poolId, player1 et player2 sont requis' });
 
-			const match = await addMatch({ poolId, player1, player2 });
-			return reply.code(201).send(match);
-		} catch (err) {
-			console.error('Erreur création match:', err.message);
-			return reply.code(500).send({ error: err.message });
-		}
+	//		const match = await addMatch({ poolId, player1, player2 });
+	//		return reply.code(201).send(match);
+	//	} catch (err) {
+	//		console.error('Erreur création match:', err.message);
+	//		return reply.code(500).send({ error: err.message });
+	//	}
+	//});
+
+	fastify.post('/jwt', { preHandler: [fastify.authenticate] },async (request, reply) => {
+		console.log("\n\n");
+		console.log("Request : ", request);
+		console.log("\n\n");
+		const playerName = request.user.name;
+		console.log('match/jwt: ', playerName);
 	});
+	fastify.post('/toto', async (request, reply) => {
+		const body = request.body;
+		if (body === undefined) {
+			return reply.code(400).send({ error: 'no body' });
+		}
+		console.log(body);
+	//	console.log('name: ', name, ' status: ', status);
+		if (body.name === undefined || body.status === undefined) {
+			return reply.code(400).send({ error: 'name and status are required' });
+		}
 
+	});
 	// Route PUT pour creer un match avec un random
 	fastify.put('/random', async (request, reply) => {
 		// Validation des donnees JSON a faire
@@ -26,7 +54,7 @@ export default async function (fastify, opts) {
 		
 		// GET random player from user-service
 		// le param query name est le nom du joueur qui cherche
-		const opponent = await fetch('http://user-service:3001/random?name=' + playerName, {
+		const opponent = await fetch('http://user-service:3000/random?name=' + playerName, {
 			method: 'GET',
 		});
 
@@ -44,7 +72,7 @@ export default async function (fastify, opts) {
 
 			const p2Name = oppBody.name;
 			// Mise a jour des etats des joueurs dans user-service (PUT)
-			const response = await fetch('http://user-service:3001/update', {
+			const response = await fetch('http://user-service:3000/update', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -76,7 +104,7 @@ export default async function (fastify, opts) {
 			return { error: 'Name is undefined' };
 
 		// Check l'existence du joueur et sa disponibilite
-		const opponent = await fetch ('http://user-service:3001/find/' + opponentName, {
+		const opponent = await fetch ('http://user-service:3000/find/' + opponentName, {
 			method: 'GET',
 		});
 		const oppBody = await opponent.json();
@@ -90,7 +118,7 @@ export default async function (fastify, opts) {
 
 			// if invitation accepted
 			// envoyer dans le bodynom du joueur + nouvel etat
-			const response = await fetch('http://user-service:3001/update', {
+			const response = await fetch('http://user-service:3000/update', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -125,11 +153,6 @@ export default async function (fastify, opts) {
 		})
 
 		// Creation du match dans la db matches
-	});
-
-	// Route GET pour tester 
-	fastify.get('/prout', async (request, reply) => {
-		return { status: 'ok' };
 	});
 }
 

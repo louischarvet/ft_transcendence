@@ -1,3 +1,4 @@
+
 import { isInDatabase, insertInDatabase, getUserByName, getUsers , getAvailableUser, updateState} from '../models/models.js'
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
@@ -7,13 +8,27 @@ export async function fetchUsers(request, reply) {
 	return reply.send(users);
 }
 
+// route POST pour tester les tokens JWT
+export async function testJWT(request, reply) {
+	const name = request.body.name;
+	if (name === undefined)
+		return reply.code(400).send({ error: 'Name and status are required' });
+	const user = await getUserByName(name);
+	if (user === undefined)
+		return reply.code(400).send({ error: 'User not found !' });
+	const token = await request.server.jwt.sign({ name: user.name, role: 'user' }, { expiresIn: '1h' });
+	console.log('TOKEN: ', token);
+	return reply.code(201).send({ token });
+	
+}
+
 // route POST /register
 export async function createUser(request, reply) {
 
 	// On recupere le nom et le statut de l'user avec request.body
 	// request.body c'est un objet qui contient la data avec POST
-	const { name , status} = request.body;
-	if (name === undefined || status === undefined)
+	const { name } = request.body;
+	if (name === undefined)
 		return reply.code(400).send({ error: 'name and status are required' });
 
 	if (!checkNameFormat(name))
@@ -24,7 +39,7 @@ export async function createUser(request, reply) {
 		return reply.code(409).send({ error: 'User already exists' });
 	
 	await insertInDatabase(name);
-	
+
 	return reply.code(201).send({ message: 'User created', name });
 }
 

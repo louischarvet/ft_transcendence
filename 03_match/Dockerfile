@@ -1,4 +1,4 @@
-FROM node:24
+FROM louischarvet/ft_transcendence_backend_base:1.0
 
 WORKDIR /usr/src/app
 
@@ -10,8 +10,12 @@ RUN apt-get install sqlite3 -y
 RUN npm install sqlite3
 RUN npm install sqlite
 
+RUN npm install @fastify/jwt
+
 COPY . .
 
-EXPOSE 3002
+RUN cat ./database/initDatabase.sqlite | sqlite3 matches_db
+
+EXPOSE 3000
 #CMD ["node", "index.js"]
 CMD ["nodemon", "index.js"]

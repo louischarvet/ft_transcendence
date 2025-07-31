@@ -1,18 +1,28 @@
 import Fastify from 'fastify';
+import jwt from '@fastify/jwt'
+
 import routes from './routes/routes.js';
-import shutdown from './common_tools/shutdown.js';
-import { initializeDatabase } from './database/db.js';
 
 const fastify = Fastify({ logger: true });
 
+fastify.register(jwt, {
+	secret: 'secret-key'
+});
+
+fastify.decorate("authenticate", async function (request, reply) {
+  try {
+    await request.jwtVerify(); // Le token est validé ici
+  } catch (err) {
+    return reply.code(401).send({ error: 'Unauthorized' });
+  }
+});
+
 fastify.register(routes);
-fastify.register(shutdown);
 
 const start = async () => {
 	try {
-		await initializeDatabase();
-		await fastify.listen({ port: 3002, host: '0.0.0.0' });
-		console.log('match_docker listening on port 3002');
+		await fastify.listen({ port: 3000, host: '0.0.0.0' });
+		console.log('match_docker listening on port 3000');
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

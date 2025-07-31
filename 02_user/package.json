@@ -6,7 +6,7 @@
   "main": "app.js",
   "author": "TRIJAUD Nathan",
   "dependencies": {
-	"fastify": "^4.25.1",
+	"fastify": "^5.4.0",
 	"sqlite3": "^5.1.6",
 	"sqlite": "^4.2.1",
 	"node-fetch": "^3.3.2"

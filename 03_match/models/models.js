@@ -1,4 +1,4 @@
-//controllers/match/js
+//controllers/models/js
 
 export class Match {
 	constructor(poolId, player1, player2) {

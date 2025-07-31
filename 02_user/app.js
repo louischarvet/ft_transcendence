@@ -1,10 +1,14 @@
 //index.js
 
 import Fastify from 'fastify';
+import jwt from '@fastify/jwt'
 import userRoutes from './routes/routes.js';
 
 const fastify = Fastify({ logger: true });
 
+fastify.register(jwt, {
+	secret: 'secret-key'
+});
 fastify.register(userRoutes);
 
 const start = async () => {

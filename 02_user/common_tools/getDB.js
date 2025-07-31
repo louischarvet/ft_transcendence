@@ -2,7 +2,7 @@ import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
 // Chemin vers le fichier de base de données SQLite
-const dbFile = '/usr/src/app/users_database';
+const dbFile = '/usr/src/app/users_db';
 // Fonction pour obtenir une instance de la base de données
 async function getDB() {
 	if (!dbFile)
