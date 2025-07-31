@@ -18,4 +18,4 @@ RUN cat ./database/initDatabase.sqlite | sqlite3 matches_db
 
 EXPOSE 3000
 #CMD ["node", "index.js"]
-CMD ["nodemon", "index.js"]
+CMD ["nodemon", "app.js"]

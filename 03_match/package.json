@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Fastify match service example",
   "type": "module",
-  "main": "index.js",
+  "main": "app.js",
   "author": "TRIJAUD Nathan",
   "dependencies": {
 	"fastify": "^5.4.0",
@@ -12,8 +12,8 @@
 	"node-fetch": "^3.3.2"
   },
   "scripts": {
-	"start": "node index.js",
-	"dev": "nodemon index.js",
+	"start": "node app.js",
+	"dev": "nodemon app.js",
 	"test": "jest"
   }
 }

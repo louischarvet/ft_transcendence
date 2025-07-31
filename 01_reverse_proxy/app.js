@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 //import fastifyHttpProxy from '@fastify/http-proxy'
 import routesPlugin from './routes/routes.js'
-import cors from '@fastify/cors'
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -17,12 +16,7 @@ const httpsOptions = {
 
 const server = Fastify({
     logger: false,
-    //https: httpsOptions
-})
-
-await server.register(cors, {
-  origin: 'http://localhost:5173', // ou '*' pour tout autoriser
-  credentials: true
+    https: httpsOptions
 })
 
 server.register(routesPlugin)

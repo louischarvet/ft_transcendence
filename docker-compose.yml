@@ -14,18 +14,18 @@ services:
       - transcendence-net  
     restart: on-failure
 
-  frontend-service:
-    build: ./TransFront
-    container_name: frontend-service
-    expose:
-      - "5173"
-    working_dir: /usr/src/app
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    depends_on:
-      - proxy-service
-    command: npm run dev -- --host 0.0.0.0
+  #frontend-service:
+  #  build: ./TransFront
+  #  container_name: frontend-service
+  #  expose:
+  #    - "5173"
+  #  working_dir: /usr/src/app
+  #  networks:
+  #    - transcendence-net
+  #  restart: unless-stopped
+  #  depends_on:
+  #    - proxy-service
+  #  command: npm run dev -- --host 0.0.0.0
 
 
   user-service:

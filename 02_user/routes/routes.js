@@ -1,18 +1,17 @@
-import { testJWT, createUser, fetchUserByName,
+import { createUser, fetchUserByName,
 	fetchUserStatus, getRandomUser, changeState }
 	from '../controllers/controllers.js';
+import { userSchema } from '../schema/userSchema.js';
+
 
 // On définit les routes pour l'API user
 async function userRoutes(fastify, options) {
 	fastify.get('/', (request, reply) => {
 		reply.send({ message: 'Hello from user' });
 	});
-	
-	// Route pour tester les JWT (en genere un pour un user)
-	fastify.post('/jwt', testJWT);
 
 	// Route pour creer un nouvel utilisateur
-	fastify.post('/register', createUser);
+	fastify.post('/register', {schema  : userSchema}, createUser);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs
@@ -25,8 +24,8 @@ async function userRoutes(fastify, options) {
 
 
 	// Dédié aux autres dockers 
-	fastify.get('/random', getRandomUser);
-	fastify.put('/update', changeState);
+	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
+	fastify.put('/update',{preHandler : [fastify.authentication], schema  : userSchema}, changeState);
 //	fastify.get('/vs', checkAvailability)
 }
 

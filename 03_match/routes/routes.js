@@ -1,5 +1,5 @@
-import { addMatch } from '../controllers/controllers.js';
-import { createMatch } from '../database/db.js'
+import { createMatch } from '../controllers/controllers.js';
+import { matchSchema } from '../schema/matchSchema.js'
 
 export default async function matchRoutes (fastify, opts) {
 	// Differents types de matches
@@ -27,13 +27,18 @@ export default async function matchRoutes (fastify, opts) {
 	//	}
 	//});
 
-	fastify.post('/jwt', { preHandler: [fastify.authenticate] },async (request, reply) => {
+	// Jouer en local entre 2 joueurs
+	// Il faut que le front mette match_type('local') dans le body avant d'envoyer la requete
+	fastify.put('/local',{ preHandler: [fastify.authenticate], schema: matchSchema }, createMatch);
+
+	fastify.post('/jwt', { preHandler: [fastify.authenticate] }, async (request, reply) => {
 		console.log("\n\n");
 		console.log("Request : ", request);
 		console.log("\n\n");
 		const playerName = request.user.name;
 		console.log('match/jwt: ', playerName);
 	});
+
 	fastify.post('/toto', async (request, reply) => {
 		const body = request.body;
 		if (body === undefined) {

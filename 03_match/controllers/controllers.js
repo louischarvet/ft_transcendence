@@ -1,7 +1,31 @@
 //controllers/controllers/js
 
-import { Match } from '../models/models.js';
+//import { cre } from '../models/models.js';
 //import fetch from 'node-fetch';
+import { setMatch } from '../models/models.js'
+
+//Fonction utile
+async function createMatch(request, reply) {
+	const body = request.body;
+	const match_type = body.match_type;
+
+	// Fonction a part ? pour verifier que le type du match correspond a la route
+	const url = request.url;
+	if (url === '/local' && match_type !== 'local')
+		return reply.code(400).send({ error: 'Must be local match_type' });
+
+	const p1Name = (request.user ? request.user.name : 'P1');
+	const p2Name = (body.player2 ? body.player2.name : 'P2');
+	
+	await setMatch(p1Name, p2Name, match_type);
+}
+
+
+//////Route PUT /local
+//async function localMatch(request, reply) {
+//	await createMatch();
+//}
+
 
 // Route PUT /match/random
 async function randomMatch(request, reply) {
@@ -68,10 +92,10 @@ async function addMatch(match) {
 			throw new Error('Un ou plusieurs joueurs sont inconnus.');
 
 		// creer match
-		return await Match.createMatch(poolId, player1, player2);
+		return await createMatch(poolId, player1, player2);
 	} catch (error) {
 		throw new Error('Error creating match: ' + error.message);
 	}
 }
 
-export { addMatch };
+export { addMatch , createMatch };

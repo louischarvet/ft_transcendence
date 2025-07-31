@@ -2,14 +2,24 @@
 
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
+
+import authenticateJWT from './authentication/auth.js'
 import userRoutes from './routes/routes.js';
+import { userSchema } from './schema/userSchema.js';
 
 const fastify = Fastify({ logger: true });
 
+// Authentification par token
 fastify.register(jwt, {
 	secret: 'secret-key'
 });
+
+fastify.decorate('authentication', authenticateJWT);
+
+// On instencie les routes
 fastify.register(userRoutes);
+// On instencie les Schemas de JSONs
+fastify.addSchema(userSchema);
 
 const start = async () => {
 	try {

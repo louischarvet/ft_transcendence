@@ -12,7 +12,7 @@ EXPOSE 3000
 #RUN npm i fastify
 RUN npm install && npm install -g nodemon
 RUN npm install @fastify/http-proxy
-RUN npm install @fastify/cors
+#RUN npm install @fastify/cors
 
 
 # RUN apt-get install openssl -y

@@ -1,7 +1,10 @@
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
 
+import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
+import { userSchema, matchSchema } from './schema/matchSchema.js';
+
 
 const fastify = Fastify({ logger: true });
 
@@ -9,15 +12,11 @@ fastify.register(jwt, {
 	secret: 'secret-key'
 });
 
-fastify.decorate("authenticate", async function (request, reply) {
-  try {
-    await request.jwtVerify(); // Le token est validé ici
-  } catch (err) {
-    return reply.code(401).send({ error: 'Unauthorized' });
-  }
-});
+fastify.decorate("authenticate", authenticateJWT);
 
 fastify.register(routes);
+fastify.addSchema(userSchema);
+fastify.addSchema(matchSchema);
 
 const start = async () => {
 	try {
