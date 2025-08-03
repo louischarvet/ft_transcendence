@@ -1,22 +1,8 @@
-up: # cp-common-tools
+up:
 	@docker compose up --build
-cp-common-tools:
-	@chmod +x ./scripts/cp_common_tools.sh
-	@./scripts/cp_common_tools.sh
-	@chmod -x ./scripts/cp_common_tools.sh
 
-rm-common-tools:
-	@chmod +x ./scripts/rm_common_tools.sh
-	@./scripts/rm_common_tools.sh
-	@chmod -x ./scripts/rm_common_tools.sh
-
-rmi:
-	@IMAGES=$$(docker images -qa); \
-	if [ -n "$$IMAGES" ]; then \
-		docker rmi -f $$IMAGES; \
-	else \
-		echo "Pas d'images !"; \
-	fi
+down:
+	@docker compose down
 
 build:
 	@docker compose build
@@ -30,7 +16,7 @@ stop:
 restart:
 	@docker compose restart
 
-img:
+image:
 	@docker compose images
 
 logs:
@@ -39,29 +25,21 @@ logs:
 ps:
 	@docker compose ps
 
-down: # rm-common-tools
-	@docker compose down
-
-clean: # rm-common-tools
+clean:
 	@echo "Stopping running containers..."
-	$(eval RUNNING_DOCKERS=`docker ps -qa`)
-	@-docker stop $(RUNNING_DOCKERS)
+	@docker ps -q | xargs -r docker stop
 
 	@echo "Removing containers..."
-	$(eval BUILT_CONTAINERS=`docker ps -qa`)
-	@-docker rm $(BUILT_CONTAINERS) > /dev/null 2>&1
+	@docker ps -aq | xargs -r docker rm
 
 	@echo "Removing images..."
-	$(eval DOCKER_IMAGES=`docker images -qa`)
-	@-docker rmi -f $(DOCKER_IMAGES) > /dev/null 2>&1
+	@docker images -q | xargs -r docker rmi -f
 
 	@echo "Removing volumes..."
-	$(eval DOCKER_VOLUMES=`docker volume ls -q`)
-	@-docker volume rm $(DOCKER_VOLUMES) > /dev/null 2>&1
+	@docker volume ls -q | xargs -r docker volume rm
 
 	@echo "Removing networks..."
-	$(eval DOCKER_NETWORKS=`docker network ls -q`)
-	@-docker network rm $(DOCKER_NETWORKS) > /dev/null 2>&1
+	@docker network ls --format "table {{.Name}}" | tail -n +2 | grep -vE "^(bridge|host|none)$$" | xargs -r docker network rm
 
 fclean: clean
 	@echo "Pruning..."

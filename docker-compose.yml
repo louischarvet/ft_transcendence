@@ -1,86 +1,30 @@
 services:
+  # Services du backend
   proxy-service:
-
-    container_name: proxy-service
-
-    build:
-      context: ./01_reverse_proxy
-      dockerfile: Dockerfile
-#    depends_on:
-#      - base_image
-    ports:
-      - "3000:3000"
-    networks:
-      - transcendence-net  
-    restart: on-failure
-
-  #frontend-service:
-  #  build: ./TransFront
-  #  container_name: frontend-service
-  #  expose:
-  #    - "5173"
-  #  working_dir: /usr/src/app
-  #  networks:
-  #    - transcendence-net
-  #  restart: unless-stopped
-  #  depends_on:
-  #    - proxy-service
-  #  command: npm run dev -- --host 0.0.0.0
-
+    extends:
+      file: ./backend/docker-compose.yml
+      service: proxy-service
 
   user-service:
-  
-    build: ./02_user
-    container_name: user-service
-    expose:
-      - "3000"
-    working_dir: /usr/src/app
-    #volumes:
-      #- ./02_user:/usr/src/app
-      #- ./02_user/database/:/usr/src/app/db
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    command: npm run dev
-
+    extends:
+      file: ./backend/docker-compose.yml
+      service: user-service
 
   match-service:
-
-    build: ./03_match
-    container_name: match-service
-    expose:
-      - "3000"
-    working_dir: /usr/src/app
-    #volumes:
-      #- ./03_match:/usr/src/app
-      #- ./03_match/database/:/usr/src/app/db
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    depends_on:
-      - user-service
-   #  - tournament-service
-    command: npm run dev
-
+    extends:
+      file: ./backend/docker-compose.yml
+      service: match-service
 
   tournament-service:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: tournament-service
 
-    build: ./04_tournaments
-    container_name: tournament-service
-    expose:
-      - "3003"
-    working_dir: /usr/src/app
-    #volumes:
-      #- ./04_tournaments:/usr/src/app
-      #- ./02_tournaments/database/:/usr/src/app/db
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    depends_on:
-      - user-service
-      - match-service
-    command: npm run dev
-
+  # Service du frontend
+  frontend:
+    extends:
+      file: ./frontend/docker-compose.yml
+      service: frontend
 
 networks:
   transcendence-net:
