@@ -1,4 +1,4 @@
-# Utiliser Node.js 20 Alpine pour résoudre le problème crypto.hash
+# Alpine Linux (image légère)
 FROM node:20-alpine
 
 # Installer les dépendances système nécessaires

@@ -19,7 +19,6 @@ Sur cette branche, modifier UNIQUEMENT ce micro-service.
 ### 3. Match Service (Port 3002)
 - Création/gestion des matchs
 - Scores et résultats
-- Historique des parties (table -> match_results)
 
 ### 4. Tournament Service (Port 3003)
 - Création/gestion des tournois
@@ -43,20 +42,18 @@ make
 ## API Documentation
 
 ### User Service
-- GET /user/users - Liste des utilisateurs
-- POST /user/users - Création d'utilisateur
+- POST /user/register - Création d'utilisateur
 - voir /routes/
 ...
 
 ### Match Service
 - POST /match/matches - Création d'un match
-- PATCH /match/matches/:id/result - Mise à jour score
+- GET /match/matches - Pour récupérer les matches
+- GET /match/matches/:id - Pour récupérer un match par id
 - voir /routes/
 ...
 
 ### Tournament Service
-- GET /tournament/data_tournaments - Liste des tournois
-- POST /tournament/next_match - Prochain match
 - voir /routes/
 ...
 

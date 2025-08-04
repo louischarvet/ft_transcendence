@@ -7,17 +7,17 @@ async function routesPlugin(fastify, options) {
     })
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://user-service:3000",
-		prefix: '/api/user',
+		prefix: '/user',
 		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://match-service:3000",
-		prefix: '/api/match',
+		prefix: '/match',
 		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://tournament-service:3003",
-		prefix: '/api/tournament',
+		prefix: '/tournament',
 		rewritePrefix: '/',
 	});
 /*	fastify.get('/auth', async (request, reply) => {

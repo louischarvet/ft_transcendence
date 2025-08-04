@@ -6,8 +6,6 @@ services:
     build:
       context: ./01_reverse_proxy
       dockerfile: Dockerfile
-#    depends_on:
-#      - base_image
     ports:
       - "3000:3000"
     networks:
@@ -22,9 +20,6 @@ services:
     expose:
       - "3000"
     working_dir: /usr/src/app
-    #volumes:
-      #- ./02_user:/usr/src/app
-      #- ./02_user/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
@@ -38,15 +33,11 @@ services:
     expose:
       - "3000"
     working_dir: /usr/src/app
-    #volumes:
-      #- ./03_match:/usr/src/app
-      #- ./03_match/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
     depends_on:
       - user-service
-   #  - tournament-service
     command: npm run dev
 
 
@@ -57,9 +48,6 @@ services:
     expose:
       - "3003"
     working_dir: /usr/src/app
-    #volumes:
-      #- ./04_tournaments:/usr/src/app
-      #- ./02_tournaments/database/:/usr/src/app/db
     networks:
       - transcendence-net
     restart: unless-stopped
