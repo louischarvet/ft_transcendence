@@ -1,7 +1,19 @@
 CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
+	password TEXT,
+	profile_picture TEXT NOT NULL;
 	status TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS friend (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_1 INTEGER NOT NULL,
+	user_2 INTEGER NOT NULL,
+	FOREIGN KEY (user_1) REFERENCES users(id),
+	FOREIGN KEY (user_2) REFERENCES users(id),
+	UNIQUE(user_1, user_2)
+	CHECK (user_1 != user_2)
 );
 
 INSERT INTO users(name, status) VALUES("pipo", "available");

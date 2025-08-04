@@ -1,3 +1,6 @@
+front:
+	docker compose -f ./frontend/docker-compose.yml up --build
+
 up:
 	@docker compose up --build
 
