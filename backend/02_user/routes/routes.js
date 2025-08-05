@@ -1,4 +1,4 @@
-import { createUser, fetchUserByName,
+import { createGuest, signIn, logIn, fetchUserByName,
 	fetchUserStatus, getRandomUser, changeState }
 	from '../controllers/controllers.js';
 import { userSchema } from '../schema/userSchema.js';
@@ -10,8 +10,12 @@ async function userRoutes(fastify, options) {
 		reply.send({ message: 'Hello from user' });
 	});
 
+	fastify.post('/guest', createGuest);
+	fastify.post('/signin', { schema: userSchema }, signIn);
+	fastify.put('/login', { schema: userSchema }, logIn);
+
 	// Route pour creer un nouvel utilisateur
-	fastify.post('/register', {schema  : userSchema}, createUser);
+//	fastify.post('/register', {schema  : userSchema}, createUser);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs

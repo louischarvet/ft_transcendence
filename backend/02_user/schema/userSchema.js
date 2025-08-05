@@ -4,10 +4,11 @@ export const userSchema = {
 $id: 'userSchema',
   body: {
     type: 'object',
-    required: ['name'],
+    required: ['name', 'password'],
     properties: {
-		id: { type : 'integer'},
+		id: { type : 'integer' },
       	name: { type: 'string', minLength: 1 },
+		password: { type: 'string', minLength: 8 },
       	status: { type: 'string', minLength: 1 },
     },
     additionalProperties: false

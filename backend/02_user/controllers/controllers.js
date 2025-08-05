@@ -1,5 +1,6 @@
-
-import { isInDatabase, insertInDatabase, getUserByName, getUsers , getAvailableUser, updateState} from '../models/models.js'
+import bcrypt from 'bcrypt';
+import { isInDatabase, insertInDatabase, getUserByName, getUsers, 
+	insertInTable, getColumnFromTable, getAvailableUser, updateStatus } from '../models/models.js'
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
 // Récupère tous les utilisateurs
@@ -8,21 +9,56 @@ export async function fetchUsers(request, reply) {
 	return reply.send(users);
 }
 
+// rout POST /guest
+export async function createGuest(request, reply) {
+	const guests = await getColumnFromTable('id', 'guests');
+	console.log("guests: ", guests);
+	const len = guests.length;
+	const newID = (!len ? 1 : guests[len - 1].id + 1);
+	const name = "Guest" + newID;
+
+	const toInsert = { name: name };
+	await insertInTable('guests', toInsert);
+
+	const token = await request.server.jwt.sign({ name: name, role: 'guest' }, { expiresIn: '1h' });
+	return reply.code(201).send({ message: 'Guest created', token });
+}
+
 // route POST /register
-export async function createUser(request, reply) {
+export async function signIn(request, reply) {
+	const { name, password } = request.body;
 
-	const { name } = request.body;
-
-	if (!checkNameFormat(name))
-		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character' });
+	if (!await checkNameFormat(name))
+		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 	
 	const exists = await isInDatabase(name);
 	if (exists)
 		return reply.code(409).send({ error: 'User already exists' });
 	
-	await insertInDatabase(name);
+	// hachage du password
+	const hashedPassword = await bcrypt.hash(password, 10);
+	const toInsert = { name: name, hashedPassword: hashedPassword };
+	await insertInTable('users', toInsert);
+	// token expiration ?
 	const token = await request.server.jwt.sign({ name: name, role: 'player' }, { expiresIn: '1h' });
 	return reply.code(201).send({ message: 'User created', token });
+}
+
+// route PUT /login
+export async function logIn(request, reply) {
+	const { name, password } = request.body;
+
+	const user = await getUserByName(name);
+
+	if (user === undefined)
+		return reply.code(400).send({ error: 'User is not in the database' });
+	if (await bcrypt.compare(password, user.hashedPassword)) {
+		updateStatus(name, 'available');
+		const token = await request.server.jwt.sign({ name: name, role: 'player' }, { expiresIn: '1h' });
+
+		return reply.code(202).send({ message: 'User logged in', token });
+	} else
+		return reply.code(401).send({ error: 'Bad password' });
 }
 
 // Recupere un user par son nom
@@ -73,6 +109,6 @@ export async function changeState(request, reply) {
 
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
-	await updateState(name, newState);
+	await updateStatus(name, newState);
 	return reply.code(201).send({message : 'States updated!'});
 }

@@ -1,10 +1,12 @@
 CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
-	status TEXT NOT NULL
+	hashedPassword TEXT NOT NULL,
+	status TEXT NOT NULL DEFAULT "available"
 );
 
-INSERT INTO users(name, status) VALUES("pipo", "available");
-INSERT INTO users(name, status) VALUES("toto", "available");
-INSERT INTO users(name, status) VALUES("grugru", "available");
-INSERT INTO users(name, status) VALUES("zouzou", "available");
+CREATE TABLE IF NOT EXISTS guests (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	status TEXT NOT NULL DEFAULT "available"
+);

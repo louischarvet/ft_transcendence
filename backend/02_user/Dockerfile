@@ -10,6 +10,7 @@ RUN apt-get install sqlite3 -y
 # RUN npm install sqlite3
 # RUN npm install sqlite
 RUN npm install @fastify/jwt
+RUN npm install bcrypt
 
 COPY . .
 
