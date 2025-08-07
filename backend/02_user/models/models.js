@@ -6,27 +6,12 @@ const db = await getDB();
 
 // Récupère tous les utilisateurs
 async function getUsers() {
-//	const db = await getDB();
 	return db.all('SELECT * FROM users');
 }
 
-// Vérifie si l'utilisateur existe dans la base de données
-async function isInDatabase(name) {
-//	const db = await getDB();
-	const user = await db.get('SELECT * FROM users WHERE name = ?', [name]);
-	return !!user;
-}
-
 // Récupère un utilisateur par son nom
-async function getUserByName(name) {
-//	const db = await getDB();
-	return db.get('SELECT * FROM users WHERE name = ?', [name]);
-}
-
-// Insère un nouvel utilisateur dans la base de données
-async function insertInDatabase(name) {
-//	const db = await getDB();
-	await db.run("INSERT INTO users (name, status) VALUES (?, ?)", [name, 'available']);
+async function getUserByName(table, name) {
+	return db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]);
 }
 
 async function insertInTable(table, toInsert) {
@@ -44,6 +29,16 @@ async function getColumnFromTable(column, table) {
 	return (await db.all("SELECT " + column + " FROM " + table));
 }
 
+// Revoquer les tokens pour log out
+async function insertRevokedToken(token) {
+	await db.run('INSERT INTO revoked_tokens (token) VALUES (?)', [token]);
+}
+
+// Verifier si un JWT est revoque
+async function isRevokedToken(token) {
+	return (!!await db.get('SELECT * FROM revoked_tokens WHERE token = ?', [token]));
+}
+
 // Get un user disponible pour jouer
 async function getAvailableUser(name){
 //	const db = await getDB();
@@ -53,11 +48,12 @@ async function getAvailableUser(name){
 }
 
 // Update States
-async function updateStatus(name, newStatus) {
+async function updateStatus(table, name, newStatus) {
 //	const db = await getDB();
-	await db.run('UPDATE users SET status = ? WHERE name = ?', [newStatus, name]);
+	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
 }
 
 
-export { isInDatabase, insertInDatabase, getUserByName, getUsers,
-	insertInTable, getColumnFromTable, getAvailableUser, updateStatus };
+export { insertInTable, getUserByName, getUsers,
+	getColumnFromTable, getAvailableUser, insertRevokedToken,
+	isRevokedToken, updateStatus };

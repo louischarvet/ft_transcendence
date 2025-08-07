@@ -1,6 +1,7 @@
-import { createGuest, signIn, logIn, fetchUserByName,
+import { createGuest, signIn, logIn, logOut, fetchUserByName,
 	fetchUserStatus, getRandomUser, changeState }
 	from '../controllers/controllers.js';
+import { userInput } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
 
 
@@ -11,8 +12,9 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.post('/guest', createGuest);
-	fastify.post('/signin', { schema: userSchema }, signIn);
-	fastify.put('/login', { schema: userSchema }, logIn);
+	fastify.post('/signin', { schema: userInput }, signIn);
+	fastify.put('/login', { schema: userInput }, logIn);
+	fastify.put('/logout', { preValidation: [fastify.authentication] }, logOut);
 
 	// Route pour creer un nouvel utilisateur
 //	fastify.post('/register', {schema  : userSchema}, createUser);
@@ -29,7 +31,7 @@ async function userRoutes(fastify, options) {
 
 	// Dédié aux autres dockers 
 	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
-	fastify.put('/update',{preHandler : [fastify.authentication], schema  : userSchema}, changeState);
+//	fastify.put('/update',{preHandler : [fastify.authentication], schema  : userSchema}, changeState);
 //	fastify.get('/vs', checkAvailability)
 }
 

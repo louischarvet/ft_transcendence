@@ -1,27 +1,31 @@
 import bcrypt from 'bcrypt';
-import { isInDatabase, insertInDatabase, getUserByName, getUsers, 
-	insertInTable, getColumnFromTable, getAvailableUser, updateStatus } from '../models/models.js'
+import { insertInTable, getUserByName, getUsers, 
+	getColumnFromTable, getAvailableUser, insertRevokedToken,
+	isRevokedToken, updateStatus } from '../models/models.js'
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
-
-// Récupère tous les utilisateurs
-export async function fetchUsers(request, reply) {
-	const users = await getUsers();
-	return reply.send(users);
-}
 
 // rout POST /guest
 export async function createGuest(request, reply) {
 	const guests = await getColumnFromTable('id', 'guests');
-	console.log("guests: ", guests);
 	const len = guests.length;
-	const newID = (!len ? 1 : guests[len - 1].id + 1);
+	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
 
-	const toInsert = { name: name };
-	await insertInTable('guests', toInsert);
+	await insertInTable('guests', {
+		name: name
+	});
 
-	const token = await request.server.jwt.sign({ name: name, role: 'guest' }, { expiresIn: '1h' });
-	return reply.code(201).send({ message: 'Guest created', token });
+	const user = await getUserByName('guests', name);
+	const token = await request.server.jwt.sign({
+		name: name,
+		role: 'guest'
+	}); // token expiration ?
+
+	return reply.code(201).send({
+		user,
+		token,
+		message: 'Guest created'
+	});
 }
 
 // route POST /register
@@ -31,34 +35,82 @@ export async function signIn(request, reply) {
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 	
-	const exists = await isInDatabase(name);
-	if (exists)
+	const exists = await getUserByName('registered', name);
+	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
 	
 	// hachage du password
 	const hashedPassword = await bcrypt.hash(password, 10);
-	const toInsert = { name: name, hashedPassword: hashedPassword };
-	await insertInTable('users', toInsert);
-	// token expiration ?
-	const token = await request.server.jwt.sign({ name: name, role: 'player' }, { expiresIn: '1h' });
-	return reply.code(201).send({ message: 'User created', token });
+
+	// insertion
+	await insertInTable('registered', {
+		name: name,
+		hashedPassword: hashedPassword });
+
+	const user = await getUserByName('registered', name);
+	const token = await request.server.jwt.sign({
+		name: name,
+		role: 'registered'
+	}); // token expiration ?
+
+	return reply.code(201).send({
+		user,
+		token,
+		message: 'User created'
+	});
 }
 
 // route PUT /login
 export async function logIn(request, reply) {
 	const { name, password } = request.body;
 
-	const user = await getUserByName(name);
+	const exists = await getUserByName('registered', name);
 
-	if (user === undefined)
+	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	if (await bcrypt.compare(password, user.hashedPassword)) {
-		updateStatus(name, 'available');
-		const token = await request.server.jwt.sign({ name: name, role: 'player' }, { expiresIn: '1h' });
+	else if (exists.status !== 'logged_out')
+		return reply.code(409).send({ error: 'User already logged in.' });
+	if (await bcrypt.compare(password, exists.hashedPassword)) {
+		updateStatus('registered', name, 'available');
 
-		return reply.code(202).send({ message: 'User logged in', token });
+		const user = await getUserByName('registered', name);
+
+		const token = await request.server.jwt.sign({
+			name: name,
+			role: 'registered'
+		}); // token expiration ?
+
+		return reply.code(202).send({
+			user,
+			token,
+			message: 'User logged in'
+		});
 	} else
 		return reply.code(401).send({ error: 'Bad password' });
+}
+
+// Route PUT /logout
+export async function logOut(request, reply) {
+	const token = request.headers.authorization.split(' ')[1];
+	// verifier si le token n'est pas revoque
+	if (await isRevokedToken(token)) {
+		return reply.code(409).send({
+			error: "Revoked token."
+		});
+	}
+	// revoke token
+	insertRevokedToken(token);
+	// updateStatus
+	updateStatus(request.user.role, request.user.name, 'logged_out');
+	return reply.code(201).send({
+		message: "Successfully logged out."
+	});
+}
+
+// Récupère tous les utilisateurs
+export async function fetchUsers(request, reply) {
+	const users = await getUsers();
+	return reply.send(users);
 }
 
 // Recupere un user par son nom
