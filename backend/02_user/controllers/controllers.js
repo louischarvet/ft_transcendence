@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, getUsers, 
 	getColumnFromTable, getAvailableUser, insertRevokedToken,
-	isRevokedToken, updateStatus } from '../models/models.js'
+	isRevokedToken, updateStatus, deleteUserInTable } from '../models/models.js'
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
 // rout POST /guest
@@ -107,6 +107,19 @@ export async function logOut(request, reply) {
 	});
 }
 
+// Route DELETE /delete/:name
+export async function deleteUser(request, reply) {
+	const user = request.user;
+	const userName = user.name;
+
+	if (userName === request.params.name) {
+		deleteUserInTable(user.role, userName);
+		return reply.code(200).send({ message: 'User successfully deleted.' });
+	}
+	else
+		return reply.code(409).send({ error: 'Non authorized to delete user.' });
+}
+
 // Récupère tous les utilisateurs
 export async function fetchUsers(request, reply) {
 	const users = await getUsers();
@@ -146,7 +159,7 @@ export async function getRandomUser(request, reply) {
 	return reply.code(201).send(randomUser);
 }
 
-export async function changeState(request, reply) {
+export async function changeStatus(request, reply) {
 	const reqBody = request.body;
 	// check si player2 existe
 	// s'il n'existe pas -> player1 VS IA

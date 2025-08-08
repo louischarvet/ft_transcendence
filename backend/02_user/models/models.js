@@ -53,7 +53,11 @@ async function updateStatus(table, name, newStatus) {
 	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
 }
 
+// Delete user i ntable
+async function deleteUserInTable(table, userName) {
+	await db.run('DELETE FROM ' + table + ' WHERE name = ?', [userName]);
+}
 
 export { insertInTable, getUserByName, getUsers,
 	getColumnFromTable, getAvailableUser, insertRevokedToken,
-	isRevokedToken, updateStatus };
+	isRevokedToken, updateStatus, deleteUserInTable };
