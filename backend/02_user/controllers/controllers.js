@@ -112,6 +112,8 @@ export async function deleteUser(request, reply) {
 	const user = request.user;
 	const userName = user.name;
 
+	// verifier que le user est connecte
+	// (qu'un user ne puis pas supprimer le compte d'un autre)
 	if (userName === request.params.name) {
 		deleteUserInTable(user.role, userName);
 		return reply.code(200).send({ message: 'User successfully deleted.' });

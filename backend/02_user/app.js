@@ -1,4 +1,4 @@
-//index.js
+//app.js
 
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
