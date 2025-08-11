@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { insertInTable, isInTable } from '../models/models';
+import { getAllFromTable, insertInTable, isInTable, deleteExpiredTokens } from '../models/models.js';
 
 const secret = 'secret-key';
 
@@ -7,12 +7,14 @@ const secret = 'secret-key';
 export async function generateToken(request, reply) {
 //	if (await isActiveUser)
 //		return error : user token already defined
+
+	// try catch ?
 	const token = await jwt.sign({
 		name: request.name,
 		type: request.type
 	},
 		secret,
-		{ expiresIn : '1h' }
+		{ expiresIn : '30s' }
 	);
 	return reply.code(200).send({
 		token,
@@ -48,8 +50,22 @@ export async function revokeToken(request, reply) {
 	if (!token)
 		return reply.code(401).send({ error: 'Missing token' });
 
-	const decoded = jwt.verify(token, secret);
-	// console.log("decoded: ", decoded);
-	// console.log("decoded.exp: ", decoded.exp);
-	await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
+	try {
+		const decoded = jwt.verify(token, secret);
+		// console.log("decoded: ", decoded);
+		// console.log("decoded.exp: ", decoded.exp);
+		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
+	} catch (err) {
+		return reply.code(401).send({ error: 'Invalid token' });
+	}
+}
+
+// cron pour supprimer les tokens revoques ~ toutes les 30 minutes
+export async function pruneExpiredTokens() {
+	const time = await Math.floor( await Date.now() / 1000 );
+	await deleteExpiredTokens(time);
+
+//	const rows = await getAllFromTable('revoked_tokens');
+
+	// console.log(rows);
 }

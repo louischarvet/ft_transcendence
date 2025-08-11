@@ -14,3 +14,11 @@ export async function isInTable(table, column, value) {
 	return await db.get("SELECT * FROM " + table + " WHERE " + column + " = ?",
 		[ value ])
 }
+
+export async function getAllFromTable(table) {
+	return await db.all("SELECT * FROM " + table);
+}
+
+export async function deleteExpiredTokens(time) {
+	await db.run("DELETE FROM revoked_tokens WHERE exp <= ?", time);
+}

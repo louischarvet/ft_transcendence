@@ -3,15 +3,30 @@
 import Fastify from 'fastify';
 //import jwt from '@fastify/jwt';
 import jwt from 'jsonwebtoken';
-import { sessionRoutes } from './routes/routes.js';
+import fastifyCron from 'fastify-cron';
 
+import { sessionRoutes } from './routes/routes.js';
 import { sessionInput } from './schema/sessionInput.js';
+import { pruneExpiredTokens } from './controllers/controllers.js';
 
 //const secret = "secret-key";
 const fastify = Fastify({ logger: true });
 
 // Authentification par token
 //fastify.register(jwt);
+
+// supprimer toutes les 30 minutes les tokens expires
+// stockes dans revoked_tokens
+fastify.register(fastifyCron, {
+	jobs: [
+		{
+			cronTime: '*/30 * * * *',
+			onTick: pruneExpiredTokens,
+			start: true,
+			timeZone: 'Europe/Paris'
+		}
+	]
+});
 
 fastify.register(sessionRoutes);
 
