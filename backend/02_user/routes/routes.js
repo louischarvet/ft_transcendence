@@ -14,6 +14,8 @@ async function userRoutes(fastify, options) {
 	fastify.post('/guest', createGuest);
 	fastify.post('/signin', { schema: userInput }, signIn);
 	fastify.put('/login', { schema: userInput }, logIn);
+
+	// userSchema ?
 	fastify.put('/logout', { preValidation: [fastify.authentication] }, logOut);
 	fastify.delete('/delete/:name', { preValidation: [fastify.authentication] }, deleteUser);
 

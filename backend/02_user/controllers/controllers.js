@@ -16,10 +16,23 @@ export async function createGuest(request, reply) {
 	});
 
 	const user = await getUserByName('guests', name);
-	const token = await request.server.jwt.sign({
-		name: name,
-		role: 'guest'
-	}); // token expiration ?
+	const response = await fetch('http://session-service:3000/generate', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			name: name,
+			type: 'guest'
+		})
+	});
+	const jsonRes = await response.json();
+	const token = jsonRes.token;
+//	console.log("TOKEN: ", token);
+//	const token = await request.server.jwt.sign({
+//		name: name,
+//		role: 'guest'
+//	}); // token expiration ?
 
 	return reply.code(201).send({
 		user,
@@ -48,10 +61,23 @@ export async function signIn(request, reply) {
 		hashedPassword: hashedPassword });
 
 	const user = await getUserByName('registered', name);
-	const token = await request.server.jwt.sign({
-		name: name,
-		role: 'registered'
-	}); // token expiration ?
+
+	const response = await fetch('http://session-service:3000/generate', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			name: name,
+			type: 'registered'
+		})
+	});
+	const jsonRes = await response.json();
+	const token = jsonRes.token;
+	// const token = await request.server.jwt.sign({
+	// 	name: name,
+	// 	role: 'registered'
+	// }); // token expiration ?
 
 	return reply.code(201).send({
 		user,
@@ -75,10 +101,22 @@ export async function logIn(request, reply) {
 
 		const user = await getUserByName('registered', name);
 
-		const token = await request.server.jwt.sign({
-			name: name,
-			role: 'registered'
-		}); // token expiration ?
+		const response = await fetch('http://session-service:3000/generate', {
+			method: 'POST',
+			headers: {
+			'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				name: name,
+				type: 'registered'
+			})
+		});
+		const jsonRes = await response.json();
+		const token = jsonRes.token;
+		// const token = await request.server.jwt.sign({
+		// 	name: name,
+		// 	role: 'registered'
+		// }); // token expiration ?
 
 		return reply.code(202).send({
 			user,
@@ -93,18 +131,37 @@ export async function logIn(request, reply) {
 export async function logOut(request, reply) {
 	const token = request.headers.authorization.split(' ')[1];
 	// verifier si le token n'est pas revoque
-	if (await isRevokedToken(token)) {
-		return reply.code(409).send({
-			error: "Revoked token."
-		});
-	}
-	// revoke token
-	insertRevokedToken(token);
-	// updateStatus
-	updateStatus(request.user.role, request.user.name, 'logged_out');
-	return reply.code(201).send({
-		message: "Successfully logged out."
+
+	const authRes = await fetch('http://session-service:3000/authenticate', {
+		method: 'GET',
+		headers: {
+			'Authorization': `Bearer ${token}`
+		}
 	});
+	if (authRes.status == 200) {
+		const revRes = await fetch('http://session-service:3000/revoke', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				name: request.user.name,
+				type: request.user.type
+			})
+		});
+
+		if (request.user.type == 'guest')
+			deleteUserInTable('guest', request.user.name);
+		else
+			updateStatus(request.user.role, request.user.name, 'logged_out');
+
+		return reply.code(201).send({
+			message: "Successfully logged out."
+		});
+	} else {
+		return authRes; // probablement foireux
+	}
 }
 
 // Route DELETE /delete/:name
@@ -112,14 +169,33 @@ export async function deleteUser(request, reply) {
 	const user = request.user;
 	const userName = user.name;
 
-	// verifier que le user est connecte
-	// (qu'un user ne puis pas supprimer le compte d'un autre)
-	if (userName === request.params.name) {
-		deleteUserInTable(user.role, userName);
-		return reply.code(200).send({ message: 'User successfully deleted.' });
-	}
-	else
+	const authRes = await fetch('http://session-service:3000/authenticate', {
+		method: 'GET',
+		headers: {
+			'Authorization': `Bearer ${token}`
+		}
+	});
+	if (authRes.status == 200) {
+		const revRes = await fetch('http://session-service:3000/revoke', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify({
+				name: request.user.name,
+				type: request.user.type
+			})
+		});
+
+		deleteUserInTable(request.user.type, request.user.name);
+
+		return reply.code(200).send({
+			message: "User successfully deleted."
+		});
+	} else {
 		return reply.code(409).send({ error: 'Non authorized to delete user.' });
+	}
 }
 
 // Récupère tous les utilisateurs

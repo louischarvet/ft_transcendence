@@ -8,16 +8,18 @@ export async function generateToken(request, reply) {
 //	if (await isActiveUser)
 //		return error : user token already defined
 
+	const { name, type } = request.body;
 	// try catch ?
 	const token = await jwt.sign({
-		name: request.name,
-		type: request.type
+		name: name,
+		type: type
 	},
 		secret,
-		{ expiresIn : '30s' }
+		{ expiresIn : '1s' }
 	);
+	console.log("token: ", token);
 	return reply.code(200).send({
-		token,
+		token: token,
 		message: 'JWT created'
 	})
 }

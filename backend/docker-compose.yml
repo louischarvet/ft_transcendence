@@ -23,7 +23,7 @@ services:
     networks:
       - transcendence-net
     restart: unless-stopped
-    command: npm run dev
+#    command: npm run dev
 
 
   match-service:
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
-    command: npm run dev
+#    command: npm run dev
 
 
   tournament-service:
@@ -54,16 +54,14 @@ services:
     depends_on:
       - user-service
       - match-service
-    command: npm run dev
+#    command: npm run dev
 
   session-service:
 
     build: ./05_session
     container_name: session-service
     expose:
-      - "3005"
-    ports:
-      - "3005:3005"
+      - "3000"
     working_dir: /usr/src/app
     networks:
       - transcendence-net

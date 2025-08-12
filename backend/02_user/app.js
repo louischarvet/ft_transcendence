@@ -32,7 +32,7 @@ fastify.register(userRoutes);
 fastify.addSchema(userInput);
 fastify.addSchema(userSchema);
 
-const start = async () => {
+async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
 		console.log('User-service listening on port 3000');
