@@ -4,6 +4,14 @@ import { getDB } from '../common_tools/getDB.js';
 
 const db = await getDB();
 
+// Maybe elsewhere
+export async function userAndTokenMatch(token, user) {
+	return (token.name === user.name
+		&& token.id === user.id
+		&& token.type === user.type
+	);
+}
+
 export async function insertInTable(table, toInsert) {
 	const { token, exp } = toInsert;
 	await db.run("INSERT INTO " + table + "(token, exp) VALUES(?, ?)",

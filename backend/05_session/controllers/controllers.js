@@ -1,23 +1,20 @@
 import jwt from 'jsonwebtoken';
-import { getAllFromTable, insertInTable, isInTable, deleteExpiredTokens } from '../models/models.js';
+import { userAndTokenMatch, insertInTable, isInTable, deleteExpiredTokens } from '../models/models.js';
 
 const secret = 'secret-key';
 
 // Route POST /generate
 export async function generateToken(request, reply) {
-//	if (await isActiveUser)
-//		return error : user token already defined
-
-	const { name, type } = request.body;
-	// try catch ?
+	const { name, type, id } = request.body;
 	const token = await jwt.sign({
 		name: name,
-		type: type
+		type: type,
+		id: id
 	},
 		secret,
-		{ expiresIn : '1s' }
+		{ expiresIn : '2h' }
 	);
-	console.log("token: ", token);
+
 	return reply.code(200).send({
 		token: token,
 		message: 'JWT created'
@@ -26,21 +23,23 @@ export async function generateToken(request, reply) {
 
 // Route GET /authenticate
 export async function authenticateUser(request, reply) {
-	const token = request.headers.authorization?.split(' ')[1];
+	const token = request.headers.authorization.split(' ')[1];
 
 	if (!token)
 		return reply.code(401).send({ error: 'Missing token' });
 	try {
 		if (await isInTable('revoked_tokens', 'token', token))
-			return reply.code(401).send({ error: 'Token has been revoked' });
+			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		const decoded = await jwt.verify(token, secret);
-		// console.log("decoded: ", decoded);
-		// console.log("decoded.exp: ", decoded.exp);
-		return reply.code(200).send({
-			user: decoded,
-			message: 'Valid token'
-		});
+		if (await userAndTokenMatch(decoded, request.body)) {
+			return reply.code(200).send({
+				user: decoded,
+				message: 'Valid token'
+			});
+		} else {
+			return reply.code(401).send({ error: "Token and user infos don't match" });
+		}
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
 	}
@@ -53,10 +52,16 @@ export async function revokeToken(request, reply) {
 		return reply.code(401).send({ error: 'Missing token' });
 
 	try {
+		if (await isInTable('revoked_tokens', 'token', token))
+			return reply.code(401).send({ error: 'Token is already revoked' });
+
 		const decoded = jwt.verify(token, secret);
-		// console.log("decoded: ", decoded);
-		// console.log("decoded.exp: ", decoded.exp);
-		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
+		if (await userAndTokenMatch(decoded, request.body)) {
+			await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
+			return reply.code(200).send({ message: 'Token has been revoked' });
+		} else {
+			return reply.code(401).send({ error: "Token and user infos don't match" });
+		}
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
 	}
@@ -66,8 +71,4 @@ export async function revokeToken(request, reply) {
 export async function pruneExpiredTokens() {
 	const time = await Math.floor( await Date.now() / 1000 );
 	await deleteExpiredTokens(time);
-
-//	const rows = await getAllFromTable('revoked_tokens');
-
-	// console.log(rows);
 }

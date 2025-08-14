@@ -4,7 +4,10 @@ import Fastify from 'fastify';
 import fastifyCron from 'fastify-cron';
 
 import { sessionRoutes } from './routes/routes.js';
-import { sessionInput } from './schema/sessionInput.js';
+
+//import { sessionInput } from './schema/sessionInput.js';
+import { userSchema } from './schema/userSchema.js';
+
 import { pruneExpiredTokens } from './controllers/controllers.js';
 
 //const secret = "secret-key";
@@ -25,7 +28,8 @@ fastify.register(fastifyCron, {
 
 fastify.register(sessionRoutes);
 
-fastify.addSchema(sessionInput);
+//fastify.addSchema(sessionInput);
+fastify.addSchema(userSchema);
 
 const start = async () => {
 	try {

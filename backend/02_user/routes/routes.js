@@ -11,13 +11,13 @@ async function userRoutes(fastify, options) {
 		reply.send({ message: 'Hello from user' });
 	});
 
+	// Renvoie un userSchema
 	fastify.post('/guest', createGuest);
 	fastify.post('/signin', { schema: userInput }, signIn);
 	fastify.put('/login', { schema: userInput }, logIn);
 
-	// userSchema ?
-	fastify.put('/logout', { preValidation: [fastify.authentication] }, logOut);
-	fastify.delete('/delete/:name', { preValidation: [fastify.authentication] }, deleteUser);
+	fastify.put('/logout', { schema: userSchema }, logOut);
+	fastify.delete('/delete', { schema: userSchema }, deleteUser);
 
 	// Route pour creer un nouvel utilisateur
 //	fastify.post('/register', {schema  : userSchema}, createUser);

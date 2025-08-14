@@ -21,18 +21,10 @@ export async function createGuest(request, reply) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({
-			name: name,
-			type: 'guest'
-		})
+		body: JSON.stringify(user)
 	});
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
-//	console.log("TOKEN: ", token);
-//	const token = await request.server.jwt.sign({
-//		name: name,
-//		role: 'guest'
-//	}); // token expiration ?
 
 	return reply.code(201).send({
 		user,
@@ -53,31 +45,24 @@ export async function signIn(request, reply) {
 		return reply.code(409).send({ error: 'User already exists' });
 	
 	// hachage du password
-	const hashedPassword = await bcrypt.hash(password, 10);
+	const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt());
 
-	// insertion
 	await insertInTable('registered', {
 		name: name,
 		hashedPassword: hashedPassword });
 
 	const user = await getUserByName('registered', name);
+	delete user.hashedPassword;
 
 	const response = await fetch('http://session-service:3000/generate', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({
-			name: name,
-			type: 'registered'
-		})
+		body: JSON.stringify(user)
 	});
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
-	// const token = await request.server.jwt.sign({
-	// 	name: name,
-	// 	role: 'registered'
-	// }); // token expiration ?
 
 	return reply.code(201).send({
 		user,
@@ -104,19 +89,12 @@ export async function logIn(request, reply) {
 		const response = await fetch('http://session-service:3000/generate', {
 			method: 'POST',
 			headers: {
-			'Content-Type': 'application/json'
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				name: name,
-				type: 'registered'
-			})
+			body: JSON.stringify(user)
 		});
 		const jsonRes = await response.json();
 		const token = jsonRes.token;
-		// const token = await request.server.jwt.sign({
-		// 	name: name,
-		// 	role: 'registered'
-		// }); // token expiration ?
 
 		return reply.code(202).send({
 			user,
@@ -129,72 +107,76 @@ export async function logIn(request, reply) {
 
 // Route PUT /logout
 export async function logOut(request, reply) {
-	const token = request.headers.authorization.split(' ')[1];
-	// verifier si le token n'est pas revoque
+	const bearerToken = request.headers.authorization;
+	const body = request.body;
 
 	const authRes = await fetch('http://session-service:3000/authenticate', {
-		method: 'GET',
+		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${token}`
-		}
+			'Authorization': bearerToken,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(body)
 	});
 	if (authRes.status == 200) {
 		const revRes = await fetch('http://session-service:3000/revoke', {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${token}`
+				'Authorization': bearerToken,
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				name: request.user.name,
-				type: request.user.type
-			})
+			body: JSON.stringify(body)
 		});
+		if (revRes.status == 200) {
+			if (body.type == 'guest')
+				deleteUserInTable('guest', body.name);
+			else
+				updateStatus(body.type, body.name, 'logged_out');
 
-		if (request.user.type == 'guest')
-			deleteUserInTable('guest', request.user.name);
-		else
-			updateStatus(request.user.role, request.user.name, 'logged_out');
-
-		return reply.code(201).send({
-			message: "Successfully logged out."
-		});
+			return reply.code(201).send({
+				message: "Successfully logged out."
+			});
+		} else {
+			return revRes;
+		}
 	} else {
-		return authRes; // probablement foireux
+		return authRes;
 	}
 }
 
-// Route DELETE /delete/:name
+// Route DELETE /delete
 export async function deleteUser(request, reply) {
-	const user = request.user;
-	const userName = user.name;
+	const bearerToken = request.headers.authorization;
+	const body = request.body;
 
 	const authRes = await fetch('http://session-service:3000/authenticate', {
-		method: 'GET',
+		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${token}`
-		}
+			'Authorization': bearerToken,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(body)
 	});
 	if (authRes.status == 200) {
 		const revRes = await fetch('http://session-service:3000/revoke', {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${token}`
+				'Authorization': bearerToken,
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				name: request.user.name,
-				type: request.user.type
-			})
+			body: JSON.stringify(body)
 		});
+		if (revRes.status == 200) {
+			deleteUserInTable(body.type, body.name);
 
-		deleteUserInTable(request.user.type, request.user.name);
-
-		return reply.code(200).send({
-			message: "User successfully deleted."
-		});
+			return reply.code(200).send({
+				message: "User successfully deleted."
+			});
+		} else {
+			return revRes;
+		}
 	} else {
-		return reply.code(409).send({ error: 'Non authorized to delete user.' });
+		return authRes;
 	}
 }
 
@@ -230,7 +212,7 @@ export async function getRandomUser(request, reply) {
 	const { name } = request.user;
 
 	const randomUser = await getAvailableUser(name);
-	console.log("Test randomUser :", randomUser);
+//	console.log("Test randomUser :", randomUser);
 	if (randomUser === undefined)
 		return reply.code(404).send({ error: 'No player available.' });
 
@@ -253,5 +235,5 @@ export async function changeStatus(request, reply) {
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
 	await updateStatus(name, newState);
-	return reply.code(201).send({message : 'States updated!'});
+	return reply.code(201).send({message : 'Status updated!'});
 }
