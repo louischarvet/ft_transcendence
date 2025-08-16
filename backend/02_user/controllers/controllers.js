@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, getUsers, 
-	getColumnFromTable, getAvailableUser, insertRevokedToken,
-	isRevokedToken, updateStatus, deleteUserInTable } from '../models/models.js'
+import { insertInTable, getUserByName, getUsers, updateValue,
+	getColumnFromTable, getAvailableUser, updateStatus,
+	deleteUserInTable } from '../models/models.js'
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
 // rout POST /guest
@@ -49,7 +49,8 @@ export async function signIn(request, reply) {
 
 	await insertInTable('registered', {
 		name: name,
-		hashedPassword: hashedPassword });
+		hashedPassword: hashedPassword
+	});
 
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
@@ -179,6 +180,48 @@ export async function deleteUser(request, reply) {
 		return authRes;
 	}
 }
+
+export async function updateInfo(request, reply) {
+	// pic password email telephone
+	const body = request.body;
+	const { name, password, toUpdate, newValue } = body;
+
+	try {
+		const user = await getUserByName('registered', name);
+
+		if (!await bcrypt.compare(password, user.hashedPassword))
+			return reply.code(401).send({ error: 'Bad password' });
+
+		const authRes = await fetch('http://session-service:3000/authenticate', {
+			method: 'POST',
+			headers: {
+				'Authorization': request.headers.authorization,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(user)
+		});
+		if (authRes.status == 200) {
+			const col = toUpdate === 'password' ?
+				'hashedPassword' : toUpdate;
+			const val = toUpdate === 'password' ?
+				await bcrypt.hash(password, await bcrypt.genSalt()) : newValue;
+			
+			updateValue('registered', col, name, val);
+			return reply.code(200).send({
+				user: await getUserByName('registered', name),
+				message: 'User info updated'
+			});
+		} else
+			return authRes;
+	} catch (err) {
+		console.log(err); ////
+	}
+}
+
+
+
+
+
 
 // Récupère tous les utilisateurs
 export async function fetchUsers(request, reply) {

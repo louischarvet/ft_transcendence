@@ -8,8 +8,7 @@ const db = await getDB();
 export async function userAndTokenMatch(token, user) {
 	return (token.name === user.name
 		&& token.id === user.id
-		&& token.type === user.type
-	);
+		&& token.type === user.type	);
 }
 
 export async function insertInTable(table, toInsert) {
@@ -28,5 +27,5 @@ export async function getAllFromTable(table) {
 }
 
 export async function deleteExpiredTokens(time) {
-	await db.run("DELETE FROM revoked_tokens WHERE exp <= ?", time);
+	await db.run("DELETE FROM revoked_tokens WHERE exp <= ?", [ time ]);
 }

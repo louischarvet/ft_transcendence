@@ -1,7 +1,7 @@
 import { createGuest, signIn, logIn, logOut, deleteUser,
-	fetchUserByName, fetchUserStatus, getRandomUser, changeStatus }
+	fetchUserByName, fetchUserStatus, getRandomUser, updateInfo }
 	from '../controllers/controllers.js';
-import { userInput } from '../schema/userInput.js';
+import { userInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
 
 
@@ -11,10 +11,14 @@ async function userRoutes(fastify, options) {
 		reply.send({ message: 'Hello from user' });
 	});
 
+	// prevalider les tokens JWT ici ?
+
 	// Renvoie un userSchema
 	fastify.post('/guest', createGuest);
 	fastify.post('/signin', { schema: userInput }, signIn);
 	fastify.put('/login', { schema: userInput }, logIn);
+
+	fastify.put('/update', { schema: updateSchema }, updateInfo);
 
 	fastify.put('/logout', { schema: userSchema }, logOut);
 	fastify.delete('/delete', { schema: userSchema }, deleteUser);
@@ -34,7 +38,6 @@ async function userRoutes(fastify, options) {
 
 	// Dédié aux autres dockers 
 	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
-//	fastify.put('/update',{preHandler : [fastify.authentication], schema  : userSchema}, changeStatus);
 //	fastify.get('/vs', checkAvailability)
 }
 

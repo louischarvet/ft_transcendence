@@ -10,10 +10,19 @@ export const userSchema = {
 		  	name: { type: 'string', minLength: 1 },
 			type: {
 				type: 'string',
-				enum: [ 'guest', 'registered' ]
-			},
+				enum: [ 'guest', 'registered' ],
+		  	},
 			status: { type: 'string', minLength: 1 }
 		},
 		additionalProperties: false
+	},
+	response: {
+		200: {
+			type: 'object',
+			properties: {
+			success: { type: 'boolean' },
+			userId: { type: 'string' }
+    		}
+		}
 	}
 }

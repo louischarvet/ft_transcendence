@@ -4,7 +4,7 @@ import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
 import authenticateJWT from './authentication/auth.js'
 import userRoutes from './routes/routes.js';
-import { userInput } from './schema/userInput.js';
+import { userInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 
 const fastify = Fastify({ logger: true });
@@ -30,6 +30,7 @@ fastify.decorate('authentication', authenticateJWT);
 fastify.register(userRoutes);
 // On instencie les Schemas de JSONs
 fastify.addSchema(userInput);
+fastify.addSchema(updateSchema);
 fastify.addSchema(userSchema);
 
 async function start() {

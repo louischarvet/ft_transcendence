@@ -12,3 +12,21 @@ export const userInput = {
 		additionalProperties: false
 	}
 }
+
+export const updateSchema = {
+	$id: 'updateSchema',
+	body: {
+		type: 'object',
+		required: [ 'name', 'password' , 'toUpdate', 'newValue' ],
+		properties: {
+			name: { type: 'string', minLength: 1 },
+			password: { type: 'string', minLength: 8 },
+			toUpdate: {
+				type: 'string',
+				enum: [ 'picture', 'password', 'email', 'telephone' ]
+			},
+			newValue: { type: 'string' }
+		},
+		additionalProperties: false
+	}
+}

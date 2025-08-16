@@ -47,7 +47,13 @@ async function getAvailableUser(name){
 	return user;
 }
 
-// Update States
+// Update Info
+async function updateValue(table, column, name, newValue) {
+	await db.run('UPDATE ' + table + ' SET ' + column + ' = ? WHERE name = ?',
+		[ newValue, name ]);
+}
+
+// Update Status
 async function updateStatus(table, name, newStatus) {
 //	const db = await getDB();
 	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
@@ -59,5 +65,5 @@ async function deleteUserInTable(table, userName) {
 }
 
 export { insertInTable, getUserByName, getUsers,
-	getColumnFromTable, getAvailableUser, insertRevokedToken,
-	isRevokedToken, updateStatus, deleteUserInTable };
+	getColumnFromTable, getAvailableUser, updateValue,
+	insertRevokedToken, isRevokedToken, updateStatus, deleteUserInTable };
