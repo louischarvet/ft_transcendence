@@ -2,7 +2,7 @@
 
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
-import authenticateJWT from './authentication/auth.js'
+//import authenticateJWT from './authentication/auth.js'
 import userRoutes from './routes/routes.js';
 import { userInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
@@ -24,7 +24,7 @@ fastify.register(jwt, {
 	secret: 'secret-key'
 });
 
-fastify.decorate('authentication', authenticateJWT);
+//fastify.decorate('authentication', authenticateJWT);
 
 // On instencie les routes
 fastify.register(userRoutes);

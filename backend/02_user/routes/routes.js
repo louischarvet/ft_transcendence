@@ -1,6 +1,6 @@
 import { createGuest, signIn, logIn, logOut, deleteUser,
-	fetchUserByName, fetchUserStatus, getRandomUser, updateInfo }
-	from '../controllers/controllers.js';
+	fetchUserByName, fetchUserStatus, getRandomUser, updateInfo,
+	addFriend } from '../controllers/controllers.js';
 import { userInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
 
@@ -19,9 +19,12 @@ async function userRoutes(fastify, options) {
 	fastify.put('/login', { schema: userInput }, logIn);
 
 	fastify.put('/update', { schema: updateSchema }, updateInfo);
-
+	
 	fastify.put('/logout', { schema: userSchema }, logOut);
 	fastify.delete('/delete', { schema: userSchema }, deleteUser);
+
+	// Autre service
+	fastify.post('/addfriend/:friendName', { schema: userSchema }, addFriend);
 
 	// Route pour creer un nouvel utilisateur
 //	fastify.post('/register', {schema  : userSchema}, createUser);
@@ -37,7 +40,7 @@ async function userRoutes(fastify, options) {
 
 
 	// Dédié aux autres dockers 
-	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
+//	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
 //	fastify.get('/vs', checkAvailability)
 }
 

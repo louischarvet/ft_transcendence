@@ -56,12 +56,8 @@ export async function revokeToken(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		const decoded = jwt.verify(token, secret);
-		if (await userAndTokenMatch(decoded, request.body)) {
-			await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
-			return reply.code(200).send({ message: 'Token has been revoked' });
-		} else {
-			return reply.code(401).send({ error: "Token and user infos don't match" });
-		}
+		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
+		return reply.code(200).send({ message: 'Token has been revoked' });
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
 	}

@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
 	deleteUserInTable } from '../models/models.js'
+import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
 // rout POST /guest
@@ -16,13 +17,7 @@ export async function createGuest(request, reply) {
 	});
 
 	const user = await getUserByName('guests', name);
-	const response = await fetch('http://session-service:3000/generate', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(user)
-	});
+	const response = await generateJWT(user);
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
 
@@ -55,13 +50,7 @@ export async function signIn(request, reply) {
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
 
-	const response = await fetch('http://session-service:3000/generate', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(user)
-	});
+	const response = await generateJWT(user);
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
 
@@ -82,18 +71,12 @@ export async function logIn(request, reply) {
 		return reply.code(400).send({ error: 'User is not in the database' });
 	else if (exists.status !== 'logged_out')
 		return reply.code(409).send({ error: 'User already logged in.' });
+
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
 		updateStatus('registered', name, 'available');
 
 		const user = await getUserByName('registered', name);
-
-		const response = await fetch('http://session-service:3000/generate', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(user)
-		});
+		const response = await generateJWT(user);
 		const jsonRes = await response.json();
 		const token = jsonRes.token;
 
@@ -108,26 +91,12 @@ export async function logIn(request, reply) {
 
 // Route PUT /logout
 export async function logOut(request, reply) {
-	const bearerToken = request.headers.authorization;
+	const token = request.headers.authorization;
 	const body = request.body;
 
-	const authRes = await fetch('http://session-service:3000/authenticate', {
-		method: 'POST',
-		headers: {
-			'Authorization': bearerToken,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(body)
-	});
+	const authRes = await authenticateJWT(token, body);
 	if (authRes.status == 200) {
-		const revRes = await fetch('http://session-service:3000/revoke', {
-			method: 'POST',
-			headers: {
-				'Authorization': bearerToken,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(body)
-		});
+		const revRes = await revokeJWT(token, body);
 		if (revRes.status == 200) {
 			if (body.type == 'guest')
 				deleteUserInTable('guest', body.name);
@@ -147,26 +116,12 @@ export async function logOut(request, reply) {
 
 // Route DELETE /delete
 export async function deleteUser(request, reply) {
-	const bearerToken = request.headers.authorization;
+	const token = request.headers.authorization;
 	const body = request.body;
 
-	const authRes = await fetch('http://session-service:3000/authenticate', {
-		method: 'POST',
-		headers: {
-			'Authorization': bearerToken,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(body)
-	});
+	const authRes = await authenticateJWT(token, body);
 	if (authRes.status == 200) {
-		const revRes = await fetch('http://session-service:3000/revoke', {
-			method: 'POST',
-			headers: {
-				'Authorization': bearerToken,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(body)
-		});
+		const revRes = await revokeJWT(token, body);
 		if (revRes.status == 200) {
 			deleteUserInTable(body.type, body.name);
 
@@ -183,6 +138,7 @@ export async function deleteUser(request, reply) {
 
 export async function updateInfo(request, reply) {
 	// pic password email telephone
+	const token = request.headers.authorization;
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 
@@ -192,14 +148,7 @@ export async function updateInfo(request, reply) {
 		if (!await bcrypt.compare(password, user.hashedPassword))
 			return reply.code(401).send({ error: 'Bad password' });
 
-		const authRes = await fetch('http://session-service:3000/authenticate', {
-			method: 'POST',
-			headers: {
-				'Authorization': request.headers.authorization,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(user)
-		});
+		const authRes = await authenticateJWT(token, user);
 		if (authRes.status == 200) {
 			const col = toUpdate === 'password' ?
 				'hashedPassword' : toUpdate;
@@ -207,6 +156,7 @@ export async function updateInfo(request, reply) {
 				await bcrypt.hash(password, await bcrypt.genSalt()) : newValue;
 			
 			updateValue('registered', col, name, val);
+
 			return reply.code(200).send({
 				user: await getUserByName('registered', name),
 				message: 'User info updated'
@@ -218,7 +168,29 @@ export async function updateInfo(request, reply) {
 	}
 }
 
+// Autre service ?
+export async function addFriend(request, reply) {
+	const token = request.headers.authorization;
+	const body = request.body;
 
+	// authentication
+
+	const authRes = await authenticateJWT(token, body);
+	if (authRes.status == 200) {
+		// addFriend
+		const { friendName } = request.params;
+		if (friendName === undefined)
+			return reply.code(401).send({ error: 'friendName is missing' });
+
+		const friend = getUserByName('registered', friendName);
+		if (friend === undefined)
+			return reply.code(401).send({ error: 'Friend not found' });
+
+		// envoyer une demande d'amis
+
+	} else
+		return authRes;
+}
 
 
 
