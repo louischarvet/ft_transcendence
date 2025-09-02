@@ -5,18 +5,22 @@ const secret = 'secret-key';
 
 // Route POST /generate
 export async function generateToken(request, reply) {
-	const { name, type, id } = request.body;
+	const { name, type, id, hashedPassword } = request.body;
 	const token = await jwt.sign({
 		name: name,
 		type: type,
-		id: id
+		id: id,
+	//	hashedPassword: hashedPassword
 	},
 		secret,
 		{ expiresIn : '2h' }
 	);
 
+	const iat = (jwt.verify(token, secret)).iat;
+
 	return reply.code(200).send({
 		token: token,
+		iat: iat,
 		message: 'JWT created'
 	})
 }
@@ -55,7 +59,7 @@ export async function revokeToken(request, reply) {
 		if (await isInTable('revoked_tokens', 'token', token))
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
-		const decoded = jwt.verify(token, secret);
+		const decoded = await jwt.verify(token, secret);
 		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
 		return reply.code(200).send({ message: 'Token has been revoked' });
 	} catch (err) {

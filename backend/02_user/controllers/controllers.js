@@ -21,6 +21,9 @@ export async function createGuest(request, reply) {
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
 
+	// update value: iat du token -> jwt_time user
+	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
+
 	return reply.code(201).send({
 		user,
 		token,
@@ -153,8 +156,8 @@ export async function updateInfo(request, reply) {
 			const col = toUpdate === 'password' ?
 				'hashedPassword' : toUpdate;
 			const val = toUpdate === 'password' ?
-				await bcrypt.hash(password, await bcrypt.genSalt()) : newValue;
-			
+				await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
+
 			updateValue('registered', col, name, val);
 
 			return reply.code(200).send({

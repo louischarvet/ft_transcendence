@@ -20,3 +20,6 @@ Tokens JWT >
 	> si revoques, on verifie dans la BD si la date d'expiration
 		est atteinte
 	> si oui, on supprime le token
+
+	stocker l'iat du token dans les infos du user, comparer les
+	deux pour l'authentification

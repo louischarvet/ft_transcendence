@@ -8,7 +8,8 @@ const db = await getDB();
 export async function userAndTokenMatch(token, user) {
 	return (token.name === user.name
 		&& token.id === user.id
-		&& token.type === user.type	);
+		&& token.type === user.type
+		&& token.iat === user.iat);
 }
 
 export async function insertInTable(table, toInsert) {

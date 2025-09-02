@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS registered (
 	wins INTEGER NOT NULL DEFAULT 0,
 	losses INTEGER NOT NULL DEFAULT 0,
 
+	jwt_time INTEGER DEFAULT NULL,
+
 	picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
 	hashedPassword TEXT NOT NULL,
 	email TEXT,
@@ -19,6 +21,8 @@ CREATE TABLE IF NOT EXISTS guest (
 	status TEXT NOT NULL DEFAULT "available",
 	wins INTEGER NOT NULL DEFAULT 0,
 	losses INTEGER NOT NULL DEFAULT 0,
+
+	jwt_time INTEGER DEFAULT NULL,
 
 	pic TEXT NOT NULL DEFAULT "./pictures/BG.webp"
 );
