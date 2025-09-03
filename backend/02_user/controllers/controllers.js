@@ -23,6 +23,7 @@ export async function createGuest(request, reply) {
 
 	// update value: iat du token -> jwt_time user
 	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
+	user.jwt_time = jsonRes.iat;
 
 	return reply.code(201).send({
 		user,
@@ -56,6 +57,9 @@ export async function signIn(request, reply) {
 	const response = await generateJWT(user);
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
+
+	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
+	user.jwt_time = jsonRes.iat;
 
 	return reply.code(201).send({
 		user,
@@ -145,30 +149,42 @@ export async function updateInfo(request, reply) {
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 
-	try {
 		const user = await getUserByName('registered', name);
+	//	console.log("//////// pre USER\n", user, "\n");
 
 		if (!await bcrypt.compare(password, user.hashedPassword))
 			return reply.code(401).send({ error: 'Bad password' });
 
+		// authentication en preHandler
 		const authRes = await authenticateJWT(token, user);
 		if (authRes.status == 200) {
+			
 			const col = toUpdate === 'password' ?
 				'hashedPassword' : toUpdate;
 			const val = toUpdate === 'password' ?
 				await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
 
+			// verifier si le nom existe deja
+			if (toUpdate === 'name'
+				&& await getUserByName('registered', newValue))
+				return reply.code(401).send({ error: 'Name is already taken' });
+
 			updateValue('registered', col, name, val);
 
+			const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
+			console.log("/// newUser\n", newUser, "///\n");
+			const retObj = {
+					id: newUser.id,
+					name: newUser.name,
+					type: newUser.type,
+					status: newUser.status };
+
 			return reply.code(200).send({
-				user: await getUserByName('registered', name),
+				user: retObj,
 				message: 'User info updated'
 			});
 		} else
 			return authRes;
-	} catch (err) {
-		console.log(err); ////
-	}
 }
 
 // Autre service ?

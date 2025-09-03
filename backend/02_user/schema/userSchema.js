@@ -15,14 +15,5 @@ export const userSchema = {
 			status: { type: 'string', minLength: 1 }
 		},
 		additionalProperties: false
-	},
-	response: {
-		200: {
-			type: 'object',
-			properties: {
-			success: { type: 'boolean' },
-			userId: { type: 'string' }
-    		}
-		}
 	}
 }

@@ -7,7 +7,7 @@ const secret = 'secret-key';
 export async function generateToken(request, reply) {
 	const { name, type, id, hashedPassword } = request.body;
 	const token = await jwt.sign({
-		name: name,
+//		name: name,
 		type: type,
 		id: id,
 	//	hashedPassword: hashedPassword
@@ -36,6 +36,7 @@ export async function authenticateUser(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		const decoded = await jwt.verify(token, secret);
+	//	console.log("//// body\n", request.body);
 		if (await userAndTokenMatch(decoded, request.body)) {
 			return reply.code(200).send({
 				user: decoded,

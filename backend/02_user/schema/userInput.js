@@ -23,7 +23,7 @@ export const updateSchema = {
 			password: { type: 'string', minLength: 8 },
 			toUpdate: {
 				type: 'string',
-				enum: [ 'picture', 'password', 'email', 'telephone' ]
+				enum: [ 'name', 'picture', 'password', 'email', 'telephone' ]
 			},
 			newValue: { type: 'string' }
 		},

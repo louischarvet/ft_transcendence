@@ -12,6 +12,7 @@ export async function generateJWT(user) {
 }
 
 export async function authenticateJWT(token, body) {
+//	console.log("//// body\n", body);
 	const authRes = await fetch('http://session-service:3000/authenticate', {
 		method: 'POST',
 		headers: {
