@@ -23,3 +23,5 @@ Tokens JWT >
 
 	stocker l'iat du token dans les infos du user, comparer les
 	deux pour l'authentification
+
+	

@@ -20,11 +20,28 @@ services:
       file: ./backend/docker-compose.yml
       service: tournament-service
 
+  session-service:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: session-service
+      
   # Service du frontend
   frontend:
-    extends:
-      file: ./frontend/docker-compose.yml
-      service: frontend
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    networks:
+      - transcendence-net
+    restart: on-failure
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    depends_on:
+      - proxy-service
 
 networks:
   transcendence-net:

@@ -5,12 +5,11 @@ const secret = 'secret-key';
 
 // Route POST /generate
 export async function generateToken(request, reply) {
-	const { name, type, id, hashedPassword } = request.body;
+	const { name, type, id } = request.body;
 	const token = await jwt.sign({
-//		name: name,
+		name: name,
 		type: type,
 		id: id,
-	//	hashedPassword: hashedPassword
 	},
 		secret,
 		{ expiresIn : '2h' }

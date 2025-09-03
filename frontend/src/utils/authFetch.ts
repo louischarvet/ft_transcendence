@@ -1,40 +1,23 @@
-// frontend/src/utils/authFetch.ts
+export async function authFetch(path: string, opts: RequestInit = {}) {
+  const base = (import.meta as any).env?.VITE_API_URL || '';
+  const url = base + path;
+  const defaultOpts: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+  const finalOpts: RequestInit = Object.assign({}, defaultOpts, opts);
+  if (finalOpts.body && typeof finalOpts.body === 'object')
+    finalOpts.body = JSON.stringify(finalOpts.body as any);
 
-// pour genérer des requêtes authentifiées avec un token JWT
-export async function authFetch(input: RequestInfo, init?: RequestInit, retry = true) {
+  const res = await fetch(url, finalOpts);
+  const text = await res.text();
+  let json: any = null;
+  try { json = text ? JSON.parse(text) : null; } catch (e) { json = null; }
+  if (!res.ok) throw { status: res.status, body: json ?? text };
+  return json;
+}
 
-	// Récupérer le token depuis localStorage
-	const token = localStorage.getItem('token');
-
-	// Si le token n'existe pas, on ne peut pas faire de requête authentifiée
-	const headers = new Headers(init?.headers);
-
-	if (token) 
-		headers.set('Authorization', `Bearer ${token}`);
-
-	const fetchInit = { ...init, headers };
-
-	let response = await fetch(input, fetchInit);
-
-	if (response.status === 401) {
-		// tentative de refresh token (à adapter selon ton backend)
-		const refreshResponse = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-
-		if (refreshResponse.ok) {
-			const { token: newToken } = await refreshResponse.json();
-			if (newToken) {
-				localStorage.setItem('token', newToken);
-				headers.set('Authorization', `Bearer ${newToken}`);
-				response = await fetch(input, { ...init, headers });
-			} else {
-				localStorage.removeItem('token');
-				throw new Error('Token refresh failed');
-			}
-		} else {
-			localStorage.removeItem('token');
-			throw new Error('Token refresh failed');
-		}
-	}
-
-	return response;
+export async function postJson(path: string, body: object) {
+  return authFetch(path, { method: 'POST', body: body as any });
 }
