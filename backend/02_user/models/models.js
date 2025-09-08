@@ -47,6 +47,8 @@ async function getAvailableUser(name){
 	return user;
 }
 
+// Get pour 
+
 // Update Info
 async function updateValue(table, column, name, newValue) {
 	await db.run('UPDATE ' + table + ' SET ' + column + ' = ? WHERE name = ?',

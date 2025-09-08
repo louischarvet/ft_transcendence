@@ -4,6 +4,8 @@ import { insertInTable, getUserByName, getUsers, updateValue,
 	deleteUserInTable } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
+import fs from 'fs';
+import path from 'path';
 
 // rout POST /guest
 export async function createGuest(request, reply) {
@@ -98,117 +100,151 @@ export async function logIn(request, reply) {
 
 // Route PUT /logout
 export async function logOut(request, reply) {
-	const token = request.headers.authorization;
 	const body = request.body;
 
-	const authRes = await authenticateJWT(token, body);
-	if (authRes.status == 200) {
-		const revRes = await revokeJWT(token, body);
-		if (revRes.status == 200) {
-			if (body.type == 'guest')
-				deleteUserInTable('guest', body.name);
-			else
-				updateStatus(body.type, body.name, 'logged_out');
+	const revRes = await revokeJWT(request.headers.authorization, body);
+	if (revRes.status == 200) {
+		if (body.type == 'guest')
+			deleteUserInTable('guest', body.name);
+		else
+			updateStatus(body.type, body.name, 'logged_out');
 
-			return reply.code(201).send({
-				message: "Successfully logged out."
-			});
-		} else {
-			return revRes;
-		}
-	} else {
-		return authRes;
-	}
+		return reply.code(201).send({
+			message: "Successfully logged out."
+		});
+	} else
+		return revRes;
 }
 
 // Route DELETE /delete
 export async function deleteUser(request, reply) {
-	const token = request.headers.authorization;
 	const body = request.body;
 
-	const authRes = await authenticateJWT(token, body);
-	if (authRes.status == 200) {
-		const revRes = await revokeJWT(token, body);
-		if (revRes.status == 200) {
-			deleteUserInTable(body.type, body.name);
+	const revRes = await revokeJWT(token, body);
+	if (revRes.status == 200) {
+		deleteUserInTable(body.type, body.name);
 
-			return reply.code(200).send({
-				message: "User successfully deleted."
-			});
-		} else {
-			return revRes;
-		}
-	} else {
-		return authRes;
+		return reply.code(200).send({
+			message: "User successfully deleted."
+		});
 	}
+	else
+		return revRes;
 }
 
 export async function updateInfo(request, reply) {
 	// pic password email telephone
-	const token = request.headers.authorization;
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 
-		const user = await getUserByName('registered', name);
-	//	console.log("//////// pre USER\n", user, "\n");
+	const user = await getUserByName('registered', name);
 
-		if (!await bcrypt.compare(password, user.hashedPassword))
-			return reply.code(401).send({ error: 'Bad password' });
+	if (!await bcrypt.compare(password, user.hashedPassword))
+		return reply.code(401).send({ error: 'Bad password' });
+		
+	const col = toUpdate === 'password' ?
+		'hashedPassword' : toUpdate;
+	const val = toUpdate === 'password' ?
+		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
 
-		// authentication en preHandler
-		const authRes = await authenticateJWT(token, user);
-		if (authRes.status == 200) {
-			
-			const col = toUpdate === 'password' ?
-				'hashedPassword' : toUpdate;
-			const val = toUpdate === 'password' ?
-				await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
+	// verifier si le nom existe deja
+	if (toUpdate === 'name'
+		&& await getUserByName('registered', newValue))
+		return reply.code(401).send({ error: 'Name is already taken' });
 
-			// verifier si le nom existe deja
-			if (toUpdate === 'name'
-				&& await getUserByName('registered', newValue))
-				return reply.code(401).send({ error: 'Name is already taken' });
+	updateValue('registered', col, name, val);
 
-			updateValue('registered', col, name, val);
+	const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
+	console.log("/// newUser\n", newUser, "///\n");
+	const retObj = {
+			id: newUser.id,
+			name: newUser.name,
+			type: newUser.type,
+			status: newUser.status };
 
-			const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
-			console.log("/// newUser\n", newUser, "///\n");
-			const retObj = {
-					id: newUser.id,
-					name: newUser.name,
-					type: newUser.type,
-					status: newUser.status };
-
-			return reply.code(200).send({
-				user: retObj,
-				message: 'User info updated'
-			});
-		} else
-			return authRes;
+	return reply.code(200).send({
+		user: retObj,
+		message: 'User info updated'
+	});
 }
+
+export async function updateAvatar(request, reply) {
+	const user = request.user;
+	if (!user)
+		return reply.code(401).send({ error: 'Unauthorized' });
+
+	console.log("UpdateAvatar \n");
+	console.log("\t//USER\n", user, "\t//END USER\n");
+	console.log("Request headers:", request.headers);
+
+	const data = await request.file();
+	if (!data)
+		return reply.code(400).send({ error: 'No file uploaded' });
+
+	const uploadDir = path.join(process.cwd(), 'pictures');
+	if (!fs.existsSync(uploadDir))
+		fs.mkdirSync(uploadDir, { recursive: true });
+
+	if (user.picture && fs.existsSync(user.picture))
+		fs.unlinkSync(user.picture);
+
+	const ext = path.extname(data.filename);
+	const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
+	const filePath = path.join(uploadDir, fileName);
+
+	const buffer = await data.toBuffer();
+	fs.writeFileSync(filePath, buffer);
+
+	const relativePath = `./pictures/${fileName}`;
+	await updateValue('registered', 'picture', user.name, relativePath);
+
+	return reply.code(200).send({
+		message: 'Avatar updated successfully',
+		picture: relativePath
+	});
+}
+
+
 
 // Autre service ?
 export async function addFriend(request, reply) {
-	const token = request.headers.authorization;
+	// Auth deja faite et token deja verifier
+	// request.params cest l'amis a ajouter
+
 	const body = request.body;
+	console.log("body dans addFriend :", body);
+	const name  = body.name;
+	if (name === undefined)
+		return reply.code(401).send({ error: 'Name is missing' });
 
-	// authentication
+	const user = await getUserByName('registered', name);
+	if (!user) 
+		return reply.code(401).send({ error: 'User not found' });
 
-	const authRes = await authenticateJWT(token, body);
-	if (authRes.status == 200) {
-		// addFriend
-		const { friendName } = request.params;
-		if (friendName === undefined)
-			return reply.code(401).send({ error: 'friendName is missing' });
+	const { friendName } = request.params;
+	if (friendName === undefined)
+		return reply.code(401).send({ error: 'friendName is missing' });
 
-		const friend = getUserByName('registered', friendName);
-		if (friend === undefined)
-			return reply.code(401).send({ error: 'Friend not found' });
+	const friend = await getUserByName('registered', friendName);
+	if (!friend) 
+		return reply.code(401).send({ error: 'User friend not found' });
 
-		// envoyer une demande d'amis
+	
+	let friendListString = user.friend_ship || "";
+	//split en tableau sans ; pour verifier apres si l'ami est deja dans la liste en js
+	const friendList = friendListString ? friendListString.split(";").filter(f => f) : [];
+	console.log("friendList :", friendList);
 
-	} else
-		return authRes;
+	//verifier si l'ami est deja dans la liste
+	if (friendList.includes(String(friend.id)))
+		return reply.code(409).send({ error: 'Friend already in the list' });
+
+	const col = 'friend_ship';
+	const val = friendListString + friend.id + ";";
+
+	//ajouter via la methode updateValue
+	await updateValue('registered', col, name, val);
+    return reply.code(200).send({ message: `Friend ${friendName} added.` });
 }
 
 

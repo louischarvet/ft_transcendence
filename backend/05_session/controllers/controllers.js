@@ -35,7 +35,6 @@ export async function authenticateUser(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		const decoded = await jwt.verify(token, secret);
-	//	console.log("//// body\n", request.body);
 		if (await userAndTokenMatch(decoded, request.body)) {
 			return reply.code(200).send({
 				user: decoded,
@@ -51,7 +50,7 @@ export async function authenticateUser(request, reply) {
 
 // Route POST /revoke
 export async function revokeToken(request, reply) {
-	const token = request.headers.authorization?.split(' ')[1];
+	const token = request.headers.authorization.split(' ')[1];
 	if (!token)
 		return reply.code(401).send({ error: 'Missing token' });
 

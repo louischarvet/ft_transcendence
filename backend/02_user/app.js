@@ -7,6 +7,9 @@ import userRoutes from './routes/routes.js';
 import { userInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 
+import { authenticateJWT } from "./authentication/auth.js";
+import fastifyMultipart from '@fastify/multipart';
+
 const fastify = Fastify({ logger: true });
 
 
@@ -21,13 +24,16 @@ fastify.register(fastifyCors, {
 
 // Authentification par token
 fastify.register(jwt, {
-	secret: 'secret-key'
+	secret: 'secret-key' //! A modifier -- >.env
 });
+
+//fastify.addHook('preHandler', authenticateJWT);
 
 //fastify.decorate('authentication', authenticateJWT);
 
-// On instencie les routes
+fastify.register(fastifyMultipart);
 fastify.register(userRoutes);
+
 // On instencie les Schemas de JSONs
 fastify.addSchema(userInput);
 fastify.addSchema(updateSchema);
