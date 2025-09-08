@@ -1,10 +1,10 @@
 import { generateToken, authenticateUser, revokeToken, pruneExpiredTokens } from '../controllers/controllers.js'
-//import { sessionInput } from '../schema/sessionInput.js';
+import { sessionInput } from '../schema/sessionInput.js';
 import { userSchema } from '../schema/userSchema.js'
 
 export async function sessionRoutes(fastify, options) {
 	// generer un token
-	fastify.post('/generate', { schema: userSchema }, generateToken);
+	fastify.post('/generate', { schema: sessionInput }, generateToken);
 	// verifier un token // joindre un userSchema
 	// et verifier la correspondance du name avec le token ?
 	fastify.post('/authenticate', { schema: userSchema }, authenticateUser);

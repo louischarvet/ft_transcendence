@@ -1,9 +1,9 @@
 import { createGuest, signIn, logIn, logOut, deleteUser,
-	fetchUserByName, fetchUserStatus, getRandomUser, updateInfo,
+	fetchUserByName, fetchUserStatus, updateAvatar, updateInfo,
 	addFriend } from '../controllers/controllers.js';
 import { userInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
-
+import { authenticateJWT } from '../authentication/auth.js';
 
 // On définit les routes pour l'API user
 async function userRoutes(fastify, options) {
@@ -18,13 +18,14 @@ async function userRoutes(fastify, options) {
 	fastify.post('/signin', { schema: userInput }, signIn);
 	fastify.put('/login', { schema: userInput }, logIn);
 
-	fastify.put('/update', { schema: updateSchema }, updateInfo);
-	
-	fastify.put('/logout', { schema: userSchema }, logOut);
-	fastify.delete('/delete', { schema: userSchema }, deleteUser);
+	fastify.put('/update',{preHandler: authenticateJWT , schema: updateSchema },  updateInfo);
+	fastify.put('/updateAvatar',{preHandler: authenticateJWT},  updateAvatar);
+
+	fastify.put('/logout', {preHandler: authenticateJWT , schema: userSchema },  logOut);
+	fastify.delete('/delete', {preHandler: authenticateJWT , schema: userSchema },  deleteUser);
 
 	// Autre service
-	fastify.post('/addfriend/:friendName', { schema: userSchema }, addFriend);
+	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT , schema: userSchema },  addFriend);
 
 	// Route pour creer un nouvel utilisateur
 //	fastify.post('/register', {schema  : userSchema}, createUser);

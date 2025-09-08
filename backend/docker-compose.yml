@@ -23,6 +23,8 @@ services:
     networks:
       - transcendence-net
     restart: unless-stopped
+    volumes:
+    - ./02_user/pictures:/usr/src/app/pictures
 #    command: npm run dev
 
 

@@ -6,16 +6,17 @@
   "main": "app.js",
   "author": "TRIJAUD Nathan",
   "dependencies": {
-	"fastify": "^4.23.2",
-	"sqlite3": "^5.1.6",
-	"sqlite": "^4.2.1",
-	"node-fetch": "^3.3.2",
-	"@fastify/cors": "^8.2.0",
-	"@fastify/jwt": "^7.2.0"
+    "fastify": "^4.23.2",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^4.2.1",
+    "node-fetch": "^3.3.2",
+    "@fastify/cors": "^8.2.0",
+    "@fastify/jwt": "^7.2.0",
+    "@fastify/multipart": "^7.0.0"
   },
   "scripts": {
     "start": "node app.js",
-	"dev": "nodemon app.js",
+    "dev": "nodemon app.js",
     "test": "jest"
   }
 }

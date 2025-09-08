@@ -6,11 +6,11 @@ const db = await getDB();
 
 // Maybe elsewhere
 export async function userAndTokenMatch(token, user) {
-//	console.log("/// TOKEN\n", token, "/// USER\n", user, "\n");
+	//console.log("/// TOKEN\n", token, "/// USER\n", user, "\n");
 	return (token.name === user.name
 		&& token.id === user.id
 		&& token.type === user.type
-		&& token.iat === user.jwt_time);
+		&& token.iat >= user.jwt_time);
 }
 
 export async function insertInTable(table, toInsert) {

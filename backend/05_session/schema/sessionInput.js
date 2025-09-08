@@ -4,9 +4,10 @@ export const sessionInput = {
 	$id: 'sessionInput',
 	body: {
 		type: 'object',
-		required: [ 'name', 'type' ],
+		required: [ 'name', 'type', 'id' ],
 		properties: {
 			name: { type: 'string' },
+			id: { type: 'integer' },
 			type: {
 				type: 'string',
 				enum: [ 'guest', 'registered' ]
