@@ -12,6 +12,7 @@ RUN apt-get install sqlite3 -y
 RUN npm install @fastify/jwt
 RUN npm install jsonwebtoken
 RUN npm install fastify-cron
+RUN npm install speakeasy
 
 COPY . .
 
