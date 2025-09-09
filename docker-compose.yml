@@ -24,6 +24,10 @@ services:
     extends:
       file: ./backend/docker-compose.yml
       service: session-service
+  twofa-service:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: twofa-service      
       
   # Service du frontend
   frontend:

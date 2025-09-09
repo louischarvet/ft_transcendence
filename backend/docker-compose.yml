@@ -68,6 +68,18 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+  twofa-service:
+
+    build: ./06_twofa
+    container_name: twofa-service
+    expose:
+      - "3000"
+    working_dir: /usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+    depends_on:
+      - user-service
 
 networks:
   transcendence-net:

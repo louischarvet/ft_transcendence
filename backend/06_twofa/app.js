@@ -2,9 +2,11 @@
 
 import Fastify from 'fastify';
 import twoFARoutes from './routes/routes.js';
+import { initDB } from './database/database.js';
 
 const fastify = Fastify({ logger: true });
 
+fastify.register(initDB);
 fastify.register(twoFARoutes);
 
 async function start() {

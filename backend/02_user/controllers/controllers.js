@@ -3,6 +3,7 @@ import { insertInTable, getUserByName, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
 	deleteUserInTable } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 
 // rout POST /guest
@@ -34,8 +35,9 @@ export async function createGuest(request, reply) {
 
 // route POST /register
 export async function signIn(request, reply) {
-	const { name, password } = request.body;
+	const { name, password, email} = request.body;
 
+	// if email === undefined va te foutre
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 	
@@ -48,22 +50,28 @@ export async function signIn(request, reply) {
 
 	await insertInTable('registered', {
 		name: name,
-		hashedPassword: hashedPassword
+		hashedPassword: hashedPassword,
+		email: email,
 	});
 
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
 
-	const response = await generateJWT(user);
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
+	await sendCode({
+		name: user.name,
+		email: user.email,
+		id: user.id
+	});
+	//const response = await generateJWT(user);
+	//const jsonRes = await response.json();
+	//const token = jsonRes.token;
 
-	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
-	user.jwt_time = jsonRes.iat;
+	//await updateValue('registered', 'jwt_time', name, jsonRes.iat);
+	//user.jwt_time = jsonRes.iat;
 
 	return reply.code(201).send({
 		user,
-		token,
+		//token,
 		message: 'User created'
 	});
 }

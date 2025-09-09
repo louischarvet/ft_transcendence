@@ -7,7 +7,8 @@ export const userInput = {
 		required: ['name', 'password'],
 		properties: {
 			name: { type: 'string', minLength: 1 },
-			password: { type: 'string', minLength: 8 }
+			password: { type: 'string', minLength: 8 },
+			email: { type: 'string', minLength: 8 } // TODO parsing mail
 		},
 		additionalProperties: false
 	}

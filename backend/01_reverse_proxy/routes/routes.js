@@ -20,6 +20,11 @@ async function routesPlugin(fastify, options) {
 		prefix: '/tournament',
 		rewritePrefix: '/',
 	});
+	fastify.register(fastifyHttpProxy, {
+		upstream: "http://twofa-service:3000",
+		prefix: '/twofa',
+		rewritePrefix: '/',
+	});	
 /*	fastify.get('/auth', async (request, reply) => {
 		try {
 			const response = await fetch('http://auth:3001/data');
