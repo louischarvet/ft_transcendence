@@ -7,9 +7,9 @@ export async function sessionRoutes(fastify, options) {
 	fastify.post('/generate', { schema: sessionInput }, generateToken);
 	// verifier un token // joindre un userSchema
 	// et verifier la correspondance du name avec le token ?
-	fastify.post('/authenticate', { schema: userSchema }, authenticateUser);
+	fastify.post('/authenticate', authenticateUser);
 	// revoquer un token (le rendre inactif an attendant son expiration)
-	fastify.post('/revoke', { schema: userSchema }, revokeToken);
+	fastify.post('/revoke', revokeToken);
 
 	// route test pour supprimer les JWT expires
 	fastify.get('/test', pruneExpiredTokens);

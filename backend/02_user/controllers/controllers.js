@@ -23,10 +23,6 @@ export async function createGuest(request, reply) {
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
 
-	// update value: iat du token -> jwt_time user
-	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
-	user.jwt_time = jsonRes.iat;
-
 	return reply.code(201).send({
 		user,
 		token,
@@ -59,9 +55,6 @@ export async function signIn(request, reply) {
 	const response = await generateJWT(user);
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
-
-	await updateValue('registered', 'jwt_time', name, jsonRes.iat);
-	user.jwt_time = jsonRes.iat;
 
 	return reply.code(201).send({
 		user,
@@ -102,7 +95,7 @@ export async function logIn(request, reply) {
 export async function logOut(request, reply) {
 	const body = request.body;
 
-	const revRes = await revokeJWT(request.headers.authorization, body);
+	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
 		if (body.type == 'guest')
 			deleteUserInTable('guest', body.name);
@@ -112,8 +105,9 @@ export async function logOut(request, reply) {
 		return reply.code(201).send({
 			message: "Successfully logged out."
 		});
-	} else
+	} else {
 		return revRes;
+	}
 }
 
 // Route DELETE /delete
@@ -139,6 +133,7 @@ export async function updateInfo(request, reply) {
 
 	const user = await getUserByName('registered', name);
 
+	console.log("/// HASHED PASS in functuon updateInfos\n", user);
 	if (!await bcrypt.compare(password, user.hashedPassword))
 		return reply.code(401).send({ error: 'Bad password' });
 		
@@ -152,7 +147,7 @@ export async function updateInfo(request, reply) {
 		&& await getUserByName('registered', newValue))
 		return reply.code(401).send({ error: 'Name is already taken' });
 
-	updateValue('registered', col, name, val);
+	await updateValue('registered', col, name, val);
 
 	const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
 	console.log("/// newUser\n", newUser, "///\n");
