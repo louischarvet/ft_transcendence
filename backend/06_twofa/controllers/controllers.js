@@ -14,6 +14,8 @@ const secret = speakeasy.generateSecret({ length: 20 });
 
 // Generation du code (one time password)
 async function generateCode() {
+	console.log("################################### SECRET\n",
+		secret.base32, "##########################################\n");
 	return (await speakeasy.totp({
 		secret: secret.base32,
 		encoding: 'base32'
@@ -33,8 +35,10 @@ async function sendMail(name, email, code) {
 	await transporter.sendMail({
 		from: `"2FA Service" <` + process.env.USR_ADDR + `>`,
  		to: email,
- 		subject: `This is a test`,
- 		text: `Hello.` + code
+ 		subject: `2FA authentification ft_transcendence`,
+ 		text: `Hello ` + name
+			+ ",\nPlease enter the code below to achieve your sigin:\n" + code
+			+ "\n\nThank you and see you soon on ft_transcendence !"
  	});
 }
 
@@ -71,6 +75,9 @@ export async function sendCode(request, reply) {
 
 // Route POST pour verifier le code généré
 export async function verifyCode(request, reply) {
+	// console.log("################################# REQUEST VERIFYCODE\n",
+	// 	request.headers, "####################################################\n"
+	// );
 	const { code, id, name } = request.body;
 	const codeToCompare = await getFromTable(id);
 	if (codeToCompare === undefined)
@@ -87,6 +94,20 @@ export async function verifyCode(request, reply) {
 	const jsonRes = await response.json();
 	const token = jsonRes.token;
 	await deleteInTable(id);
+
+	// Changer le status dans user-service: pending -> available
+	await fetch('http://user-service:3000/change', {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/JSON'
+		},
+		body: {
+			name: name,
+			id: id,
+			status: 'available',
+		},
+	})
+
 	return reply.code(201).send({
 		token,
 		message: 'User verified'

@@ -4,7 +4,7 @@ export const userInput = {
 	$id: 'userInput',
 	body: {
 		type: 'object',
-		required: ['name', 'password'],
+		required: ['name', 'password', 'email'],
 		properties: {
 			name: { type: 'string', minLength: 1 },
 			password: { type: 'string', minLength: 8 },

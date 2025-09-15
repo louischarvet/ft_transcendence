@@ -42,6 +42,10 @@ async function userRoutes(fastify, options) {
 	// Dédié aux autres dockers 
 //	fastify.get('/random', {preHandler : [fastify.authentication]}, getRandomUser);
 //	fastify.get('/vs', checkAvailability)
+
+	// Utilisee par le service 2fa, probablement par match ou game plus tard
+	// Route a proteger !
+	fastify.put('/changestatus', changeStatus);
 }
 
 export default userRoutes;
