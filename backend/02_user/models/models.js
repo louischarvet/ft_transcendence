@@ -18,8 +18,8 @@ async function insertInTable(table, toInsert) {
 	const name = toInsert.name;
 	if (toInsert.hashedPassword) { // signin -- with password
 		const hashedPassword = toInsert.hashedPassword;
-		await db.run("INSERT INTO " + table + "(name, hashedPassword) VALUES (?, ?)",
-			[name, hashedPassword]);
+		await db.run("INSERT INTO " + table + "(name, hashedPassword, email) VALUES (?, ?, ?)",
+			[name, hashedPassword, toInsert.email]);
 	} else // guest -- no password
 		await db.run("INSERT INTO " + table + "(name) VALUES (?)",
 			[name]);

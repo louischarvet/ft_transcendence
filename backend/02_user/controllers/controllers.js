@@ -3,6 +3,7 @@ import { insertInTable, getUserByName, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
 	deleteUserInTable } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
 import fs from 'fs';
 import path from 'path';
@@ -32,8 +33,9 @@ export async function createGuest(request, reply) {
 
 // route POST /register
 export async function signIn(request, reply) {
-	const { name, password } = request.body;
+	const { name, password, email} = request.body;
 
+	// if email === undefined va te foutre
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 	
@@ -46,26 +48,28 @@ export async function signIn(request, reply) {
 
 	await insertInTable('registered', {
 		name: name,
-		hashedPassword: hashedPassword
+		hashedPassword: hashedPassword,
+		email: email,
 	});
 
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
 
-	const response = await generateJWT(user);
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
+	await sendCode({
+		name: user.name,
+		email: user.email,
+		id: user.id
+	});
 
 	return reply.code(201).send({
 		user,
-		token,
 		message: 'User created'
 	});
 }
 
 // route PUT /login
 export async function logIn(request, reply) {
-	const { name, password } = request.body;
+	const { name, password, email } = request.body;
 
 	const exists = await getUserByName('registered', name);
 
@@ -75,16 +79,19 @@ export async function logIn(request, reply) {
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		updateStatus('registered', name, 'available');
+		updateStatus('registered', name, 'pending');
 
 		const user = await getUserByName('registered', name);
-		const response = await generateJWT(user);
-		const jsonRes = await response.json();
-		const token = jsonRes.token;
+		delete user.hashedPassword;
 
+		await sendCode({
+			name: user.name,
+			email: user.email,
+			id: user.id
+		});
+		
 		return reply.code(202).send({
 			user,
-			token,
 			message: 'User logged in'
 		});
 	} else
