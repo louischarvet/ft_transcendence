@@ -24,4 +24,16 @@ Tokens JWT >
 	stocker l'iat du token dans les infos du user, comparer les
 	deux pour l'authentification
 
-	
+---------------------------------------------------
+
+data persistante :
+
+USER:
+
+{
+	token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MDI1OTEzLCJleHAiOjE3NTgwMzMxMTN9.bkBrpYU9Z4UPC6jtoOQf7Ec5Z1lGsa_jGFx9XXtofOs
+	"id": 1,
+    "email": "trijaudnathan@gmail.com",
+    "type" : "registered",
+    "name": "Nathan"
+}

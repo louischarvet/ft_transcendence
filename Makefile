@@ -1,3 +1,11 @@
+backend_file=backend/docker-compose.yml
+
+backend:
+	@docker compose -f $(backend_file) up --build
+
+backend-clean:
+	@echo "Stopping running containers..."
+	@docker compose -f $(backend_file) down -v 
 up:
 	@docker compose up --build
 
@@ -47,3 +55,5 @@ fclean: clean
 
 re: clean up
 fre: fclean up
+
+.PHONY: backend backend-clean up down build start stop restart image logs ps clean fclean re fre

@@ -50,3 +50,10 @@ services:
 networks:
   transcendence-net:
     driver: bridge
+
+volumes:
+  user_db:
+  match_db:
+  tournament_db:
+  session_db:
+  twofa_db:

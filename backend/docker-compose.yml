@@ -25,6 +25,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./02_user/pictures:/usr/src/app/pictures
+    - ./02_user/data:/usr/src/app/data/
 #    command: npm run dev
 
 
@@ -40,6 +41,8 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+    #volumes:
+      #- match_db:/usr/src/app/data
 #    command: npm run dev
 
 
@@ -56,6 +59,8 @@ services:
     depends_on:
       - user-service
       - match-service
+    #volumes:
+      #- tournament_db:/usr/src/app/data
 #    command: npm run dev
 
   session-service:
@@ -70,6 +75,9 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+    #volumes:
+      #- session_db:/usr/src/app/data
+
   twofa-service:
 
     build: ./06_twofa
@@ -82,7 +90,16 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+    #volumes:
+      #- twofa_db:/usr/src/app/data
 
 networks:
   transcendence-net:
     driver: bridge
+
+volumes:
+  user_db:
+  #match_db:
+  #tournament_db:
+  #session_db:
+  #twofa_db:

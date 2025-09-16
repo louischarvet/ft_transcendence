@@ -2,6 +2,11 @@
 import { getUserByName } from "../models/models.js";
 
 export async function generateJWT(user) {
+
+	//! ajout 16/09/2025
+	if (!user)
+		return { status: 400, error: 'Bad Request: User information is incomplete' };
+	
 	const genRes = await fetch('http://session-service:3000/generate', {
 		method: 'POST',
 		headers: {
@@ -16,6 +21,10 @@ export async function generateJWT(user) {
 export async function authenticateJWT(request, reply) {
     console.log("authenticateJWT");
 
+	//! ajout 16/09/2025
+	//? dans le cas ou la requete n'a pas de token ou un token vide ou invalide
+	if (!request.headers.authorization)
+		return reply.code(401).send({ error: 'Unauthorized: No token provided' });
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'POST',
@@ -38,6 +47,10 @@ export async function authenticateJWT(request, reply) {
 
 
 export async function revokeJWT(token) {
+
+	//! ajout 16/09/2025
+	if (!token)
+		return { status: 401, error: 'Unauthorized: No token provided' };
 	//console.log("//RETOBJ\n", retObj, "//END RETOBJ\n");
 	const revRes = await fetch('http://session-service:3000/revoke', {
 		method: 'POST',

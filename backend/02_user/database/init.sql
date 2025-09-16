@@ -1,0 +1,28 @@
+CREATE TABLE IF NOT EXISTS registered (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	type TEXT NOT NULL DEFAULT "registered",
+	status TEXT NOT NULL DEFAULT "pending",
+	wins INTEGER NOT NULL DEFAULT 0,
+	losses INTEGER NOT NULL DEFAULT 0,
+	friend_ship	TEXT,
+
+	picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
+	
+	hashedPassword TEXT NOT NULL,
+	email TEXT,
+	telephone TEXT
+);
+
+CREATE TABLE IF NOT EXISTS guests (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	type TEXT NOT NULL DEFAULT "guest",
+	status TEXT NOT NULL DEFAULT "available",
+	wins INTEGER NOT NULL DEFAULT 0,
+	losses INTEGER NOT NULL DEFAULT 0,
+
+	jwt_time INTEGER DEFAULT NULL,
+
+	pic TEXT NOT NULL DEFAULT "./pictures/BG.webp"
+);

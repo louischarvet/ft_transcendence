@@ -2,16 +2,16 @@
 
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
-//import authenticateJWT from './authentication/auth.js'
 import userRoutes from './routes/routes.js';
 import { userInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
+//! ajout le 16/09/2025
+import { initDB } from './database/db.js';
 
-import { authenticateJWT } from "./authentication/auth.js";
+// Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
 
 const fastify = Fastify({ logger: true });
-
 
 // CORS configuration
 import fastifyCors from '@fastify/cors';
@@ -21,15 +21,10 @@ fastify.register(fastifyCors, {
 	allowedHeaders: ["Content-Type", "Authorization"],
 });
 
-
 // Authentification par token
 fastify.register(jwt, {
 	secret: 'secret-key' //! A modifier -- >.env
 });
-
-//fastify.addHook('preHandler', authenticateJWT);
-
-//fastify.decorate('authentication', authenticateJWT);
 
 fastify.register(fastifyMultipart);
 fastify.register(userRoutes);
@@ -38,6 +33,9 @@ fastify.register(userRoutes);
 fastify.addSchema(userInput);
 fastify.addSchema(updateSchema);
 fastify.addSchema(userSchema);
+
+//! ajout le 16/09/2025
+await initDB();
 
 async function start() {
 	try {

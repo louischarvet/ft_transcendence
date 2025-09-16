@@ -7,14 +7,14 @@ COPY ./package.json ./package-lock.json* ./
 RUN npm install && npm install -g nodemon
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install sqlite3 -y
-# RUN npm install sqlite3
-# RUN npm install sqlite
 RUN npm install @fastify/jwt
 RUN npm install bcrypt
 
 COPY . .
 
-RUN cat ./database/initDatabase.sqlite | sqlite3 users_db
+#! ajout 16/09/2025
+#? supp ligne suivante on initialise db dans app.js
+#RUN cat ./database/initDatabase.sqlite | sqlite3 users_db
 
 EXPOSE 3000
 #CMD ["node", "index.js"]
