@@ -48,3 +48,17 @@ export async function createLocalMatch(p1, p2) {
 export async function createVsMatch(p1, p2) {
 	return await createMatch(p1, p2, 'vs');
 }
+
+
+export async function insertInTable(table, p1_id, p1_type, p2_id, match_type) {
+	const db = await getDB();
+	const time = await Math.floor( await Date.now() / 1000 );
+	await db.run(
+		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, match_type, created_at)
+		VALUES(?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, match_type, time ]
+	);
+	return (await db.get(
+		`SELECT * FROM ` + table + ` WHERE p1_id = ? AND p2_id = ? AND created_at = ?`,
+		[ p1_id, p2_id, time ]
+	));
+}

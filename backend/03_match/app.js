@@ -19,7 +19,7 @@ fastify.addSchema(userSchema);
 fastify.addSchema(matchSchema);
 fastify.addSchema(matchUpdateSchema);
 
-const start = async () => {
+async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
 		console.log('match_docker listening on port 3000');

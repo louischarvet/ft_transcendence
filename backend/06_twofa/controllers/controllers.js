@@ -76,40 +76,47 @@ export async function verifyCode(request, reply) {
 	// console.log("################################# REQUEST VERIFYCODE\n",
 	// 	request.headers, "####################################################\n"
 	// );
-	const { code, id, name, type } = request.body;
+	const { code, id, name, type, tmp } = request.body;
 	const codeToCompare = await getFromTable(id);
 	if (codeToCompare === undefined)
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
-	console.log("\t/// body verifiCode \n", request.body);
-	console.log("\t/// codeToCompare and code\n", codeToCompare, code);
+//	console.log("\t/// body verifiCode \n", request.body);
+//	console.log("\t/// codeToCompare and code\n", codeToCompare, code);
 	if (code !== codeToCompare.code)
 		return reply.code(401).send({error : 'bad code. Retry !'});
-	const response = await generateJWT({ 
-			id: id,
-			type: 'registered',
-			name: name
-	});
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
-	await deleteInTable(id);
 
-	// Changer le status dans user-service: pending -> available
-	await fetch('http://user-service:3000/changestatus', {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
+	// si user n'est pas le p2 d'un match
+	let token;
+	if (tmp === undefined || !tmp) {
+		const response = await generateJWT({ 
+				id: id,
+				type: 'registered',
+				name: name
+		});
+		const jsonRes = await response.json();
+		token = jsonRes.token;
+		
+		// Changer le status dans user-service: pending -> available
+		await fetch('http://user-service:3000/changestatus', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
 				name: name,
 				id: id,
 				status: 'available',
 				type: type
-		}),
-	});
+			}),
+		});
+	}
+	
+	await deleteInTable(id);
 
 	return reply.code(201).send({
-		token,
-		message: 'User verified'
+		token: token,
+		message: 'User ' + name + ' verified',
+		tmp: tmp,
 	});
 }
 

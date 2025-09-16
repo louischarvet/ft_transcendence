@@ -31,11 +31,15 @@ export async function generateToken(request, reply) {
 export async function authenticateUser(request, reply) {
 	const token = request.headers.authorization.split(' ')[1];
 
-	if (!token)
+	if (!token) {
+		console.log('Missing token');
 		return reply.code(401).send({ error: 'Missing token' });
+	}
 	try {
-		if (await isInTable('revoked_tokens', 'token', token))
+		if (await isInTable('revoked_tokens', 'token', token)) {
+			console.log('Token is already revoked');
 			return reply.code(401).send({ error: 'Token is already revoked' });
+		}
 
 		const decoded = jwt.verify(token, secret);
 //		if (await userAndTokenMatch(decoded, request.body)) {
@@ -49,9 +53,11 @@ export async function authenticateUser(request, reply) {
 				message: 'Valid token'
 			});
 		} else {
+			console.log("Token and user infos don't match");
 			return reply.code(401).send({ error: "Token and user infos don't match" });
 		}
 	} catch (err) {
+		console.log('Invalid token');
 		return reply.code(401).send({ error: 'Invalid token' });
 	}
 }

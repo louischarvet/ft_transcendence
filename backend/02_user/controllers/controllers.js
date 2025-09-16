@@ -63,13 +63,13 @@ export async function signIn(request, reply) {
 
 	return reply.code(201).send({
 		user,
-		message: 'User created'
+		message: 'User ' + name + ' created'
 	});
 }
 
 // route PUT /login
 export async function logIn(request, reply) {
-	const { name, password, email } = request.body;
+	const { name, password, email, tmp } = request.body;
 
 	const exists = await getUserByName('registered', name);
 
@@ -94,7 +94,8 @@ export async function logIn(request, reply) {
 		
 		return reply.code(201).send({
 			user,
-			message: 'User logged in'
+			message: 'User ' + name + ' pending 2fa.',
+//			tmp,
 		});
 	} else
 		return reply.code(401).send({ error: 'Bad password' });

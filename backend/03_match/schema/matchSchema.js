@@ -8,12 +8,14 @@ export const matchSchema = {
 		properties: {
 			match_type: { 
 				type: 'string', 
-				enum: ['local', 'vs'] 
+				enum: ['guest', 'registered', 'ia'] 
 			},
 			player2: {
 				type: 'object',
 				properties: {
-					name: { type: 'string', minLength: 1 }
+					name: { type: 'string', minLength: 1 },
+					email: { type: 'string', minLength: 3 },
+					password: { type: 'string', minLength: 8 },
 				}
 			}
 		},
