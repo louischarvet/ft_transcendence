@@ -4,6 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import routesPlugin from './routes/routes.js';
+import shutdown from './shutdown.js'
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -24,6 +25,7 @@ server.register(fastifyCors, {
 console.log('after registering CORS ...');
 // Enregistrez vos routes
 server.register(routesPlugin);
+server.register(shutdown);
 
 console.log('after registering routes ...');
 server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {

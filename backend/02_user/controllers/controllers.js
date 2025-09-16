@@ -35,7 +35,6 @@ export async function createGuest(request, reply) {
 export async function signIn(request, reply) {
 	const { name, password, email} = request.body;
 
-	// if email === undefined va te foutre
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 	
@@ -43,7 +42,6 @@ export async function signIn(request, reply) {
 	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
 	
-	// hachage du password
 	const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt());
 
 	await insertInTable('registered', {
@@ -54,10 +52,12 @@ export async function signIn(request, reply) {
 
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
+	delete user.email;
+	delete user.telephone;
 
 	await sendCode({
-		name: user.name,
-		email: user.email,
+		name: name,
+		email: email,
 		id: user.id
 	});
 
@@ -83,14 +83,16 @@ export async function logIn(request, reply) {
 
 		const user = await getUserByName('registered', name);
 		delete user.hashedPassword;
+		delete user.email;
+		delete user.telephone;
 
 		await sendCode({
-			name: user.name,
-			email: user.email,
+			name: name,
+			email: email,
 			id: user.id
 		});
 		
-		return reply.code(202).send({
+		return reply.code(201).send({
 			user,
 			message: 'User logged in'
 		});
@@ -100,14 +102,12 @@ export async function logIn(request, reply) {
 
 // Route PUT /logout
 export async function logOut(request, reply) {
-	const body = request.body;
-
 	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
-		if (body.type == 'guest')
-			deleteUserInTable('guest', body.name);
+		if (request.user.type == 'guest')
+			deleteUserInTable('guest', request.user.name);
 		else
-			updateStatus(body.type, body.name, 'logged_out');
+			updateStatus(request.user.type, request.user.name, 'logged_out');
 
 		return reply.code(201).send({
 			message: "Successfully logged out."
@@ -119,11 +119,10 @@ export async function logOut(request, reply) {
 
 // Route DELETE /delete
 export async function deleteUser(request, reply) {
-	const body = request.body;
 
-	const revRes = await revokeJWT(token, body);
+	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
-		deleteUserInTable(body.type, body.name);
+		deleteUserInTable(request.user.type, request.user.name);
 
 		return reply.code(200).send({
 			message: "User successfully deleted."
@@ -134,13 +133,11 @@ export async function deleteUser(request, reply) {
 }
 
 export async function updateInfo(request, reply) {
-	// pic password email telephone
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 
 	const user = await getUserByName('registered', name);
 
-	console.log("/// HASHED PASS in functuon updateInfos\n", user);
 	if (!await bcrypt.compare(password, user.hashedPassword))
 		return reply.code(401).send({ error: 'Bad password' });
 		
@@ -157,33 +154,28 @@ export async function updateInfo(request, reply) {
 	await updateValue('registered', col, name, val);
 
 	const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
-	console.log("/// newUser\n", newUser, "///\n");
-	const retObj = {
-			id: newUser.id,
-			name: newUser.name,
-			type: newUser.type,
-			status: newUser.status };
+	delete newUser.hashedPassword;
+	delete newUser.email;
+	delete newUser.telephone;
 
 	return reply.code(200).send({
-		user: retObj,
+		user: newUser,
 		message: 'User info updated'
 	});
 }
 
 export async function updateAvatar(request, reply) {
-	const user = request.user;
+	const user = getUserByName('registered', request.user.name);
+
 	if (!user)
 		return reply.code(401).send({ error: 'Unauthorized' });
-
-	console.log("UpdateAvatar \n");
-	console.log("\t//USER\n", user, "\t//END USER\n");
-	console.log("Request headers:", request.headers);
 
 	const data = await request.file();
 	if (!data)
 		return reply.code(400).send({ error: 'No file uploaded' });
 
 	const uploadDir = path.join(process.cwd(), 'pictures');
+	console.log("############ UPLOADDIR = ", uploadDir); 
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -292,9 +284,11 @@ export async function getRandomUser(request, reply) {
 }
 
 export async function changeStatus(request, reply) {
+	console.log("#### IM chagestatus in Docker user\n########");
 	const reqBody = request.body;
 	// check si player2 existe
 	// s'il n'existe pas -> player1 VS IA
+	console.log("####### \n", reqBody, "#####\n");
 	const name = reqBody.name;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
@@ -303,9 +297,9 @@ export async function changeStatus(request, reply) {
 	if (newState === undefined)
 		return reply.code(400).send({ error: 'Status is required' });
 	
-
+	const user = await getUserByName('registered', name);
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
-	await updateStatus(name, newState);
+	await updateStatus('registered', name, newState);
 	return reply.code(201).send({message : 'Status updated!'});
 }

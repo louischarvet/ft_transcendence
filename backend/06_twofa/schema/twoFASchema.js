@@ -18,11 +18,15 @@ export const verifySchema = {
 	$id: 'verifySchema',
 	body: {
 		type: 'object',
-		required: [ 'id', 'name', 'code' ],
+		required: [ 'id', 'name', 'code', 'type' ],
 		properties: {
 			id: { type: 'integer' },
 			name: { type: 'string', minLength: 1 },
-			code: { type: 'integer' }
+			code: { type: 'integer' },
+			type: {
+				type: 'string',
+				enum: [ 'guest', 'registered' ],
+		  	},
 		},
 		additionalProperties: false
 	}

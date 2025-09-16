@@ -46,7 +46,7 @@ async function userRoutes(fastify, options) {
 
 	// Utilisee par le service 2fa, probablement par match ou game plus tard
 	// Route a proteger !
-	fastify.put('/changestatus', changeStatus);
+	fastify.put('/changestatus',{schema: userSchema }, changeStatus);
 }
 
 export default userRoutes;

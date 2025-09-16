@@ -14,8 +14,6 @@ const secret = speakeasy.generateSecret({ length: 20 });
 
 // Generation du code (one time password)
 async function generateCode() {
-	console.log("################################### SECRET\n",
-		secret.base32, "##########################################\n");
 	return (await speakeasy.totp({
 		secret: secret.base32,
 		encoding: 'base32'
@@ -78,7 +76,7 @@ export async function verifyCode(request, reply) {
 	// console.log("################################# REQUEST VERIFYCODE\n",
 	// 	request.headers, "####################################################\n"
 	// );
-	const { code, id, name } = request.body;
+	const { code, id, name, type } = request.body;
 	const codeToCompare = await getFromTable(id);
 	if (codeToCompare === undefined)
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
@@ -96,17 +94,18 @@ export async function verifyCode(request, reply) {
 	await deleteInTable(id);
 
 	// Changer le status dans user-service: pending -> available
-	await fetch('http://user-service:3000/change', {
+	await fetch('http://user-service:3000/changestatus', {
 		method: 'PUT',
 		headers: {
-			'Content-Type': 'application/JSON'
+			'Content-Type': 'application/json'
 		},
-		body: {
-			name: name,
-			id: id,
-			status: 'available',
-		},
-	})
+		body: JSON.stringify({
+				name: name,
+				id: id,
+				status: 'available',
+				type: type
+		}),
+	});
 
 	return reply.code(201).send({
 		token,
