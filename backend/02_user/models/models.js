@@ -42,7 +42,7 @@ async function isRevokedToken(token) {
 // Get un user disponible pour jouer
 async function getAvailableUser(name){
 //	const db = await getDB();
-	const user = await db.get('SELECT * FROM users WHERE status = "available" AND name != ?', [name]);
+	const user = await db.get('SELECT * FROM users WHERE status = "pending" AND name != ?', [name]);
 	console.log("From getAvailableUser :", user);
 	return user;
 }

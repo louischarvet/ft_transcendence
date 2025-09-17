@@ -1,9 +1,0 @@
-INSERT INTO users(name, status) VALUES("pipo", "available");
-INSERT INTO users(name, status) VALUES("toto", "available");
-INSERT INTO users(name, status) VALUES("grugru", "available");
-INSERT INTO users(name, status) VALUES("zouzou", "available");
-
-INSERT INTO guests(name, status) VALUES("Guest1", "available");
-INSERT INTO guests(name, status) VALUES("Guest2", "available");
-INSERT INTO guests(name, status) VALUES("Guest3", "available");
-INSERT INTO guests(name, status) VALUES("Guest4", "available");

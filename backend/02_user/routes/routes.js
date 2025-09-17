@@ -1,5 +1,5 @@
 import { createGuest, signIn, logIn, logOut, deleteUser,
-	fetchUserByName, fetchUserStatus, updateAvatar, updateInfo,
+	fetchUserStatus, updateAvatar, updateInfo,
 	addFriend, changeStatus } from '../controllers/controllers.js';
 import { userInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
@@ -21,21 +21,21 @@ async function userRoutes(fastify, options) {
 	fastify.put('/update',{preHandler: authenticateJWT , schema: updateSchema },  updateInfo);
 	fastify.put('/updateAvatar',{preHandler: authenticateJWT},  updateAvatar);
 
-	fastify.put('/logout', {preHandler: authenticateJWT , schema: userSchema },  logOut);
-	fastify.delete('/delete', {preHandler: authenticateJWT , schema: userSchema },  deleteUser);
+	//! ajout le 17/09/2025
+	//! supprimer les schemas userSchema
+	fastify.put('/logout', {preHandler: authenticateJWT },  logOut);
+	fastify.delete('/delete', {preHandler: authenticateJWT },  deleteUser);
 
-	// Autre service
-	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT , schema: userSchema },  addFriend);
-
-	// Route pour creer un nouvel utilisateur
-//	fastify.post('/register', {schema  : userSchema}, createUser);
+	//! ajout le 17/09/2025
+	//! supprimer les schemas userSchema
+	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT},  addFriend);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs
 	// + retirer le /users ici, car l'url finale ressemble a ca sinon:
 	// http://localhost:3000/user/users/:name (c'est redondant)
 	// remplacer par search ou fetch ?
-	fastify.get('/find/:name', fetchUserByName);
+	//fastify.get('/find/:name', fetchUserByName);
 
 	fastify.get('/find/:name/status', fetchUserStatus);
 
@@ -50,3 +50,4 @@ async function userRoutes(fastify, options) {
 }
 
 export default userRoutes;
+

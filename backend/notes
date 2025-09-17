@@ -31,9 +31,31 @@ data persistante :
 USER:
 
 {
-	token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MDI1OTEzLCJleHAiOjE3NTgwMzMxMTN9.bkBrpYU9Z4UPC6jtoOQf7Ec5Z1lGsa_jGFx9XXtofOs
-	"id": 1,
-    "email": "trijaudnathan@gmail.com",
-    "type" : "registered",
-    "name": "Nathan"
+    "user": {
+        "id": 1,
+        "name": "Nathan",
+        "type": "registered",
+        "status": "pending",
+        "wins": 0,
+        "losses": 0,
+        "friend_ship": null,
+        "picture": "./pictures/BG.webp"
+    },
+    "message": "User created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MTAyNjUxLCJleHAiOjE3NTgxMDk4NTF9.oQqX5w8fxWpBTJgs-pzJyVwGO_0OXtS13bg2EkQzRkM",
+}
+
+{
+    "user": {
+        "id": 2,
+        "name": "Popo",
+        "type": "registered",
+        "status": "pending",
+        "wins": 0,
+        "losses": 0,
+        "friend_ship": null,
+        "picture": "./pictures/BG.webp"
+    },
+    "message": "User created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUG9wbyIsInR5cGUiOiJyZWdpc3RlcmVkIiwiaWQiOjIsImlhdCI6MTc1ODEwMTY3OCwiZXhwIjoxNzU4MTA4ODc4fQ.RFkg1wLWR1sgmq4c4XLOkNBDYwZGKi3M4nsNTFPwbw8",
 }

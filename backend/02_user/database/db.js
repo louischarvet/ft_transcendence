@@ -24,7 +24,7 @@ export async function initDB(){
 	`);
 
 	await db.exec(`
-		CREATE TABLE IF NOT EXISTS guests (
+		CREATE TABLE IF NOT EXISTS guest (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
 		type TEXT NOT NULL DEFAULT "guest",

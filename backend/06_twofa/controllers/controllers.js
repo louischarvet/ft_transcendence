@@ -79,7 +79,7 @@ export async function verifyCode(request, reply) {
 	const { code, id, name, type } = request.body;
 	const codeToCompare = await getFromTable(id);
 	if (codeToCompare === undefined)
-		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
+		return reply.code(401).send({ error: 'Unauthorized ()' });
 	console.log("\t/// body verifiCode \n", request.body);
 	console.log("\t/// codeToCompare and code\n", codeToCompare, code);
 	if (code !== codeToCompare.code)
@@ -93,7 +93,7 @@ export async function verifyCode(request, reply) {
 	const token = jsonRes.token;
 	await deleteInTable(id);
 
-	// Changer le status dans user-service: pending -> available
+	// Changer le status dans user-service: pending -> pending
 	await fetch('http://user-service:3000/changestatus', {
 		method: 'PUT',
 		headers: {
@@ -102,7 +102,7 @@ export async function verifyCode(request, reply) {
 		body: JSON.stringify({
 				name: name,
 				id: id,
-				status: 'available',
+				status: 'pending',
 				type: type
 		}),
 	});

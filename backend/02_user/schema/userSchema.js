@@ -12,7 +12,12 @@ export const userSchema = {
 				type: 'string',
 				enum: [ 'guest', 'registered' ],
 		  	},
-			status: { type: 'string', minLength: 1 }
+			status: { 
+				type: 'string',
+				minLength: 1,
+				enum: ['active', 'logged_out', 'pending']
+				//! ajout le 16/09/2025
+			}
 		},
 		additionalProperties: false
 	}

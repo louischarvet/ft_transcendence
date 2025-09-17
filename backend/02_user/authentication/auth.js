@@ -19,7 +19,7 @@ export async function generateJWT(user) {
 }
 
 export async function authenticateJWT(request, reply) {
-    console.log("authenticateJWT");
+    console.log("####authenticateJWT");
 
 	//! ajout 16/09/2025
 	//? dans le cas ou la requete n'a pas de token ou un token vide ou invalide
@@ -33,10 +33,15 @@ export async function authenticateJWT(request, reply) {
         }
     });
 
-
     const data = await authRes.json();
-	console.log("/// DATA\n", data);
-    const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
+	console.log("/// data : \n", data);
+	//! modifier le 17/09/2025 
+	if (!data)
+		return reply.code(401).send({ error: 'Unauthorized: No data received from auth service' });
+
+	//! modifier le 17/09/2025 
+    const currentuser = data.user ; // fallback si le service renvoie "user"
+    //const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
 
     if (!authRes.ok || !currentuser)
         return reply.code(401).send({ error: 'Unauthorized' });
