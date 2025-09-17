@@ -9,7 +9,7 @@ export async function generateJWT(user) {
 		},
 		body: JSON.stringify(user)
 	});
-	console.log("######## genRes\n", genRes, "#######\n");
+//	console.log("######## genRes\n", genRes, "#######\n");
 	return genRes;
 }
 
@@ -26,7 +26,7 @@ export async function authenticateJWT(request, reply) {
 
 
     const data = await authRes.json();
-	console.log("/// DATA\n", data);
+//	console.log("/// DATA\n", data);
     const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
 
     if (!authRes.ok || !currentuser)

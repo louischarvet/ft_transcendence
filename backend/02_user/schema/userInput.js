@@ -1,14 +1,28 @@
 // schema/userInput.js
 
-export const userInput = {
-	$id: 'userInput',
+export const registerInput = {
+	$id: 'registerInput',
 	body: {
 		type: 'object',
-		required: ['name', 'password', 'email'],
+		required: [ 'name', 'password', 'email' ],
 		properties: {
 			name: { type: 'string', minLength: 1 },
 			password: { type: 'string', minLength: 8 },
 			email: { type: 'string', minLength: 8 }, // TODO parsing mail
+			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
+		},
+		additionalProperties: false
+	}
+}
+
+export const loginInput = {
+	$id: 'loginInput',
+	body: {
+		type: 'object',
+		required: [ 'name', 'password' ],
+		properties: {
+			name: { type: 'string', minLength: 1 },
+			password: { type: 'string', minLength: 8 },
 			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
 		},
 		additionalProperties: false

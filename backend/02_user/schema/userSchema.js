@@ -3,7 +3,6 @@
 export const userSchema = {
 	$id: 'userSchema',
 	body: {
-		type: 'object',
 		required: [ 'id', 'name', 'type', 'status' ],
 		properties: {
 			id: { type : 'integer' },

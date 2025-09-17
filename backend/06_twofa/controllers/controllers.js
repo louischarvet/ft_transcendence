@@ -82,8 +82,14 @@ export async function verifyCode(request, reply) {
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
 //	console.log("\t/// body verifiCode \n", request.body);
 //	console.log("\t/// codeToCompare and code\n", codeToCompare, code);
-	if (code !== codeToCompare.code)
-		return reply.code(401).send({error : 'bad code. Retry !'});
+
+
+//////////////////////////// DECOMMENTER POUR ACTIVER LE 2FA !!!!!!
+//	if (code !== codeToCompare.code)
+//		return reply.code(401).send({error : 'bad code. Retry !'});
+///////////////////////////////////////////////////////////////////
+
+
 
 	// si user n'est pas le p2 d'un match
 	let token;

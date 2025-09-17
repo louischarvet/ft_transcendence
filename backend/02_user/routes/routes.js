@@ -1,7 +1,7 @@
-import { createGuest, signIn, logIn, logOut, deleteUser,
+import { createGuest, register, logIn, logOut, deleteUser,
 	fetchUserByName, fetchUserStatus, updateAvatar, updateInfo,
 	addFriend, changeStatus } from '../controllers/controllers.js';
-import { userInput, updateSchema } from '../schema/userInput.js';
+import { registerInput, loginInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
 
@@ -15,14 +15,14 @@ async function userRoutes(fastify, options) {
 
 	// Renvoie un userSchema
 	fastify.post('/guest', createGuest);
-	fastify.post('/signin', { schema: userInput }, signIn);
-	fastify.put('/login', { schema: userInput }, logIn);
+	fastify.post('/register', { schema: registerInput }, register);
+	fastify.put('/login', { schema: loginInput }, logIn);
 
-	fastify.put('/update',{preHandler: authenticateJWT , schema: updateSchema },  updateInfo);
-	fastify.put('/updateAvatar',{preHandler: authenticateJWT},  updateAvatar);
+	fastify.put('/update',{ preHandler: authenticateJWT , schema: updateSchema },  updateInfo);
+	fastify.put('/updateAvatar',{ preHandler: authenticateJWT },  updateAvatar);
 
-	fastify.put('/logout', {preHandler: authenticateJWT , schema: userSchema },  logOut);
-	fastify.delete('/delete', {preHandler: authenticateJWT , schema: userSchema },  deleteUser);
+	fastify.put('/logout', { preHandler: authenticateJWT },  logOut);
+	fastify.delete('/delete', { preHandler: authenticateJWT },  deleteUser);
 
 	// Autre service
 	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT , schema: userSchema },  addFriend);

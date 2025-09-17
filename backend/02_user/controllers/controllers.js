@@ -32,7 +32,7 @@ export async function createGuest(request, reply) {
 }
 
 // route POST /register
-export async function signIn(request, reply) {
+export async function register(request, reply) {
 	const { name, password, email} = request.body;
 
 	if (!await checkNameFormat(name))
@@ -55,6 +55,7 @@ export async function signIn(request, reply) {
 	delete user.email;
 	delete user.telephone;
 
+	// 2FA
 	await sendCode({
 		name: name,
 		email: email,
@@ -69,7 +70,7 @@ export async function signIn(request, reply) {
 
 // route PUT /login
 export async function logIn(request, reply) {
-	const { name, password, email, tmp } = request.body;
+	const { name, password, tmp } = request.body;
 
 	const exists = await getUserByName('registered', name);
 
@@ -86,17 +87,20 @@ export async function logIn(request, reply) {
 		delete user.email;
 		delete user.telephone;
 
-		await sendCode({
-			name: name,
-			email: email,
-			id: user.id
-		});
-		
-		return reply.code(201).send({
-			user,
+		// 2FA
+		// await sendCode({
+		// 	name: name,
+		// 	email: email,
+		// 	id: user.id
+		// });
+
+		const token = tmp == true ? undefined : await generateJWT(user);
+		const body = {
+			user: user,
+			token: token,
 			message: 'User ' + name + ' pending 2fa.',
-//			tmp,
-		});
+		};
+		return reply.code(201).send(body);
 	} else
 		return reply.code(401).send({ error: 'Bad password' });
 }
@@ -285,22 +289,22 @@ export async function getRandomUser(request, reply) {
 }
 
 export async function changeStatus(request, reply) {
-	console.log("#### IM chagestatus in Docker user\n########");
-	const reqBody = request.body;
+//	console.log("#### IM chagestatus in Docker user\n########");
 	// check si player2 existe
 	// s'il n'existe pas -> player1 VS IA
-	console.log("####### \n", reqBody, "#####\n");
-	const name = reqBody.name;
+//	console.log("####### \n", reqBody, "#####\n");
+	const { name, status, type } = request.body;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
-	
-	const newState = reqBody.status;
-	if (newState === undefined)
+	if (status === undefined)
 		return reply.code(400).send({ error: 'Status is required' });
 	
-	const user = await getUserByName('registered', name);
+	await updateStatus(type, name, status);
+	const user = await getUserByName(type, name);
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
-	await updateStatus('registered', name, newState);
-	return reply.code(201).send({message : 'Status updated!'});
+	return reply.code(201).send({
+		user: user,
+		message : 'Status updated!',
+	});
 }
