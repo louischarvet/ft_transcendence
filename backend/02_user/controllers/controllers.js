@@ -166,7 +166,11 @@ export async function updateInfo(request, reply) {
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 
-	const user = await getUserByName('registered', name);
+	//! modifié le 17/09/2025
+	const user = await getUserByName('registered', request.user.name);
+	//! ajout le 17/09/2025
+	if (!user || user.name != name)
+		reply.code(401).send( { error : 'User not found'});
 
 	if (!await bcrypt.compare(password, user.hashedPassword))
 		return reply.code(401).send({ error: 'Bad password' });
@@ -187,7 +191,7 @@ export async function updateInfo(request, reply) {
 		if (!await checkNameFormat(newValue))
 			return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 		
-		await updateValue('registered', col, name, val);
+		await updateValue('registered', col, request.user.name, val);
 	}
 
 	//! pour modifier le mail
@@ -262,11 +266,6 @@ export async function addFriend(request, reply) {
 	if (currentUser.type !== 'registered')
 		return reply.code(401).send({ error: 'Only registered users can add friends' });
 	
-	//const body = request.body;
-	//const name  = body.name;
-	//if (name === undefined)
-	//	return reply.code(401).send({ error: 'Name is missing' });
-
 	const user = await getUserByName('registered', currentUser.name);
 	if (!user) 
 		return reply.code(401).send({ error: 'User not found' });
@@ -298,26 +297,6 @@ export async function addFriend(request, reply) {
     return reply.code(200).send({ message: `Friend ${friendName} added.` });
 }
 
-// Récupère tous les utilisateurs
-//export async function fetchUsers(request, reply) {
-//	const users = await getUsers();
-//	return reply.send(users);
-//}
-
-// Recupere un user par son nom
-// route GET /users/:name
-//export async function fetchUserByName(request, reply) {
-//	const { name } = request.params;
-//	if (!name)
-//		return reply.code(400).send({ error: 'Name is required' });
-
-//	const user = await getUserByName(name);
-//	if (!user)
-//		return reply.code(404).send({ error: 'User not found' });
-
-//	return reply.send(user);
-//}
-
 // Récupère le statut d'un utilisateur par son nom
 export async function fetchUserStatus(request, reply) {
 	const { name } = request.params;
@@ -329,18 +308,6 @@ export async function fetchUserStatus(request, reply) {
 
 	return reply.send(user.status);
 }
-
-
-//export async function getRandomUser(request, reply) {
-//	const { name } = request.user;
-
-//	const randomUser = await getAvailableUser(name);
-////	console.log("Test randomUser :", randomUser);
-//	if (randomUser === undefined)
-//		return reply.code(404).send({ error: 'No player available.' });
-
-//	return reply.code(201).send(randomUser);
-//}
 
 // Route PUT /changestatus
 export async function changeStatus(request, reply) {
