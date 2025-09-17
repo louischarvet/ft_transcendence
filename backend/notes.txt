@@ -40,9 +40,8 @@ data persistante :
         "picture": "./pictures/BG.webp"
     },
     "message": "User created"
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicmVnaXN0ZXJlZCIsImlkIjoxLCJpYXQiOjE3NTgxMTk2NTYsImV4cCI6MTc1ODEyNjg1Nn0.1C-41FKBuG1WJ6kaPiyq1c5U9cA36zEhC2WYwNtOs0I",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MTI0MDA2LCJleHAiOjE3NTgxMzEyMDZ9.EUc2ylZK8GxVD9X_f99goCioad3cav7sRuTXaM2KEUg",
 }
-
 --------------------------------------------------------------------
 17/09/2025
 

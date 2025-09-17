@@ -1,13 +1,12 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, getUsers, updateValue,
-	getColumnFromTable, getAvailableUser, updateStatus,
-	deleteUserInTable } from '../models/models.js'
-import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
+import { insertInTable, getUserByName, updateValue,
+	getColumnFromTable, updateStatus,
+	deleteUserInTable, getUserById } from '../models/models.js'
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
-import { error } from 'console';
 
 // rout POST /guest
 export async function createGuest(request, reply) {
@@ -193,16 +192,16 @@ export async function updateInfo(request, reply) {
 		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
 
 	// verifier si le nom existe deja
-	//! pour modifier le name
-	if (toUpdate === 'name'){
-		if (await getUserByName('registered', newValue))
-			return reply.code(401).send({ error: 'Name is already taken' });
+	////! pour modifier le name
+	//if (toUpdate === 'name'){
+	//	if (await getUserByName('registered', newValue))
+	//		return reply.code(401).send({ error: 'Name is already taken' });
 		
-		if (!await checkNameFormat(newValue))
-			return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
+	//	if (!await checkNameFormat(newValue))
+	//		return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 		
-		await updateValue('registered', col, currentUser.name, val);
-	}
+	//	await updateValue('registered', col, currentUser.name, val);
+	//}
 
 	//! pour modifier le mail
 	if (toUpdate === 'email'){
@@ -264,6 +263,62 @@ export async function updateAvatar(request, reply) {
 		picture: relativePath
 	});
 }
+
+// Route GET /id (recupere ses propre infos via son token)
+export	async function fetchUserByIdToken(request, reply){
+
+	const user = request.user;
+	if (!user)
+		return reply.code(401).send({ error : 'Bad Token'});
+
+	const userId = user.id;
+	if (!userId)
+		return reply.code(401).send({ error : 'Id of user required'});
+
+	const type = user.type;
+	if (!type)
+		return reply.code(401).send({ error : 'Type of user required'});
+
+	const userInfos = await getUserById(type, userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+	delete userInfos.hashedPassword;
+	delete userInfos.email;
+	delete userInfos.telephone;
+	delete userInfos.friend_ship;
+	delete userInfos.type;
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+};
+
+// Route GET /:id
+export	async function fetchUserById(request, reply){
+	const user = request.params;
+	if (!user)
+		return reply.code(401).send({ error : 'Need param'});
+	//! ajout le 17/09/2025
+	const userId = request.params.id;
+	if (!userId)
+		return reply.code(401).send({ error : 'Id of user required'});
+
+	const userInfos = await getUserById('registered', userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+
+	delete userInfos.hashedPassword;
+	delete userInfos.email;
+	delete userInfos.telephone;
+	delete userInfos.friend_ship;
+	delete userInfos.type;
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+};
+
+
 
 // Route POST /addfriend/(name)
 export async function addFriend(request, reply) {

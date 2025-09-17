@@ -1,6 +1,6 @@
 import { createGuest, signIn, logIn, logOut, deleteUser,
 	fetchUserStatus, updateAvatar, updateInfo,
-	addFriend, changeStatus } from '../controllers/controllers.js';
+	addFriend, changeStatus, fetchUserByIdToken , fetchUserById} from '../controllers/controllers.js';
 import { userInput, updateSchema } from '../schema/userInput.js';
 import { userSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
@@ -21,10 +21,16 @@ async function userRoutes(fastify, options) {
 	fastify.put('/update',{preHandler: authenticateJWT , schema: updateSchema },  updateInfo);
 	fastify.put('/updateAvatar',{preHandler: authenticateJWT},  updateAvatar);
 
+
+	//! ajout le 17/09/2025
+	// pour recuperer un user par son id (via son token)
+	fastify.get('/id', { preHandler: authenticateJWT }, fetchUserByIdToken);
+	fastify.get('/:id', fetchUserById);
+
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
 	fastify.put('/logout', {preHandler: authenticateJWT },  logOut);
-	fastify.delete('/delete', {preHandler: authenticateJWT },  deleteUser);
+	fastify.delete('/delete', {schema: updateSchema },  deleteUser);
 
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema

@@ -14,6 +14,12 @@ async function getUserByName(table, name) {
 	return db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]);
 }
 
+
+// Récupère un utilisateur par son nom
+async function getUserById(table, id) {
+	return db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]);
+}
+
 async function insertInTable(table, toInsert) {
 	const name = toInsert.name;
 	if (toInsert.hashedPassword) { // signin -- with password
@@ -68,4 +74,4 @@ async function deleteUserInTable(table, userName) {
 
 export { insertInTable, getUserByName, getUsers,
 	getColumnFromTable, getAvailableUser, updateValue,
-	insertRevokedToken, isRevokedToken, updateStatus, deleteUserInTable };
+	insertRevokedToken, isRevokedToken, updateStatus, deleteUserInTable, getUserById};
