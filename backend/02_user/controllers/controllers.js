@@ -163,12 +163,22 @@ export async function deleteUser(request, reply) {
 // Route PUT /update
 export async function updateInfo(request, reply) {
 	console.log("####Function updateInfo called:\n");
+	//! ajout le 17/09/2025	
+	const currentUser = request.user;
+	if (currentUser)
+		reply.code(401).send( { error : 'User not Authentified'});
+		
+	console.log("currentUser : ", currentUser, "\n");
+
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
-
+	if (!body || !name || !password || !toUpdate || !newValue)
+		reply.code(401).send( { error : 'Need all infos in body '});
+	console.log();
 	//! modifié le 17/09/2025
-	const user = await getUserByName('registered', request.user.name);
+	const user = await getUserByName('registered', currentUser.name);
 	//! ajout le 17/09/2025
+	//TODO VERIFIER name et user
 	if (!user || user.name != name)
 		reply.code(401).send( { error : 'User not found'});
 
@@ -191,7 +201,7 @@ export async function updateInfo(request, reply) {
 		if (!await checkNameFormat(newValue))
 			return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 		
-		await updateValue('registered', col, request.user.name, val);
+		await updateValue('registered', col, currentUser.name, val);
 	}
 
 	//! pour modifier le mail

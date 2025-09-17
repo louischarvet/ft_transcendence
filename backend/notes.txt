@@ -28,8 +28,6 @@ Tokens JWT >
 
 data persistante :
 
-USER:
-
 {
     "user": {
         "id": 1,
@@ -42,5 +40,59 @@ USER:
         "picture": "./pictures/BG.webp"
     },
     "message": "User created"
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MTA5OTUxLCJleHAiOjE3NTgxMTcxNTF9.TQgrPSLtoG9H_VZFnYUgfqYfFgw2AqRa8Exj3p9QtQs",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicmVnaXN0ZXJlZCIsImlkIjoxLCJpYXQiOjE3NTgxMTk2NTYsImV4cCI6MTc1ODEyNjg1Nn0.1C-41FKBuG1WJ6kaPiyq1c5U9cA36zEhC2WYwNtOs0I",
 }
+
+--------------------------------------------------------------------
+17/09/2025
+
+Todo : 
+
+-Impossibilite de PUT name ( function : updateInfo)
+
+-Replace getName -> getId (A voir avec Louis)
+	protege et certifit lidentite de luser (name peux changer)
+		A tester pour update et del par exemple , ou updateName et logout, token invalid etc....
+
+-Attaque XSS : 
+
+	PROTECTION AJV (Another JSON Validator)
+
+	1. Ajout des patern dans les schema : 
+		exple : pattern: "^[^<>{}\"'`]*$"
+	2. Max lenght va limiter les risques
+		exple : maxLength: 254
+
+	PROTECTION Sanitization backend facultatif mais utile en plus d’AJV
+		Permet de nettoyer les strings dans le body
+	3 - npm install sanitize-html et import sanitizeHtml from 'sanitize-html';
+		exple : 
+				function sanitizeObject(obj) {
+				for (const key in obj) {
+					if (typeof obj[key] === 'string') {
+					obj[key] = sanitizeHtml(obj[key], {
+						allowedTags: [],
+						allowedAttributes: {}
+					});
+					} else if (typeof obj[key] === 'object') {
+					sanitizeObject(obj[key]);
+					}
+				}
+				}
+
+				et 
+
+				fastify.addHook('preValidation', async (request, reply) => {
+					if (request.body)
+						sanitizeObject(request.body);
+				});
+
+
+	3 - headers de sécurité HTTP ----> ajoute X-Content-Type-Options, X-XSS-Protection
+		npm install @fastify/helmet
+		import helmet from '@fastify/helmet';
+		await fastify.register(helmet, {
+			global: true
+		});
+
+-----------
