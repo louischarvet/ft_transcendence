@@ -301,6 +301,9 @@ export async function changeStatus(request, reply) {
 	
 	await updateStatus(type, name, status);
 	const user = await getUserByName(type, name);
+	delete user.hashedPassword;
+	delete user.telephone;
+	delete user.email;
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
 	return reply.code(201).send({

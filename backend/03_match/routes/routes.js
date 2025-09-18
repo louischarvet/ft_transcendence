@@ -1,4 +1,4 @@
-import { registeredMatch, guestMatch, iaMatch, getAllMatchesController, getMatchById, updateMatchResultController } from '../controllers/controllers.js';
+import { registeredMatch, guestMatch, iaMatch, getHistory, getAllMatchesController, getMatchById, updateMatchResultController } from '../controllers/controllers.js';
 import { matchSchema, registeredMatchSchema, matchUpdateSchema, userSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 
@@ -22,7 +22,8 @@ export default async function matchRoutes(fastify, opts) {
 	// Route POST pour jouer contre une IA
 	fastify.post('/ia', { preHandler: authenticateJWT }, iaMatch);
 
-
+	// Route GET pour recuperer l'historique des matchs d'un joueur (par ID)
+	fastify.get('/history/:id', { preHandler: authenticateJWT }, getHistory);
 
 
 	// Route GET pour récupérer tous les matches

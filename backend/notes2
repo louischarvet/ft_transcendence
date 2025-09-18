@@ -1,0 +1,156 @@
+potentiel structure du dossier :
+
+transcendence/
+├── docker-compose.yml
+├── tournoi/
+│   ├── Dockerfile
+│   ├── index.js
+│   ├── controllers/
+│   ├── models/
+│   └── ...
+├── match/
+│   ├── Dockerfile
+│   ├── index.js
+│   └── ...
+├── game/
+│   └── ...
+├── score/
+│   └── ...
+
+ne pas lire....
+fqwr odcx igae hjfv
+
+Rôle de chaque service et modèle dans ta stack
+
+1. Le service 01_user (User-service)
+But : Gérer les utilisateurs "authentification / données utilisateurs".
+
+Base de données : users_db — contient la table users (id, name, status, etc).
+
+Modèles dans models/*.js :
+
+Gestion des utilisateurs dans la table users (ex: models/players.js dans user-service est en fait le modèle User).
+
+Le service expose une API HTTP (ex: /api/users/:name) qui renvoie les données utilisateur.
+
+Fonction dans l’architecture :
+C’est la source de vérité des utilisateurs. Tout ce qui concerne la validation, la création, le statut des users passe par ce service.
+
+2. Le service 02_tournament (Tournament-service)
+But : Gérer les tournois, pools, joueurs dans un contexte tournoi.
+
+Base de données : tournaments.db — contient tables pools, pool_players, et aussi players (liste des joueurs impliqués dans les tournois).
+
+Modèles dans models/*.js :
+
+Gestion des pools, joueurs dans le tournoi (classe Pool, table players locale).
+
+Mais les joueurs sont créés via une requête HTTP vers le service 01_user pour récupérer les infos utilisateurs.
+
+La table players locale sert à stocker une copie des joueurs (avec id, nom, statut) présents dans le contexte tournoi, pour les manipuler et les relier aux pools.
+
+
+
+
+-------------------------------------------
+
+multi-service-project/
+│
+├── docker-compose.yml
+│
+├── 01_user/
+│   ├── Dockerfile
+│   ├── index.js            # Point d'entrée Fastify
+│   ├── /routes             # Routes REST de l'API
+│   ├── /controllers        # Logique métier
+│   ├── /models             # Schéma des données
+│   └── /db                 # Initialisation et accès à SQLite
+│
+├── 02_tournament/
+│   ├── ... (idem user)
+│
+├── 03_match/
+│   ├── ... (idem user)
+
+
+---
+🧩 Architecture REST
+
+Chaque service possède :
+
+Son propre serveur Fastify
+
+Sa base SQLite
+
+Une API REST pour être appelé par d'autres services ou par un frontend
+
+Communication inter-services via HTTP REST avec les noms des services Docker :
+
+http://match-service:3002/matches
+http://user-service:3000/users
+
+----
+
+📊 Bases de données (SQLite)
+Service	Base SQLite	Tables principales
+01_user	user.db	users
+02_tournament	tournament.db	tournaments, pools
+03_match	match.db	matches
+
+Les bases sont créées au démarrage via des scripts dans /db/init.js ou /models/init.js.
+
+🔁 Exemple de flux REST
+Créer un match manuellement :
+
+	POST /matches
+	Content-Type: application/json
+
+	{
+	"player1": 1,
+	"player2": 2,
+	"mode": "duel"
+	}
+
+📂 Exemple de modèle Fastify (models/tournaments.js)
+Créer un tournoi qui appelle le match-service :
+
+	// tournament-service
+	await fetch('http://match-service:3002/matches', {
+	method: 'POST',
+	headers: { 'Content-Type': 'application/json' },
+	body: JSON.stringify({
+		player1: 5,
+		player2: 8,
+		mode: 'pool'
+	})
+	});
+
+
+-------------------------------------
+
+29 juillet : 
+
+A faire:
+
+_ base image en local.
+
+
+
+
+
+
+TO DO
+
+- Proteger la route /user/changeStatus
+- /session : envoyer une requete a /user/changeStatus apres la revocation du token
+- /session : verifier en arriere plan dans active_tokens les JWT expires -> requete a /user/changeStatus
+- /match : historique des matches pour un player
+- /user : empecher les registered de s'appeler "Guest(...)"
+- /user : get friends list
+- /user & /match : login par email OU par name
+- Fermer la DB a la fin du programme !
+- /user : en arriere plan: supprimer les pending trop anciens
+- verifier l'existence des ENV 
+- Securiser les schemas: echapper les caracteres speciaux (attaques XSS)
+- service stats ? db : wins, losses, win streak, ... ?
+- /match -> /endOfMatch : contient update match, update status, et met le match dans la table history

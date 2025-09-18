@@ -12,6 +12,15 @@ export async function createMatch(p1, p2, match_type) {
 	return { id: result.lastID, player1: p1, player2: p2, match_type };
 }
 
+// Fonction pour recuperer l'historique de matchs d'un joueur par son ID
+export async function getHistoryByUserID(userID) {
+	const db = await getDB();
+	const history = await db.all(
+		`SELECT * FROM history WHERE p1_id = ? OR p2_id = ?`,
+		[ userID, userID ]);
+	return (history);
+}
+
 // Fonction pour récupérer tous les matches
 export async function getAllMatches() {
 	const db = await getDB();

@@ -1,0 +1,27 @@
+Tournoi>
+	entrer le nom du Tournoi
+	> le tournoi existe > rejoindre
+	> il n'existe pas > le cree
+
+Tokens JWT >
+	login >
+	> creation de deux tokens: un "cle privee" stocke dans la BD user,
+		un token "cle publique" qui est donne au client
+	> verification du JWT : on verifie que le token du client
+		correspond au token stocke
+	> duree d'expiration pour le token client ?
+		refresh quand on arrive a la moitie par exemple ?
+
+	logout >
+	> suppression de la cle stockee
+	( pas besoin de revoquer les tokens )
+
+	expiration des tokens 1h / 1d par exemple
+	> si revoques, on verifie dans la BD si la date d'expiration
+		est atteinte
+	> si oui, on supprime le token
+
+	stocker l'iat du token dans les infos du user, comparer les
+	deux pour l'authentification
+
+	
