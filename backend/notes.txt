@@ -47,19 +47,19 @@ data persistante :
 
 Todo : 
 
--Impossibilite de PUT name ( function : updateInfo)
+-Impossibilite de PUT name ( function : updateInfo) ---> 	OK👌
 
 -Replace getName -> getId (A voir avec Louis)
-	protege et certifit lidentite de luser (name peux changer)
+	protege et certifit lidentite de luser (name peux changer) ---> OK👌 (name impossible a modifier)
 		A tester pour update et del par exemple , ou updateName et logout, token invalid etc....
 
 -Attaque XSS : 
 
 	PROTECTION AJV (Another JSON Validator)
 
-	1. Ajout des patern dans les schema : 
+	1. Ajout des patern dans les schema : ---> 	OK👌
 		exple : pattern: "^[^<>{}\"'`]*$"
-	2. Max lenght va limiter les risques
+	2. Max lenght va limiter les risques ---> 	OK👌
 		exple : maxLength: 254
 
 	PROTECTION Sanitization backend facultatif mais utile en plus d’AJV

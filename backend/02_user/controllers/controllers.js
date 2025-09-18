@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, updateValue,
 	getColumnFromTable, updateStatus,
-	deleteUserInTable, getUserById } from '../models/models.js'
+	deleteUserInTable, getUserById} from '../models/models.js'
 import { generateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
@@ -172,7 +172,7 @@ export async function updateInfo(request, reply) {
 	const body = request.body;
 	const { name, password, toUpdate, newValue } = body;
 	if (!body || !name || !password || !toUpdate || !newValue)
-		reply.code(401).send( { error : 'Need all infos in body '});
+		reply.code(401).send( { error : 'Need all infos in body caca'});
 	console.log();
 	//! modifié le 17/09/2025
 	const user = await getUserByName('registered', currentUser.name);
@@ -192,16 +192,16 @@ export async function updateInfo(request, reply) {
 		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
 
 	// verifier si le nom existe deja
-	////! pour modifier le name
-	//if (toUpdate === 'name'){
-	//	if (await getUserByName('registered', newValue))
-	//		return reply.code(401).send({ error: 'Name is already taken' });
+	//! pour modifier le name
+	// if (toUpdate === 'name'){
+	// 	if (await getUserByName('registered', newValue))
+	// 		return reply.code(401).send({ error: 'Name is already taken' });
 		
-	//	if (!await checkNameFormat(newValue))
-	//		return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
+	// 	if (!await checkNameFormat(newValue))
+	// 		return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 		
-	//	await updateValue('registered', col, currentUser.name, val);
-	//}
+	// 	await updateValue('registered', col, currentUser.name, val);
+	// }
 
 	//! pour modifier le mail
 	if (toUpdate === 'email'){
@@ -215,7 +215,9 @@ export async function updateInfo(request, reply) {
 			return reply.code(401).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
 	}
 
-	const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
+	//! ajout le 18/09/2025
+	// newValue , name enleve
+	const newUser = await getUserByName('registered', newValue);
 	delete newUser.hashedPassword;
 	delete newUser.email;
 	delete newUser.telephone;
@@ -317,8 +319,6 @@ export	async function fetchUserById(request, reply){
 		user: userInfos
 	});
 };
-
-
 
 // Route POST /addfriend/(name)
 export async function addFriend(request, reply) {

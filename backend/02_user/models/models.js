@@ -14,7 +14,6 @@ async function getUserByName(table, name) {
 	return db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]);
 }
 
-
 // Récupère un utilisateur par son nom
 async function getUserById(table, id) {
 	return db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]);

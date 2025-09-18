@@ -8,6 +8,10 @@ import { userSchema } from './schema/userSchema.js';
 //! ajout le 16/09/2025
 import { initDB } from './database/db.js';
 
+//!ajout le 18/09/2025
+//permet de gerer les attaques XSS
+import helmet from '@fastify/helmet';
+
 // Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
 
@@ -24,6 +28,12 @@ fastify.register(fastifyCors, {
 // Authentification par token
 fastify.register(jwt, {
 	secret: 'secret-key' //! A modifier -- >.env
+});
+
+//!ajout le 18/09/2025
+//permet de gerer les attaques XSS
+await fastify.register(helmet, {
+	global: true
 });
 
 fastify.register(fastifyMultipart);

@@ -12,7 +12,8 @@
     "node-fetch": "^3.3.2",
     "@fastify/cors": "^8.2.0",
     "@fastify/jwt": "^7.2.0",
-    "@fastify/multipart": "^7.0.0"
+    "@fastify/multipart": "^7.0.0",
+    "@fastify/helmet": "^11.0.0"
   },
   "scripts": {
     "start": "node app.js",
