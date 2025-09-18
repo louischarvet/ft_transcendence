@@ -1,11 +1,11 @@
 //models/models.js
 import { getDB } from '../common_tools/getDB.js';	
 
+const db = await getDB();
 
 //CRUD des matches
 // Fonction pour créer un match
 export async function createMatch(p1, p2, match_type) {
-	const db = await getDB();
 	const result = await db.run(`
 		INSERT INTO matches(player1, player2, match_type) VALUES(?, ?, ?);
 	`, [p1, p2, match_type]);
@@ -14,11 +14,18 @@ export async function createMatch(p1, p2, match_type) {
 
 // Fonction pour recuperer l'historique de matchs d'un joueur par son ID
 export async function getHistoryByUserID(userID) {
-	const db = await getDB();
 	const history = await db.all(
 		`SELECT * FROM history WHERE p1_id = ? OR p2_id = ?`,
 		[ userID, userID ]);
 	return (history);
+}
+
+// Fonction pour verifier si un user est dans un match en cours
+export async function getMatchByUserID(userID) {
+	const match = await db.get(
+		`SELECT * FROM matches WHERE p1_id = ? OR p2_id = ?`,
+		[ userID, userID ]);
+	return (match);
 }
 
 // Fonction pour récupérer tous les matches

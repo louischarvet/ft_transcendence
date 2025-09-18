@@ -154,3 +154,4 @@ TO DO
 - Securiser les schemas: echapper les caracteres speciaux (attaques XSS)
 - service stats ? db : wins, losses, win streak, ... ?
 - /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
+- Penser a fermer les DBs a la fin du programme !

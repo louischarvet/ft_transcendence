@@ -100,9 +100,14 @@ export async function getHistory(request, reply) {
 		return reply.code(400).send({ error: 'No ID in params.' });
 	else if (!(/^[0-9]+$/.test(userID)))
 		return reply.code(403).send({ error: 'Invalid ID format.' });
-	
+
 	const history = await getHistoryByUserID(userID);
 	return reply.code(200).send(history);
+}
+
+// Route PUT pour mettre fin au match, update les infos necessaires
+export async function finish(request, reply) {
+	
 }
 
 // Route GET pour récupérer tous les matches
