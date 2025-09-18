@@ -1,37 +1,5 @@
 // schema/schema.js
 
-export const matchSchema = {
-	$id: 'matchSchema',
-	body: {
-		type: 'object',
-		required: ['match_type'],
-		properties: {
-			match_type: { 
-				type: 'string', 
-				enum: ['guest', 'registered', 'ia'] 
-			},
-			player2: {
-				type: 'object',
-				properties: {
-					name: { type: 'string', minLength: 1 },
-					email: { type: 'string', minLength: 3 },
-					password: { type: 'string', minLength: 8 },
-				}
-			}
-		},
-		additionalProperties: false
-  	},
-  	response: {
-		200: {
-		  	type: 'object',
-		  	properties: {
-				success: { type: 'boolean' },
-				userId: { type: 'string' }
-	  		}
-		}
-  	}
-}
-
 export const registeredMatchSchema = {
 	$id: 'registeredMatchSchema',
 	body: {
@@ -45,17 +13,30 @@ export const registeredMatchSchema = {
 	},
 }
 
-export const matchUpdateSchema = {
-	$id: 'matchUpdateSchema',
+export const matchSchema = {
+	$id: 'matchSchema',
 	body: {
 		type: 'object',
-		required: ['scoreP1', 'scoreP2'],
+		required: [ 'id', 'p1_id', 'p1_type', 'scoreP1',
+			'p2_id', 'p2_type', 'scoreP2', 'winner_id', 'created_at' ],
 		properties: {
+			id: { type: 'integer' },
+			p1_id: { type: 'integer' },
+			p1_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest' ],
+			},
 			scoreP1: { type: 'integer', minimum: 0 },
+			p2_id: { type: 'integer' },
+			p2_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest', 'ia' ],
+			},
 			scoreP2: { type: 'integer', minimum: 0 },
-			winner_id: { type: 'string' }
+			winner_id: { type: 'integer' },
+			created_at: { type: 'integer' },
 		},
-		additionalProperties: false
+		additionalProperties: false,
   	},
   	response: {
 		200: {
@@ -65,17 +46,5 @@ export const matchUpdateSchema = {
 				message: { type: 'string' }
 	  		}
 		}
-  	}
-}
-
-export const userSchema = {
-	$id: 'userSchema',
-	body: {
-		type: 'object',
-		required: ['name'],
-		properties: {
-			name: { type: 'string', minLength: 1 }
-		},
-		additionalProperties: false
   	}
 }

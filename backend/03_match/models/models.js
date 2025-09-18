@@ -28,23 +28,37 @@ export async function getMatchByUserID(userID) {
 	return (match);
 }
 
+// Fonction pour inserer un match dans la table history
+export async function insertInHistory(match) {
+	const { id, p1_id, p1_type, scoreP1, p2_id, p2_type,
+		scoreP2, winner_id, created_at } = match;
+//	const time = await Math.floor( await Date.now() / 1000 );
+	await db.run(
+		`INSERT INTO history(id, p1_id, p1_type, scoreP1, p2_id, p2_type,
+		scoreP2, winner_id, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2, winner_id, created_at
+	);
+}
+
+// Fonction pour supprimer un match de la table matches
+export async function deleteMatch(matchID) {
+	await db.run('DELETE FROM matches WHERE id = ?', [ matchID ]);
+}
+
 // Fonction pour récupérer tous les matches
 export async function getAllMatches() {
-	const db = await getDB();
 	const matches = await db.all(`SELECT * FROM matches`);
 	return matches;
 }
 
 // Fonction pour récupérer un match par son ID
 export async function getMatch(id) {
-	const db = await getDB();
 	const match = await db.get(`SELECT * FROM matches WHERE id = ?`, [id]);
 		return match;
 }
 
 // Fonction pour mettre à jour le résultat d'un match
 export async function updateMatchResult(id, scoreP1, scoreP2, winner_id) {
-	const db = await getDB();
 	await db.run(`
 		UPDATE matches SET scoreP1 = ?, scoreP2 = ?, winner_id = ? WHERE id = ?;
 	`, [scoreP1, scoreP2, winner_id, id]);
@@ -53,7 +67,6 @@ export async function updateMatchResult(id, scoreP1, scoreP2, winner_id) {
 
 // Fonction pour créer un match local
 export async function createLocalMatch(p1, p2) {
-	const db = await getDB();
 	const result = await db.run(`
 		INSERT INTO local(player1, player2) VALUES(?, ?);
 	`, [p1, p2]);
@@ -67,7 +80,6 @@ export async function createVsMatch(p1, p2) {
 
 
 export async function insertInTable(table, p1_id, p1_type, p2_id, match_type) {
-	const db = await getDB();
 	const time = await Math.floor( await Date.now() / 1000 );
 	await db.run(
 		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, match_type, created_at)

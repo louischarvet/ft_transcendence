@@ -1,10 +1,10 @@
 //controllers/controllers.js
 
-import { insertInTable, getHistoryByUserID } from '../models/models.js';
+import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
 
 async function fetchChangeStatus(player, opponentID) {
-	const status = 'match:' + opponentID;
+	const status = 'in_game';
 	const body = JSON.stringify({
 		name: player.name,
 		id: player.id,
@@ -107,7 +107,13 @@ export async function getHistory(request, reply) {
 
 // Route PUT pour mettre fin au match, update les infos necessaires
 export async function finish(request, reply) {
-	
+	const match = request.body;
+
+	// mettre le match dans la table history
+	await insertInHistory(match);
+	// supprimer le match de la table matches
+	await deleteMatch(match.id);
+	// mettre a jour les stats et le status des joueurs
 }
 
 // Route GET pour récupérer tous les matches

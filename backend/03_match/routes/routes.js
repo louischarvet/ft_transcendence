@@ -1,7 +1,8 @@
 import { registeredMatch, guestMatch, iaMatch, getHistory, finish, getAllMatchesController, getMatchById, updateMatchResultController } from '../controllers/controllers.js';
-import { matchSchema, registeredMatchSchema, matchUpdateSchema, userSchema } from '../schema/matchSchema.js'
+import { registeredMatchSchema, matchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 import { isAvailable } from '../common_tools/isAvailable.js';
+import { inalteredMatch } from '../common_tools/.js';
 
 export default async function matchRoutes(fastify, opts) {
 	// Route test
@@ -27,7 +28,9 @@ export default async function matchRoutes(fastify, opts) {
 	fastify.get('/history/:id', { preHandler: authenticateJWT }, getHistory);
 
 	// Route PUT pour mettre fin au match, update les infos necessaires
-	fastify.put('/finish', { preHandler: authenticateJWT }, finish);
+	fastify.put('/finish', { preHandler: [ authenticateJWT, inalteredMatch ], schema: matchSchema }, finish);
+
+
 
 
 	// Route GET pour récupérer tous les matches
@@ -37,7 +40,7 @@ export default async function matchRoutes(fastify, opts) {
 	fastify.get('/matches/:id', { preHandler: authenticateJWT }, getMatchById);
 
 	// Route PUT pour mettre à jour le résultat d'un match
-	fastify.put('/matches/:id/result', { preHandler: authenticateJWT, schema: matchUpdateSchema }, updateMatchResultController);
+	fastify.put('/matches/:id/result', { preHandler: authenticateJWT, schema: matchSchema }, updateMatchResultController);
 
 	// Route par types de match :
 	// Route PUT pour créer un match local
