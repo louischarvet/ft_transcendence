@@ -3,8 +3,8 @@
 import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
 
-async function fetchChangeStatus(player, opponentID) {
-	const status = 'in_game';
+// Requete a user-service pour update le status d'un joueur
+async function fetchChangeStatus(player, status) {
 	const body = JSON.stringify({
 		name: player.name,
 		id: player.id,
@@ -22,6 +22,26 @@ async function fetchChangeStatus(player, opponentID) {
 	if (!res.ok)
 		return res;
 	return ((await res.json()).user);
+}
+
+// Requete a user-service pour mettre a jour les stats d'un ou deux joueurs
+async function fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id) {
+	const body = JSON.stringify({
+		p1_id: p1_id,
+		p1_type: p1_type,
+		p2_id: p2_id,
+		p2_type: p2_type,
+		winner_id: winner_id,
+	});
+
+	const res = await fetch('http://http:user-service:3000/updatestats', {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: body,
+	});
+//	return res;
 }
 
 // Route POST pour creer un match contre un joueur inscrit
@@ -46,8 +66,8 @@ export async function registeredMatch(request, reply) {
 	const player2 = (await p2LoginRes.json()).user;
 
 	// Changer les status des joueurs et recupere leur profil
-	const user1 = await fetchChangeStatus(player1, player2.id);
-	const user2 = await fetchChangeStatus(player2, player1.id);
+	const user1 = await fetchChangeStatus(player1, 'in_game');
+	const user2 = await fetchChangeStatus(player2, 'in_game');
 
 	// Cree le match en DB et le renvoie
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered');
@@ -114,6 +134,12 @@ export async function finish(request, reply) {
 	// supprimer le match de la table matches
 	await deleteMatch(match.id);
 	// mettre a jour les stats et le status des joueurs
+	const { p1_id, p1_type, p2_id, p2_type, winner_id } = match;
+	await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+//	await fetchChangeStatus(p1_id, 'available');
+//	if (p2_id > 0)
+//		await fetchChangeStatus(p2_id, 'available');
+
 }
 
 // Route GET pour récupérer tous les matches

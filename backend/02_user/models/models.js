@@ -61,6 +61,18 @@ async function updateStatus(table, name, newStatus) {
 	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
 }
 
+export async function updateStatsWinner(table, userID) {
+	await db.run(`UPDATE ` + table + ` SET match_wins = match_wins + 1,
+		wins_streak = wins_streak + 1, played_matches = played_matches + 1,
+		status = 'available' WHERE id = ?`, [ userID ]);
+}
+
+export async function updateStatsLoser(table, userID) {
+	await db.run(`UPDATE ` + table + ` SET wins_streak = 0,
+		played_matches = played_matches + 1, status = 'available'
+		WHERE id = ?`, [ userID ]);
+}
+
 // Delete user i ntable
 async function deleteUserInTable(table, userName) {
 	await db.run('DELETE FROM ' + table + ' WHERE name = ?', [userName]);

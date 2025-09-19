@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
-	deleteUserInTable } from '../models/models.js'
+	updateStatsWinner, updateStatsLoser, deleteUserInTable } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
@@ -87,7 +87,7 @@ export async function logIn(request, reply) {
 		delete user.email;
 		delete user.telephone;
 
-		// 2FA
+		// 2FA disabled for login
 		// await sendCode({
 		// 	name: name,
 		// 	email: email,
@@ -117,9 +117,8 @@ export async function logOut(request, reply) {
 		return reply.code(201).send({
 			message: "Successfully logged out."
 		});
-	} else {
+	} else
 		return revRes;
-	}
 }
 
 // Route DELETE /delete
@@ -310,4 +309,34 @@ export async function changeStatus(request, reply) {
 		user: user,
 		message : 'Status updated!',
 	});
+}
+
+export async function updateStats(request, reply) {
+	const { p1_id, p1_type, p2_id, p2_type, winner_id } = request.body;
+	let winner_type, loser_id, loser_type;
+	if (winner_id === p1_id) {
+		winner_type = p1_type;
+		loser_id = p2_id;
+		loser_type = p2_type;
+	} else {
+		winner_type = p2_type;
+		loser_id = p1_id;
+		loser_type = p1_type;
+	}
+
+	// gagnant:
+	// 	match_wins++
+	//	wins_streak++
+	//	played_matches++
+	if (winner_id > 0) {
+		await updateStatsWinner(winner_type, winner_id);
+	}
+
+	// perdant:
+	//	wins_streak = 0
+	//	played_matches++
+	if (loser_id > 0) {
+		await updateStatsLoser(loser_type, loser_id);
+	}
+	return reply.code(200);
 }

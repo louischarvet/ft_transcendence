@@ -16,3 +16,24 @@ export const userSchema = {
 		additionalProperties: false
 	}
 }
+
+export const updateStatsSchema = {
+	$id: 'updateStatsSchema',
+	body: {
+		required: [ 'p1_id', 'p1_type', 'p2_id', 'p2_type', 'winner_id' ],
+		properties: {
+			p1_id: { type: 'integer' },
+			p1_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest' ]
+			},
+			p2_id: { type: 'integer' },
+			p2_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest', 'ia' ]
+			},
+			winner_id: { type: 'integer' },
+		},
+		additionalProperties: false
+	}
+}
