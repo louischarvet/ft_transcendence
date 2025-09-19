@@ -1,33 +1,20 @@
-import { getDataTournaments, getNextMatch } from '../controllers/tournaments.js';
+import { launchTournament, getTournamentUserId/*,  getNextMatch */} from '../controllers/tournaments.js';
+import { authenticateJWT } from '../authentication/auth.js';
+import { tournamentSchema } from '../schema/tournamentSchema.js';
+
 
 export default async function routesPlugin(fastify, options) {
 	fastify.get('/', async (request, reply) => {
 		return { hello: 'from tournament' };
-	})
-	fastify.get('/data_tournaments', async (request, reply) => {
-		const data = await getDataTournaments(request, reply);
-		reply.send(data);
 	});
 
-	fastify.get('/next_match', async (request, reply) => {
-		const match = await getNextMatch();
-		if (match)
-			reply.send(match);
-		else
-			reply.send({ message: "Plus de matchs à jouer pour le moment." });
-	});
+	//! ajout le 19/19/2025
+	//route pour recuperer les tournois(pour participer aux tournois)
+	fastify.get('/winnerTournament/:id', /*shcema de tournoi a determiner*/ getTournamentUserId);
 
-	//fastify.get('/prout', async (request, reply) => {
-	////	const data = await getDataTournaments(request, reply);
-	//	const response = await fetch('http://match-service:3002/prout', {
-	//		method: 'POST',
-	//		headers: { 'Content-Type': 'application/json' },
-	//		body: JSON.stringify({
-	//		player1: 1,
-	//		player2: 2,
-	//		mode: 'pool'
-	//	})
-	//});
-	//	reply.send(response);
-	//});
+	//! ajout le 19/09/2025
+	// Si un joueur veux creer un tournois(remplie automatiquement avec ia, attente de 2 min pour qu'un autre user se connecte au tournoie)
+	// fastify.post('/launchTournament',{preHandler: authenticateJWT , schema: tournamentSchema }, launchTournament);
+
+
 }

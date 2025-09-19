@@ -1,77 +1,98 @@
 import { Player } from '../models/players.js';
-import { Pool } from '../models/tournaments.js';
+import { getTournamentsWonByUser } from '../models/model.js';
 
 import fetch from 'node-fetch';
 
-async function fetchUserByName(name) {
-  const res = await fetch(`http://user-service:3000/api/users/${name}`);
-  if (!res.ok) throw new Error('User not found');
-  return await res.json();
-}
 
+/*
+		CREATE TABLE IF NOT EXISTS tournament (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		matchs TEXT,
+		);
 
-const pools = [];
+		CREATE TABLE IF NOT EXISTS data_tournament (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			winnerId INTEGER,
+			remainingPlaces INTEGER NOT NULL
+		);
+*/
 
-/* 1  tournament sera cree si un user veux rejoindre un tournoi*/
-/* 2  un user rejoindra le tournoi si asser de place sinon creer un nouveau tournament*/
-export async function createSampleData() {
-  const pool1 = new Pool(1, 16);
-  const pool2 = new Pool(2, 16);
+// //! ajout 19/09/2025
+// export async function getUserById(id){
 
-  pool1.addPlayer(new Player(1, "Alice", 0));
-  pool1.addPlayer(new Player(2, "Bob", 0));
+// 	const user = await fetch(`http://user-service:3000/api/users/${id}`, {
+// 		method: 'GET',
+// 		headers: { 'Content-Type': 'application/json'},
+// 	});
+// 	if(!user.ok)
+// 		reply.code(401).send( { error : 'User not found'});
 
-  pool2.addPlayer(new Player(3, "Charlie", 0));
-  pool2.addPlayer(new Player(4, "Diana", 0));
+// 	await user.json();
 
-  pools.push(pool1, pool2);
-}
+// 	return reply.code(200).send({
+// 		user: user,
+// 		message: 'User info'
+// 	});
+// };
 
+//! ajout 19/09/2025
+//Recupere tout les tournoie gagne par un user
+export async function getTournamentUserId(request, reply){
 
-export async function getDataTournaments(request, reply) {
-	return {
-		message: "Bienvenue au grand Tournoi de BlackPong.\nIl n'en restera qu'un ...",
-		pools: pools.map(pool =>({
-			id: pool.id,
-			remainingPlaces: pool.remainingPlaces,
-			players: pool.getPlayers().map(player => ({
-				id: player.id,
-				name: player.name,
-				score: player.score
-			}))
-		}))
-	};
-}
+	console.log("###### function getTournamentUserId()\n");
 
-export function getNextMatch() {
-	for (const pool of pools) {
-		const players = pool.getPlayers();
-		if (players.length >= 2){
-			const player1 = players.shift();
-			const player2 = players.shift();
+	const id = request.params.id;
+	console.log("Parametre -> ", request.params.id, "\n");
+	const userId = Number(id);
+	console.log("userId -> ", userId, "\n");
+	if (!userId)
+		return reply.code(400).send( { error : 'UserId is required'});
 
-			return {
-				poolId: pool.id,
-				player1,
-				player2
-			};
-		}
-	}
-	return null;
-}
+	
+	// ON recupere tout les tournoies gqgner par un idUser
+	const tournaments = await getTournamentsWonByUser(userId);
+	console.log("tournoi gagne par l'userId :", userId," --> ", tournaments, "########\n");
 
-/*Dessous depuis un docker match ?? */
-//async function sendMatchToMatchService(match) {
-//    try {
-//        const response = await fetch('http://match_docker:3002/new_match', {
-//            method: 'POST',
-//            headers: { 'Content-Type': 'application/json' },
-//            body: JSON.stringify(match)
-//        });
-//        const data = await response.json();
-//        console.log('Success:', data);
-//    } catch (error) {
-//        console.error('Error:', error);
-//    }
-//}
+	/*
+	tournaments:
+	[
+		{ id: 1, winnerId: 42},
+		{ id: 3, winnerId: 42}
+	]
+	*/
 
+	if (tournaments === undefined)
+		return reply.code(200).send({
+			tournaments: [],
+			message: 'No tournament wins'
+		});		
+	// On doit stocker la liste des tournoi gagne par l'user dans une chaine "1;3;6..." pour userId1 par exemple
+
+	//list des ids tounois gagnes correspondant a luserID
+	const ids = tournaments.map(({ id }) => id);
+
+	const tournamentWinned = ids.join(';');
+
+	console.log("######\n");
+	return reply.code(200).send({
+		tournaments: tournamentWinned,
+		message: 'Tournaments winned'
+	});
+};
+
+//! ajout 19/09/2025
+export async function launchTournament(request, reply){
+
+	const user = request.user;
+	if(!user)
+		reply.code(401).send( { error : 'User not Authentified'});
+
+	const body = request.body;
+	if (!body)
+		reply.code(401).send( { error : 'Body is require'});
+
+	const numberOfMatch = body.nbMatch;
+	if (!numberOfMatch)
+		reply.code(401).send( { error : 'numberOfMatch is require'});
+	
+};

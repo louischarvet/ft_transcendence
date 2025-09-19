@@ -9,18 +9,20 @@ CREATE TABLE IF NOT EXISTS matches (
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-		CREATE TABLE IF NOT EXISTS players (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			status TEXT
-		);
-		CREATE TABLE IF NOT EXISTS pools (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			remainingPlaces INTEGER NOT NULL
-		);
-		CREATE TABLE IF NOT EXISTS pool_players (
-			pool_id INTEGER,
-			player_id INTEGER,
-			FOREIGN KEY (pool_id) REFERENCES pools(id),
-			FOREIGN KEY (player_id) REFERENCES players(id)
-		);
+CREATE TABLE IF NOT EXISTS players (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+	status TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pools (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	remainingPlaces INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pool_players (
+	pool_id INTEGER,
+	player_id INTEGER,
+	FOREIGN KEY (pool_id) REFERENCES pools(id),
+	FOREIGN KEY (player_id) REFERENCES players(id)
+);
