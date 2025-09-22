@@ -1,11 +1,16 @@
-// common_tools/inalteredMatch.js
+// common_tools/unalteredMatch.js
 
 import { getMatch } from '../models/models.js';
 
-export async function inalteredMatch(request, reply) {
+export async function unalteredMatch(request, reply) {
     const body = request.body;
     const matchID = body.id;
-    const match = getMatch(matchID);
+    const match = await getMatch(matchID);
+
+    console.log("/////////////////////////////// BODY\n", body,
+                "////////////////////////////////////\n",
+                "////////////////////////////// MATCH\n", match,
+                "////////////////////////////////////\n");
 
     if (match === undefined
         || body.id !== match.id

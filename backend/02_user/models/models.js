@@ -11,7 +11,11 @@ async function getUsers() {
 
 // Récupère un utilisateur par son nom
 async function getUserByName(table, name) {
-	return db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]);
+	return (await db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]));
+}
+
+export async function getUserById(table, id) {
+	return (await db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]));
 }
 
 async function insertInTable(table, toInsert) {
@@ -62,14 +66,14 @@ async function updateStatus(table, name, newStatus) {
 }
 
 export async function updateStatsWinner(table, userID) {
-	await db.run(`UPDATE ` + table + ` SET match_wins = match_wins + 1,
-		wins_streak = wins_streak + 1, played_matches = played_matches + 1,
+	await db.run(`UPDATE ` + table + ` SET match_wins = (match_wins + 1),
+		wins_streak = (wins_streak + 1), played_matches = (played_matches + 1),
 		status = 'available' WHERE id = ?`, [ userID ]);
 }
 
 export async function updateStatsLoser(table, userID) {
 	await db.run(`UPDATE ` + table + ` SET wins_streak = 0,
-		played_matches = played_matches + 1, status = 'available'
+		played_matches = (played_matches + 1), status = 'available'
 		WHERE id = ?`, [ userID ]);
 }
 

@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, getUsers, updateValue,
+import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
 	updateStatsWinner, updateStatsLoser, deleteUserInTable } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
@@ -328,15 +328,22 @@ export async function updateStats(request, reply) {
 	// 	match_wins++
 	//	wins_streak++
 	//	played_matches++
-	if (winner_id > 0) {
+	if (winner_id > 0)
 		await updateStatsWinner(winner_type, winner_id);
-	}
 
 	// perdant:
 	//	wins_streak = 0
 	//	played_matches++
-	if (loser_id > 0) {
+	if (loser_id > 0)
 		await updateStatsLoser(loser_type, loser_id);
-	}
-	return reply.code(200);
+
+	const user = await getUserById(p1_type, p1_id);
+	delete user.hashedPassword;
+	delete user.email;
+	delete user.telephone;
+
+	return reply.code(200).send({
+		user: user,
+		message: 'Stats updated.'
+	});
 }

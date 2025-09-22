@@ -33,11 +33,17 @@ export async function insertInHistory(match) {
 	const { id, p1_id, p1_type, scoreP1, p2_id, p2_type,
 		scoreP2, winner_id, created_at } = match;
 //	const time = await Math.floor( await Date.now() / 1000 );
+	const date = Date().toLocaleString('fr-FR');
+	const shortDate = date.split(" GMT")[0];
+	console.log("############## SHORTDATE:", shortDate);
 	await db.run(
 		`INSERT INTO history(id, p1_id, p1_type, scoreP1, p2_id, p2_type,
-		scoreP2, winner_id, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2, winner_id, created_at
+		scoreP2, winner_id, created_at, ended_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		[ id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2, winner_id, created_at, shortDate ]
 	);
+
+	return (await db.get(`SELECT * FROM history WHERE p1_id = ? AND p1_type = ? AND p2_id = ?
+		AND created_at = ? AND ended_at = ?`, [ p1_id, p1_type, p2_id, created_at, shortDate ]));
 }
 
 // Fonction pour supprimer un match de la table matches
@@ -79,14 +85,20 @@ export async function createVsMatch(p1, p2) {
 }
 
 
-export async function insertInTable(table, p1_id, p1_type, p2_id, match_type) {
-	const time = await Math.floor( await Date.now() / 1000 );
+export async function insertInTable(table, p1_id, p1_type, p2_id, p2_type) {
+//	const time = Math.floor( Date.now() / 1000 );
+	const date = Date().toLocaleString('fr-FR');
+	const shortDate = date.split(" GMT")[0];
 	await db.run(
-		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, match_type, created_at)
-		VALUES(?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, match_type, time ]
+		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, p2_type, created_at)
+		VALUES(?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, p2_type, shortDate ]
 	);
 	return (await db.get(
 		`SELECT * FROM ` + table + ` WHERE p1_id = ? AND p2_id = ? AND created_at = ?`,
-		[ p1_id, p2_id, time ]
+		[ p1_id, p2_id, shortDate ]
 	));
+}
+
+export async function getMatchByID(matchID) {
+	return (await db.get(`SELECT * FROM matches WHERE id = ?`, [ matchID ]));
 }

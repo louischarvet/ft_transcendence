@@ -2,7 +2,7 @@ import { registeredMatch, guestMatch, iaMatch, getHistory, finish, getAllMatches
 import { registeredMatchSchema, matchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 import { isAvailable } from '../common_tools/isAvailable.js';
-import { inalteredMatch } from '../common_tools/.js';
+import { unalteredMatch } from '../common_tools/unalteredMatch.js';
 
 export default async function matchRoutes(fastify, opts) {
 	// Route test
@@ -28,7 +28,7 @@ export default async function matchRoutes(fastify, opts) {
 	fastify.get('/history/:id', { preHandler: authenticateJWT }, getHistory);
 
 	// Route PUT pour mettre fin au match, update les infos necessaires
-	fastify.put('/finish', { preHandler: [ authenticateJWT, inalteredMatch ], schema: matchSchema }, finish);
+	fastify.put('/finish', { preHandler: [ authenticateJWT, unalteredMatch ], schema: matchSchema }, finish);
 
 
 

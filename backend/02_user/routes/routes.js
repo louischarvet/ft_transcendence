@@ -1,6 +1,6 @@
 import { createGuest, register, logIn, logOut, deleteUser,
 	fetchUserByName, fetchUserStatus, updateAvatar, updateInfo,
-	addFriend, changeStatus } from '../controllers/controllers.js';
+	addFriend, changeStatus, updateStats } from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema } from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
@@ -45,7 +45,7 @@ async function userRoutes(fastify, options) {
 //	fastify.get('/vs', checkAvailability)
 
 	// Utilisee par le service 2fa, probablement par match ou game plus tard
-	// Route a proteger !
+	// Routes a proteger !
 	fastify.put('/changestatus',{schema: userSchema }, changeStatus);
 	fastify.put('/updatestats', { schema: updateStatsSchema }, updateStats);
 }

@@ -1,6 +1,6 @@
 //controllers/controllers.js
 
-import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch } from '../models/models.js';
+import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
 
 // Requete a user-service pour update le status d'un joueur
@@ -34,14 +34,21 @@ async function fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id) {
 		winner_id: winner_id,
 	});
 
-	const res = await fetch('http://http:user-service:3000/updatestats', {
+	const res = await fetch('http://user-service:3000/updatestats', {
 		method: 'PUT',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: body,
 	});
-//	return res;
+	const resBody = await res.json();
+	const user = resBody.user;
+	// console.log("############################ festchUpdateStats Res\n",
+	// 			"##### BODY\n", resBody,
+	// 			"##########\n",
+	// 			"##### USER\n", user,
+	// 			"##########\n");
+	return (user);
 }
 
 // Route POST pour creer un match contre un joueur inscrit
@@ -86,7 +93,7 @@ export async function guestMatch(request, reply) {
 	const player1 = request.user;
 	const guestID = 0;
 
-	const user = await fetchChangeStatus(player1, guestID);
+	const user = await fetchChangeStatus(player1, 'in_game');
 
 	const match = await insertInTable('matches', player1.id, player1.type, guestID, 'guest');
 
@@ -102,7 +109,7 @@ export async function iaMatch(request, reply) {
 	const player1 = request.user;
 	const iaID = -1;
 
-	const user = await fetchChangeStatus(player1, iaID);
+	const user = await fetchChangeStatus(player1, 'in_game');
 
 	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia');
 
@@ -128,18 +135,29 @@ export async function getHistory(request, reply) {
 // Route PUT pour mettre fin au match, update les infos necessaires
 export async function finish(request, reply) {
 	const match = request.body;
+	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
+	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
+	match.winner_id = winner_id;
+
+	// verifier que le match est bien en cours
+	if (await getMatchByID(match.id) === undefined)
+		return reply.code(400).send({ error: 'There is no match with this ID.' });
 
 	// mettre le match dans la table history
-	await insertInHistory(match);
+	const historyMatch = await insertInHistory(match);
+
 	// supprimer le match de la table matches
 	await deleteMatch(match.id);
-	// mettre a jour les stats et le status des joueurs
-	const { p1_id, p1_type, p2_id, p2_type, winner_id } = match;
-	await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
-//	await fetchChangeStatus(p1_id, 'available');
-//	if (p2_id > 0)
-//		await fetchChangeStatus(p2_id, 'available');
 
+	// mettre a jour les stats et le status des joueurs
+	const user = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+
+	// Renvoie le profil du player1 (session user)
+	return reply.code(200).send({
+		user: user,
+		match: historyMatch,
+		message: 'Finished match.'
+	});
 }
 
 // Route GET pour récupérer tous les matches
