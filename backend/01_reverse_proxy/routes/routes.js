@@ -16,7 +16,7 @@ async function routesPlugin(fastify, options) {
 		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
-		upstream: "http://tournament-service:3003",
+		upstream: "http://tournament-service:3000",
 		prefix: '/tournament',
 		rewritePrefix: '/',
 	});

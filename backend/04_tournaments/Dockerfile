@@ -5,10 +5,8 @@ WORKDIR /usr/src/app
 COPY ./package.json ./package-lock.json* ./
 
 RUN npm install && npm install -g nodemon
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install sqlite3 -y
-RUN npm install sqlite3
-RUN npm install sqlite
+RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
+#RUN npm install sqlite
 
 COPY . .
 

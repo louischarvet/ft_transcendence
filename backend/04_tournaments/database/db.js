@@ -12,13 +12,13 @@ export async function initDB() {
 
 		CREATE TABLE IF NOT EXISTS tournament (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		matchs TEXT
-		);
-
-		CREATE TABLE IF NOT EXISTS data_tournament (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			winnerId INTEGER,
-			remainingPlaces INTEGER NOT NULL
+		status TEXT DEFAULT 'waiting',
+		matchs TEXT,
+		players TEXT DEFAULT '',
+		winnerId INTEGER,
+		nbPlayersTotal INTEGER NOT NULL,
+		remainingPlaces INTEGER NOT NULL,
+		created_at INTEGER NOT NULL
 		);
 	`);
 	return db;

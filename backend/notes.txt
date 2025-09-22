@@ -40,14 +40,13 @@ data persistante :
         "picture": "./pictures/BG.webp"
     },
     "message": "User created"
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4MTI0MDA2LCJleHAiOjE3NTgxMzEyMDZ9.EUc2ylZK8GxVD9X_f99goCioad3cav7sRuTXaM2KEUg",
-}
---------------------------------------------------------------------
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4NTAxMzM3LCJleHAiOjE3NTg1MDg1Mzd9.tIpv6yEiyHqE6-wWwpRCUPha_yVV5PPLbENLX4H85ys",
+}-----------------------------------------------------------
 17/09/2025
 
 Todo : 
 
--Impossibilite de PUT name ( function : updateInfo) ---> 	OK👌
+-Impossibilite de PUT name ( function : updateInfo) ---> 	OK👌pour userservice
 
 -Replace getName -> getId (A voir avec Louis)
 	protege et certifit lidentite de luser (name peux changer) ---> OK👌 (name impossible a modifier)
@@ -57,9 +56,9 @@ Todo :
 
 	PROTECTION AJV (Another JSON Validator)
 
-	1. Ajout des patern dans les schema : ---> 	OK👌
+	1. Ajout des patern dans les schema : ---> 	OK👌pour userservice
 		exple : pattern: "^[^<>{}\"'`]*$"
-	2. Max lenght va limiter les risques ---> 	OK👌
+	2. Max lenght va limiter les risques ---> 	OK👌pour userservice
 		exple : maxLength: 254
 
 	PROTECTION Sanitization backend facultatif mais utile en plus d’AJV
@@ -87,7 +86,7 @@ Todo :
 				});
 
 
-	3 - headers de sécurité HTTP ----> ajoute X-Content-Type-Options, X-XSS-Protection
+	3 - headers de sécurité HTTP ----> ajoute X-Content-Type-Options, X-XSS-Protection ---> 	OK👌 pour userservice
 		npm install @fastify/helmet
 		import helmet from '@fastify/helmet';
 		await fastify.register(helmet, {

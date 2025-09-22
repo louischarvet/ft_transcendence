@@ -5,11 +5,11 @@ export const tournamentSchema = {
 	$id: 'tournamentSchema',
 	body: {
 		type: 'object',
-		required: ['numberOfMatch'],
+		required: ['nbPlayers'],
 		properties: {
-			numberOfMatch: {
+			nbPlayers: {
 				type: 'integer',
-				enum: ['4', '8', '16']
+				enum: [4, 8, 16],
 			},
 		},
 		additionalProperties: false
