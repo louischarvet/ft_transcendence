@@ -20,15 +20,10 @@ export default async function routesPlugin(fastify, options) {
 	fastify.post('/joinTournament/:id', { preHandler: authenticateJWT }, joinTournament);
 	fastify.post('/endTournament', { preHandler: authenticateJWT }, endTournament);
 	fastify.post('/startTournament', { preHandler: authenticateJWT }, startTournament);
-
-	fastify.get('/:id', (req, reply) => {
-		console.log('Tournament ID received:', req.params.id);
-		return getTournamentById(req, reply);
-	});
-
-
+	fastify.get('/:id', getTournamentById);
 	fastify.get('/all', getAllTournaments);
 
+	//! ajout le 22/09/2025
 	//pour louis
 	fastify.put('/updateMatchAndPlaces', { preHandler: authenticateJWT }, updateMatchAndRemainingPlaces);
 
