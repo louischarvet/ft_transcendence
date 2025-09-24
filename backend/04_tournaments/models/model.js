@@ -18,7 +18,6 @@ export async function createTournamentRow(nbPlayersTotal, creatorId) {
 }
 
 export async function getTournament(id){
-	console.log("#####getTournament######\n -> id : ", id, "######\n");
 	return await db.get(`SELECT * FROM tournament WHERE id = ?`, [id]);
 };
 

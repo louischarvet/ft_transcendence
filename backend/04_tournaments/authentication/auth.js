@@ -31,9 +31,6 @@ export async function authenticateJWT(request, reply) {
             'Authorization': request.headers.authorization
         }
     });
-	console.log("######### AUTHRES\n", authRes,
-				"#################\n"
-	);
     const data = await authRes.json();
 	//! modifier le 17/09/2025 
 	if (!data)
@@ -43,6 +40,7 @@ export async function authenticateJWT(request, reply) {
     const currentuser = data.user ; // fallback si le service renvoie "user"
     //const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
 
+	console.log("####\n", currentuser, "####\n");
     if (!authRes.ok || !currentuser)
         return reply.code(401).send({ error: 'Unauthorized' });
 

@@ -152,9 +152,11 @@ export async function finish(request, reply) {
 	// mettre a jour les stats et le status des joueurs
 	const user = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
 
-	// Renvoie le profil du player1 (session user)
+	// Renvoie le profil du player1 (session user) + player2 (si pas IA) + le match historique
+	// + message de reussite
 	return reply.code(200).send({
 		user: user,
+		// user2
 		match: historyMatch,
 		message: 'Finished match.'
 	});

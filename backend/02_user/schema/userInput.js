@@ -6,21 +6,6 @@ export const registerInput = {
 		type: 'object',
 		required: [ 'name', 'password', 'email' ],
 		properties: {
-			name: { type: 'string', minLength: 1 },
-			password: { type: 'string', minLength: 8 },
-			email: { type: 'string', minLength: 8 }, // TODO parsing mail
-			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
-		},
-		additionalProperties: false
-	}
-}
-
-export const loginInput = {
-	$id: 'loginInput',
-	body: {
-		type: 'object',
-		required: [ 'name', 'password' ],
-		properties: {
 			name: {
 				type: 'string',
 				minLength: 1,
@@ -39,7 +24,32 @@ export const loginInput = {
 				maxLength: 254,
 				format: 'email',
 				pattern: '^[^<>{}"\'`]*$'
-			}
+			},
+			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
+		},
+		additionalProperties: false
+	}
+}
+
+export const loginInput = {
+	$id: 'loginInput',
+	body: {
+		type: 'object',
+		required: ['name', 'password'],
+		properties: {
+			name: {
+				type: 'string',
+				minLength: 1,
+				maxLength: 64,
+				pattern: '^[^<>{}"\'`]*$'
+			},
+			password: {
+				type: 'string',
+				minLength: 8,
+				maxLength: 128,
+				pattern: '^[^<>{}"\'`]*$'
+			},
+			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
 		},
 		additionalProperties: false
 	}
@@ -74,6 +84,17 @@ export const updateSchema = {
 				maxLength: 254,
 				pattern: '^[^<>{}"\'`]*$'
 			}
+		},
+		additionalProperties: false
+	}
+}
+
+export const guestTmp = {
+	$id: 'guestTmp',
+	body: {
+		type: 'object',
+		properties: {
+			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
 		},
 		additionalProperties: false
 	}

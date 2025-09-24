@@ -5,7 +5,7 @@ import {
   getTournamentsWonByUser,
   startTournamentInternal,
   setTournamentWinner,
-  updateMatchAndPlaces,
+  updateMatchAndPlaces
 } from '../models/model.js';
 //import fetch from 'node-fetch';
 
@@ -24,6 +24,19 @@ import {
  };
 
 //! ajout 24/09/2025
+export async function fetchGetGuestById(id){
+
+	const user = await fetch(`http://user-service:3000/getguest/${id}`, {
+		method: 'GET'
+	});
+ 	if(!user.ok)
+ 		return ({ error : 'User not found'});
+
+ 	const currentUser = await user.json();
+	return (currentUser.user);
+};
+
+//! ajout 24/09/2025
 export async function fetchChangeStatusUser(user){
 	const res = await fetch(`http://user-service:3000/changestatus`, {
 		method: 'PUT',
@@ -36,6 +49,34 @@ export async function fetchChangeStatusUser(user){
 	const updatedUser = await res.json();
 	return (updatedUser.user);
 };
+
+//! ajout 24/09/2025
+export async function fetchUserLogin(name, password){
+	const res = await fetch(`http://user-service:3000/login`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name, password, tmp: true })
+	});
+	if(!res.ok)
+		return ({ error : 'Login failed'});
+
+	const loggedUser = await res.json();
+	return (loggedUser.user);
+}
+
+//!ajout 24/09/2025
+export async function fetchCreateGuest(){
+	const res = await fetch(`http://user-service:3000/guest`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ tmp: true })
+	});
+	if(!res.ok)
+		return ({ error : 'Login failed'});
+
+	const guestUser = await res.json();
+	return (guestUser.user);
+}
 
 //! ajout 19/09/2025
 //Recupere tout les tournoie gagne par un user
@@ -202,10 +243,88 @@ export async function joinTournamentSession(request, reply){
 //TODO 24/09/2025
 // Route POST: un user se log sur une meme session pour rejoindre le tournoi
 export async function joinTournamentRegistered(request, reply){
+	const { name, password } = request.body;
+
+	// Login du player2+
+	const player2 = await fetchUserLogin(name, password);
+	console.log("#####player2 : ", player2);
+	if (player2.error)
+		return reply.code(400).send( { error : 'Login failed'});
+
+	// same
+	const tournamentId = Number(request.params.id);
+	if (!tournamentId || tournamentId <= 0)
+		return reply.code(400).send( { error : 'TournamentId is required'});
+	
+	const tournament = await getTournament(tournamentId);
+	if (!tournament)
+		return reply.code(404).send( { error : 'Tournament not found'});
+	if (tournament.status !== 'waiting')
+		return reply.code(400).send( { error : 'Tournament already started'});
+
+		if (tournament.remainingPlaces < 1)
+		return reply.code(400).send( { error : 'Could not join tournament (full or already joined)'});
+
+	const currentUser = await fetchGetUserById(player2.id);
+	if (!currentUser)
+		return reply.code(400).send( { error : 'PlayerId does not exist'});
+	
+//	console.log("#####currentUser : ", currentUser);
+	if (currentUser.status !== 'available')
+		return reply.code(400).send( { error : 'player unavailble'});
+
+	const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
+	let updatedTournament = await addNewPlayerToTournament(tournamentId, addPlayer);
+
+	await fetchChangeStatusUser(currentUser);
+
+	if (updatedTournament.remainingPlaces  === 0)
+		updatedTournament = await startTournamentInternal(updatedTournament.id);
+
+	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
+	
 }
 
 // Route POST: un guest rejoint le tournoi (creer le guest)
 export async function joinTournamentGuest(request, reply){
+		// Login du player2+
+	const player2 = await fetchCreateGuest();
+	if (player2.error)
+		return reply.code(400).send( { error : 'Login failed'});
+
+	// same
+	const tournamentId = Number(request.params.id);
+	if (!tournamentId || tournamentId <= 0)
+		return reply.code(400).send( { error : 'TournamentId is required'});
+	
+	const tournament = await getTournament(tournamentId);
+	if (!tournament)
+		return reply.code(404).send( { error : 'Tournament not found'});
+	if (tournament.status !== 'waiting')
+		return reply.code(400).send( { error : 'Tournament already started'});
+
+	if (tournament.remainingPlaces < 1)
+		return reply.code(400).send( { error : 'Could not join tournament (full or already joined)'});
+
+	// fetch guest by Id
+	const currentUser = await fetchGetGuestById(player2.id);
+	if (!currentUser)
+		return reply.code(400).send( { error : 'PlayerId does not exist'});
+	
+	console.log("#####currentUser : ", currentUser);
+	if (currentUser.status !== 'available')
+		return reply.code(400).send( { error : 'player unavailble'});
+
+	const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
+	let updatedTournament = await addNewPlayerToTournament(tournamentId, addPlayer);
+
+	await fetchChangeStatusUser(currentUser);
+
+	if (updatedTournament.remainingPlaces  === 0)
+		updatedTournament = await startTournamentInternal(updatedTournament.id);
+
+	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
+	
 }
 
 //! ajout 22/09/2025
@@ -235,7 +354,7 @@ export async function endTournament(request, reply) {
 
 //! ajout 22/09/2025
 export async function startTournament(request, reply) {
-
+	// fetch create tournament matches
 	const user = request.user;
 	const tournamentId = request.params.id;
 	if ( !tournamentId || tournamentId <= 0 )
@@ -260,6 +379,16 @@ export async function startTournament(request, reply) {
 		return reply.code(500).send({ error: 'Could not start tournament' });
 
 	// fetch User: recuperer les stats de tous les joueurs
+	// tableau d'objet user
+	const stringPlayers = updatedTournament.players;
+	const playersArray = stringPlayers.split(';').filter(p => p);
+	//creation d'un tableau d'objet {id: number, type: string, rank: number, winRate: number};
+	console.log("###########playersArray\n", playersArray ,"#############\n");
+
+	// Les guest prioritaire pour se battre contre les ia
+	//sinon rank le plus faible contre ia en priorite
+
+
 	// dans user: au prealable calculer win rate des joueurs (victoires / matchs joues)
 	// faire ici un classement des joueurs selon leurs win rates
 	// joueurs les plus nazes jouent contre l'I.A.?

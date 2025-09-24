@@ -1,6 +1,7 @@
-import { launchTournament, getTournamentWinUserId, joinTournament, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces } from '../controllers/tournaments.js';
+import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces } from '../controllers/tournaments.js';
 import { authenticateJWT } from '../authentication/auth.js';
 import { tournamentSchema } from '../schema/tournamentSchema.js';
+import { loginInput } from '../schema/userInput.js';
 
 
 export default async function routesPlugin(fastify, options) {
@@ -18,7 +19,7 @@ export default async function routesPlugin(fastify, options) {
 
 	//! ajout le 22/09/2025
 	fastify.post('/jointournamentsession/:id', { preHandler: authenticateJWT }, joinTournamentSession);
-	fastify.post('/jointournamentregistered/:id', { preHandler: authenticateJWT }, joinTournamentRegistered);
+	fastify.post('/jointournamentregistered/:id', { preHandler: authenticateJWT, schema: loginInput }, joinTournamentRegistered);
 	fastify.post('/jointournamentguest/:id', { preHandler: authenticateJWT }, joinTournamentGuest);
 
 	fastify.post('/endtournament', { preHandler: authenticateJWT }, endTournament);

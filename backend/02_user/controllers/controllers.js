@@ -15,17 +15,23 @@ export async function createGuest(request, reply) {
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
+	const tmp = request.body.tmp;
 
 	await insertInTable('guest', {
 		name: name
 	});
 
+	// possiblement foireux si creation en tant que P1 avec tmp==true -> pas de token
 	const user = await getUserByName('guest', name);
-	const response = await generateJWT(user);
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
+	let token;
+	if (!tmp) {
+		const response = await generateJWT(user);
+		const jsonRes = await response.json();
+		token = jsonRes.token;
+	} else
+		token = undefined;
 
-	console.log("####\n");
+	console.log("####GUEST\n", user, "####\n");
 	return reply.code(201).send({
 		user,
 		token,
@@ -93,7 +99,7 @@ export async function logIn(request, reply) {
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		updateStatus('registered', name, 'pending');
+		updateStatus('registered', name, 'available');
 
 		const user = await getUserByName('registered', name);
 		delete user.hashedPassword;
@@ -111,7 +117,7 @@ export async function logIn(request, reply) {
 		const body = {
 			user: user,
 			token: token,
-			message: 'User ' + name + ' pending 2fa.',
+			message: 'User ' + name + ' available.',
 		};
 		return reply.code(201).send(body);
 	} else
@@ -318,6 +324,21 @@ export	async function fetchUserById(request, reply){
 		user: userInfos
 	});
 };
+
+// Route GET /getguest/:id
+export async function getGuestById(request, reply) {
+	const userId = request.params.id;
+	if (!userId)
+		return reply.code(401).send({ error : 'Id of user required'});
+
+	const userInfos = await getUserById('guest', userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+}
 
 // Route POST /addfriend/(name)
 export async function addFriend(request, reply) {

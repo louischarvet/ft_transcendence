@@ -4,6 +4,7 @@
 export const userSchema = {
 	$id: 'userSchema',
 	body: {
+		type: 'object',
 		required: ['id', 'name', 'type', 'status'],
 		properties: {
 			id: { type: 'integer' },
@@ -53,6 +54,7 @@ export const userSchema = {
 export const updateStatsSchema = {
 	$id: 'updateStatsSchema',
 	body: {
+		type: 'object',
 		required: [ 'p1_id', 'p1_type', 'p2_id', 'p2_type', 'winner_id' ],
 		properties: {
 			p1_id: { type: 'integer' },

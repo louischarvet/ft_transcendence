@@ -59,8 +59,8 @@ services:
     depends_on:
       - user-service
       - match-service
-    #volumes:
-      #- tournament_db:/usr/src/app/data
+    volumes:
+      - tournament_db:/usr/src/app/data
 #    command: npm run dev
 
   session-service:
@@ -99,7 +99,7 @@ networks:
 
 volumes:
   user_db:
+  tournament_db:
   #match_db:
-  #tournament_db:
   #session_db:
   #twofa_db:

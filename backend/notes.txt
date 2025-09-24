@@ -27,11 +27,14 @@ Tokens JWT >
 ---------------------------------------------------
 
 data persistante :
+	id = 1
+	name = Nathan
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4NzI0NjQwLCJleHAiOjE3NTg3MzE4NDB9.lbg4FpcnqzvcXpeVAan-gON6mplDUqaa-2t4litmWJM",
 
 {
     "user": {
-        "id": 1,
-        "name": "NAthan",
+        "id": 3,
+        "name": "Popo",
         "type": "registered",
         "status": "pending",
         "wins": 0,
@@ -39,10 +42,24 @@ data persistante :
         "friend_ship": null,
         "picture": "./pictures/BG.webp"
     },
-    "message": "User created"
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4NjM3OTk2LCJleHAiOjE3NTg2NDUxOTZ9.ejsWVWeBNoi0Pzaqlq1k5M1Z7s9_edlXVhZCk6G5lcg",
+    "message": "User Popo created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MywiaWF0IjoxNzU4NzI0ODg5LCJleHAiOjE3NTg3MzIwODl9.eTJorTV9fzLiNYQO4hht-C5F3y4dSljilmCU6u3Hgtc",
 }
 
+{
+    "user": {
+        "id": 4,
+        "name": "Caca",
+        "type": "registered",
+        "status": "pending",
+        "wins": 0,
+        "losses": 0,
+        "friend_ship": null,
+        "picture": "./pictures/BG.webp"
+    },
+    "message": "User Caca created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2FjYSIsInR5cGUiOiJyZWdpc3RlcmVkIiwiaWQiOjQsImlhdCI6MTc1ODcyNTE4MiwiZXhwIjoxNzU4NzMyMzgyfQ.fB3ZMxRwJF1otxhGsi9NHP5f3s-pasvCKZn6GTaeenA",
+}
 -----------------------------------------------------------
 17/09/2025
 

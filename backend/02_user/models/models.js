@@ -14,14 +14,10 @@ async function getUserByName(table, name) {
 	return (await db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]));
 }
 
-export async function getUserById(table, id) {
+async function getUserById(table, id) {
 	return (await db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]));
 }
 
-// Récupère un utilisateur par son nom
-async function getUserById(table, id) {
-	return db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]);
-}
 
 async function insertInTable(table, toInsert) {
 	const name = toInsert.name;

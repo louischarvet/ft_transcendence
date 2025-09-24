@@ -77,6 +77,7 @@ export async function verifyCode(request, reply) {
 	// 	request.headers, "####################################################\n"
 	// );
 	const { code, id, name, type, tmp } = request.body;
+	// tchecher que le name est bon
 	const codeToCompare = await getFromTable(id);
 	if (codeToCompare === undefined)
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });

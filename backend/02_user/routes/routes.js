@@ -1,7 +1,7 @@
 import { createGuest, register, logIn, logOut, deleteUser,
-	fetchUserByName, fetchUserStatus, updateAvatar, updateInfo,
-	addFriend, changeStatus, updateStats } from '../controllers/controllers.js';
-import { registerInput, loginInput, updateSchema } from '../schema/userInput.js';
+	fetchUserStatus, updateAvatar, updateInfo,
+	addFriend, changeStatus, updateStats, fetchUserByIdToken,fetchUserById, getGuestById } from '../controllers/controllers.js';
+import { registerInput, loginInput, updateSchema, guestTmp } from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
 
@@ -14,7 +14,7 @@ async function userRoutes(fastify, options) {
 	// prevalider les tokens JWT ici ?
 
 	// Renvoie un userSchema
-	fastify.post('/guest', createGuest);
+	fastify.post('/guest', { schema: guestTmp }, createGuest);
 	fastify.post('/register', { schema: registerInput }, register);
 	fastify.put('/login', { schema: loginInput }, logIn);
 
@@ -35,6 +35,8 @@ async function userRoutes(fastify, options) {
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
 	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT},  addFriend);
+
+	fastify.get('/getguest/:id', getGuestById);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs
