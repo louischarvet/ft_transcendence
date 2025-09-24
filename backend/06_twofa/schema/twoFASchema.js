@@ -27,6 +27,7 @@ export const verifySchema = {
 				type: 'string',
 				enum: [ 'guest', 'registered' ],
 		  	},
+			tmp: { type: 'boolean' },
 		},
 		additionalProperties: false
 	}

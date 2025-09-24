@@ -3,7 +3,7 @@
 import Fastify from 'fastify';
 import jwt from '@fastify/jwt'
 import userRoutes from './routes/routes.js';
-import { userInput, updateSchema } from './schema/userInput.js';
+import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 //! ajout le 16/09/2025
 import { initDB } from './database/db.js';
@@ -36,13 +36,16 @@ await fastify.register(helmet, {
 	global: true
 });
 
+// On instencie les Schemas de JSONs
+fastify.addSchema(registerInput);
+fastify.addSchema(loginInput);
+
+fastify.addSchema(updateSchema);
+fastify.addSchema(userSchema);
+
 fastify.register(fastifyMultipart);
 fastify.register(userRoutes);
 
-// On instencie les Schemas de JSONs
-fastify.addSchema(userInput);
-fastify.addSchema(updateSchema);
-fastify.addSchema(userSchema);
 
 //! ajout le 16/09/2025
 await initDB();

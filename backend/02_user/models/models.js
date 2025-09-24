@@ -11,7 +11,11 @@ async function getUsers() {
 
 // Récupère un utilisateur par son nom
 async function getUserByName(table, name) {
-	return db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]);
+	return (await db.get('SELECT * FROM ' + table + ' WHERE name = ?', [name]));
+}
+
+export async function getUserById(table, id) {
+	return (await db.get('SELECT * FROM ' + table + ' WHERE id = ?', [id]));
 }
 
 // Récupère un utilisateur par son nom
@@ -64,6 +68,18 @@ async function updateValue(table, column, name, newValue) {
 async function updateStatus(table, name, newStatus) {
 //	const db = await getDB();
 	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
+}
+
+export async function updateStatsWinner(table, userID) {
+	await db.run(`UPDATE ` + table + ` SET match_wins = (match_wins + 1),
+		wins_streak = (wins_streak + 1), played_matches = (played_matches + 1),
+		status = 'available' WHERE id = ?`, [ userID ]);
+}
+
+export async function updateStatsLoser(table, userID) {
+	await db.run(`UPDATE ` + table + ` SET wins_streak = 0,
+		played_matches = (played_matches + 1), status = 'available'
+		WHERE id = ?`, [ userID ]);
 }
 
 // Delete user i ntable

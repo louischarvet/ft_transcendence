@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, updateValue,
-	getColumnFromTable, updateStatus,
-	deleteUserInTable, getUserById} from '../models/models.js'
-import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
+	getColumnFromTable, getAvailableUser, updateStatus,
+	updateStatsWinner, updateStatsLoser, deleteUserInTable } from '../models/models.js'
+import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
@@ -34,8 +34,7 @@ export async function createGuest(request, reply) {
 }
 
 // route POST /register
-export async function signIn(request, reply) {
-	console.log("####Function signIn called:\n");
+export async function register(request, reply) {
 	const { name, password, email} = request.body;
 
 	if (!await checkNameFormat(name))
@@ -66,6 +65,7 @@ export async function signIn(request, reply) {
 	delete user.email;
 	delete user.telephone;
 
+	// 2FA
 	await sendCode({
 		name: name,
 		email: email,
@@ -77,14 +77,13 @@ export async function signIn(request, reply) {
 	console.log("####\n");
 	return reply.code(201).send({
 		user,
-		message: 'User created'
+		message: 'User ' + name + ' created'
 	});
 }
 
 // route PUT /login
 export async function logIn(request, reply) {
-	console.log("####Function logIn called:\n");
-	const { name, password, email } = request.body;
+	const { name, password, tmp } = request.body;
 
 	const exists = await getUserByName('registered', name);
 
@@ -101,17 +100,20 @@ export async function logIn(request, reply) {
 		delete user.email;
 		delete user.telephone;
 
-		await sendCode({
-			name: name,
-			email: email,
-			id: user.id
-		});
-		
-		console.log("####\n");
-		return reply.code(201).send({
-			user,
-			message: 'User logged in'
-		});
+		// 2FA disabled for login
+		// await sendCode({
+		// 	name: name,
+		// 	email: email,
+		// 	id: user.id
+		// });
+
+		const token = tmp == true ? undefined : await generateJWT(user);
+		const body = {
+			user: user,
+			token: token,
+			message: 'User ' + name + ' pending 2fa.',
+		};
+		return reply.code(201).send(body);
 	} else
 		return reply.code(401).send({ error: 'Bad password' });
 }
@@ -133,10 +135,8 @@ export async function logOut(request, reply) {
 		return reply.code(201).send({
 			message: "Successfully logged out."
 		});
-	} else {
-		console.log("####\n");
+	} else
 		return revRes;
-	}
 }
 
 // Route DELETE /delete
@@ -375,23 +375,62 @@ export async function fetchUserStatus(request, reply) {
 
 // Route PUT /changestatus
 export async function changeStatus(request, reply) {
-	console.log("####Function changeStatus called:\n");
-	const reqBody = request.body;
+//	console.log("#### IM chagestatus in Docker user\n########");
 	// check si player2 existe
 	// s'il n'existe pas -> player1 VS IA
-	console.log("####### body : \n", reqBody, "#####\n");
-	const name = reqBody.name;
+//	console.log("####### \n", reqBody, "#####\n");
+	const { name, status, type } = request.body;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
-	
-	const newState = reqBody.status;
-	if (newState === undefined)
+	if (status === undefined)
 		return reply.code(400).send({ error: 'Status is required' });
 	
-	const user = await getUserByName('registered', name);
+	await updateStatus(type, name, status);
+	const user = await getUserByName(type, name);
+	delete user.hashedPassword;
+	delete user.telephone;
+	delete user.email;
 	// verifier si l'etat n'a pas change entre temps ?
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
-	await updateStatus('registered', name, newState);
-	console.log("####\n");
-	return reply.code(201).send({user: user, message : 'Status updated!'});
+	return reply.code(201).send({
+		user: user,
+		message : 'Status updated!',
+	});
+}
+
+export async function updateStats(request, reply) {
+	const { p1_id, p1_type, p2_id, p2_type, winner_id } = request.body;
+	let winner_type, loser_id, loser_type;
+	if (winner_id === p1_id) {
+		winner_type = p1_type;
+		loser_id = p2_id;
+		loser_type = p2_type;
+	} else {
+		winner_type = p2_type;
+		loser_id = p1_id;
+		loser_type = p1_type;
+	}
+
+	// gagnant:
+	// 	match_wins++
+	//	wins_streak++
+	//	played_matches++
+	if (winner_id > 0)
+		await updateStatsWinner(winner_type, winner_id);
+
+	// perdant:
+	//	wins_streak = 0
+	//	played_matches++
+	if (loser_id > 0)
+		await updateStatsLoser(loser_type, loser_id);
+
+	const user = await getUserById(p1_type, p1_id);
+	delete user.hashedPassword;
+	delete user.email;
+	delete user.telephone;
+
+	return reply.code(200).send({
+		user: user,
+		message: 'Stats updated.'
+	});
 }
