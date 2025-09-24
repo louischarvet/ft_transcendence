@@ -9,7 +9,7 @@ const secret = 'secret-key';
 // Route POST /generate
 export async function generateToken(request, reply) {
 	const { name, type, id } = request.body;
-	const token = await jwt.sign({
+	const token = jwt.sign({
 		name: name,
 		type: type,
 		id: id,

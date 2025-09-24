@@ -102,7 +102,7 @@ export async function verifyCode(request, reply) {
 		body: JSON.stringify({
 				name: name,
 				id: id,
-				status: 'pending',
+				status: 'available',
 				type: type
 		}),
 	});

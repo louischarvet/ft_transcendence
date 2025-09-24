@@ -10,16 +10,19 @@ export default async function routesPlugin(fastify, options) {
 
 	//! ajout le 19/19/2025
 	//route pour recuperer les tournois(pour participer aux tournois)
-	fastify.get('/winnerTournament/:id', /*shcema de tournoi a determiner*/ getTournamentWinUserId);
+	fastify.get('/winnertournament/:id', /*shcema de tournoi a determiner*/ getTournamentWinUserId);
 
 	//! ajout le 19/09/2025
 	// Si un joueur veux creer un tournois(remplie automatiquement avec ia, attente de 2 min pour qu'un autre user se connecte au tournoie)
-	 fastify.post('/launchTournament',{preHandler: authenticateJWT , schema: tournamentSchema }, launchTournament);
+	 fastify.post('/launchtournament',{preHandler: authenticateJWT , schema: tournamentSchema }, launchTournament);
 
 	//! ajout le 22/09/2025
-	fastify.post('/joinTournament/:id', { preHandler: authenticateJWT }, joinTournament);
-	fastify.post('/endTournament', { preHandler: authenticateJWT }, endTournament);
-	fastify.post('/startTournament', { preHandler: authenticateJWT }, startTournament);
+	fastify.post('/jointournamentsession/:id', { preHandler: authenticateJWT }, joinTournamentSession);
+	fastify.post('/jointournamentregistered/:id', { preHandler: authenticateJWT }, joinTournamentRegistered);
+	fastify.post('/jointournamentguest/:id', { preHandler: authenticateJWT }, joinTournamentGuest);
+
+	fastify.post('/endtournament', { preHandler: authenticateJWT }, endTournament);
+	fastify.post('/starttournament/:id', { preHandler: authenticateJWT }, startTournament);
 	fastify.get('/:id', getTournamentById);
 	fastify.get('/all', getAllTournaments);
 

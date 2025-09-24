@@ -35,9 +35,9 @@ export async function authenticateJWT(request, reply) {
 
     const data = await authRes.json();
 	console.log("/// data : \n", data);
-	//! modifier le 17/09/2025 
-	if (!data)
-		return reply.code(401).send({ error: 'Unauthorized: No data received from auth service' });
+	////! modifier le 17/09/2025 
+	//if (!data)
+	//	return reply.code(401).send({ error: 'Unauthorized: No data received from auth service' });
 
 	//! modifier le 17/09/2025 
     const currentuser = data.user ; // fallback si le service renvoie "user"

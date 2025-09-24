@@ -11,14 +11,24 @@ export async function initDB() {
 	await db.exec(`
 
 		CREATE TABLE IF NOT EXISTS tournament (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		status TEXT DEFAULT 'waiting',
-		matchs TEXT,
-		players TEXT DEFAULT '',
-		winnerId INTEGER,
-		nbPlayersTotal INTEGER NOT NULL,
-		remainingPlaces INTEGER NOT NULL,
-		created_at INTEGER NOT NULL
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			creatorId INTEGER NOT NULL,
+			status TEXT DEFAULT 'waiting',
+			matchs TEXT DEFAULT '',
+			players TEXT DEFAULT '',
+			nbPlayersTotal INTEGER NOT NULL,
+			remainingPlaces INTEGER NOT NULL,
+			created_at TEXT NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS history (
+			id INTEGER NOT NULL,
+			matchs TEXT,
+			players TEXT,
+			ranking TEXT,
+			winnerId INTEGER,
+			ended_at TEXT,
+			created_at TEXT NOT NULL
 		);
 	`);
 	return db;

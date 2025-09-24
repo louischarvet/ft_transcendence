@@ -11,22 +11,31 @@ import {
 
 
 //// //! ajout 19/09/2025
-// export async function getUserById(id){
+ export async function fetchGetUserById(id){
 
-// 	const user = await fetch(`http://user-service:3000/api/users/${id}`, {
-// 		method: 'GET',
-// 		headers: { 'Content-Type': 'application/json'},
-// 	});
-// 	if(!user.ok)
-// 		reply.code(401).send( { error : 'User not found'});
+ 	const user = await fetch(`http://user-service:3000/${id}`, {
+		method: 'GET'
+	});
+ 	if(!user.ok)
+ 		return ({ error : 'User not found'});
 
-// 	await user.json();
+ 	const currentUser = await user.json();
+	return (currentUser.user);
+ };
 
-// 	return reply.code(200).send({
-// 		user: user,
-// 		message: 'User info'
-// 	});
-// };
+//! ajout 24/09/2025
+export async function fetchChangeStatusUser(user){
+	const res = await fetch(`http://user-service:3000/changestatus`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(user)
+	});
+	if(!res.ok)
+		return ({ error : 'User not found'});
+
+	const updatedUser = await res.json();
+	return (updatedUser.user);
+};
 
 //! ajout 19/09/2025
 //Recupere tout les tournoie gagne par un user
@@ -109,40 +118,46 @@ export async function launchTournament(request, reply) {
 	const nbPlayers = body.nbPlayers;
 	if (!nbPlayers || typeof nbPlayers !== 'number' || nbPlayers != 4 && nbPlayers != 8 && nbPlayers != 16)
 		return reply.code(400).send({ error: 'nbPlayers invalid' });
-
-	const tournament = await createTournamentRow({ nbPlayersTotal: nbPlayers });
-	if (!tournament)
-		return reply.code(500).send({ error: 'Could not create tournament' });
-
+	
 	const creatorId = user.id;
 	if (!creatorId || creatorId <= 0)
 		return reply.code(400).send({ error: 'creatorId is required' });
 
-	const tmpTournament = await getTournament(tournament.id);
+	const tournament = await createTournamentRow(nbPlayers, creatorId);
+	if (!tournament)
+		return reply.code(500).send({ error: 'Could not create tournament' });
+
+
+	const type = user.type;
+	if (!type)
+		return reply.code(400).send({ error: 'Type is required' });
+
+	let tmpTournament = await getTournament(tournament.id);
 	if (!tmpTournament)
 		return reply.code(404).send({ error: 'Tournament not found after creation' });
-	await addPlayerToTournament(tmpTournament.id, creatorId.toString() + ';', 'user');
+	tmpTournament = await addPlayerToTournament(tmpTournament.id, creatorId.toString() + ':' + type.toString() + ';');
 
-	// pour lancer le timer avec de remplir avec les bots
-	const TWO_MINUTES_TIMEOUT = 2 * 60 * 1000;
-	setTimeout(async () => {
-		const tmpTournament = await getTournament(tournament.id);
-		if (!tmpTournament || tmpTournament.status !== 'waiting')
-			return;
+	//// pour lancer le timer avec de remplir avec les bots
+	//const TWO_MINUTES_TIMEOUT = 2 * 60 * 1000;
+	//setTimeout(async () => {
+	//	const tmpTournament = await getTournament(tournament.id);
+	//	if (!tmpTournament || tmpTournament.status !== 'waiting')
+	//		return;
 
-		if (tmpTournament.remainingPlaces > 0) {
-			for (let i = 0; i < tmpTournament.remainingPlaces; i++)
-				await addPlayerToTournament(tmpTournament.id, -1, 'ia');
-		}
-		//! faudrais ici remplir les match avec matchservice ???
-		await startTournamentInternal(tmpTournament.id);
-	}, TWO_MINUTES_TIMEOUT );
+	//	if (tmpTournament.remainingPlaces > 0) {
+	//		for (let i = 0; i < tmpTournament.remainingPlaces; i++)
+	//			await addPlayerToTournament(tmpTournament.id, -1, 'ia');
+	//	}
+	//	//! faudrais ici remplir les match avec matchservice ???
+	//	await startTournamentInternal(tmpTournament.id);
+	//}, TWO_MINUTES_TIMEOUT );
 	
-	return reply.code(201).send({ tournament, message: 'Tournament created. Waiting for players.' });
+	return reply.code(201).send({ tmpTournament, message: 'Tournament created. Waiting for players.' });
 };
 
 //! ajout le 22/09/2025
-export async function joinTournament(request, reply){
+// Route POST: un user log (autre navigateur) veux rejoindre un tournoi deja créé
+export async function joinTournamentSession(request, reply){
 	const tournamentId = Number(request.params.id);
 	if (!tournamentId || tournamentId <= 0)
 		return reply.code(400).send( { error : 'TournamentId is required'});
@@ -161,14 +176,37 @@ export async function joinTournament(request, reply){
 	if (!playerId || playerId <= 0)
 		return reply.code(400).send( { error : 'PlayerId is required'});
 
-	const playerType = 'user';
-
-	const updatedTournament = await addNewPlayerToTournament(tournamentId, playerId, playerType);
-	if (!updatedTournament)
+	if (tournament.remainingPlaces < 1)
 		return reply.code(400).send( { error : 'Could not join tournament (full or already joined)'});
+
+	const currentUser = await fetchGetUserById(playerId);
+	if (!currentUser)
+		return reply.code(400).send( { error : 'PlayerId does not exist'});
+	
+	console.log("#####currentUser : ", currentUser);
+	if (currentUser.status !== 'available')
+		return reply.code(400).send( { error : 'player unavailble'});
+
+	const addPlayer = playerId.toString() + ':' + currentUser.type + ';';
+	let updatedTournament = await addNewPlayerToTournament(tournamentId, addPlayer);
+
+	//TODO 23/09/2025 fetchChangeStatuUser ===> ingame
+	await fetchChangeStatusUser(currentUser);
+
+	if (updatedTournament.remainingPlaces  === 0)
+		updatedTournament = await startTournamentInternal(updatedTournament.id);
 
 	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
 };
+
+//TODO 24/09/2025
+// Route POST: un user se log sur une meme session pour rejoindre le tournoi
+export async function joinTournamentRegistered(request, reply){
+}
+
+// Route POST: un guest rejoint le tournoi (creer le guest)
+export async function joinTournamentGuest(request, reply){
+}
 
 //! ajout 22/09/2025
 export async function endTournament(request, reply) {
@@ -197,24 +235,36 @@ export async function endTournament(request, reply) {
 
 //! ajout 22/09/2025
 export async function startTournament(request, reply) {
-	const body = request.body;
-	if (!body)
-		return reply.code(400).send({ error: 'Invalid body' });
 
-	const tournamentId = body.tournamentId;
-	if (!tournamentId || tournamentId <= 0 || typeof tournamentId !== 'number')
+	const user = request.user;
+	const tournamentId = request.params.id;
+	if ( !tournamentId || tournamentId <= 0 )
 		return reply.code(400).send({ error: 'tournamentId invalid' });
 	
 	const tournament = await getTournament(tournamentId);
+	console.log("###########tournament\n", tournament ,"#############\n");
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.status !== 'waiting')
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
-
+	if (tournament.creatorId != user.id)
+		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
+	// si remaining place > 0
+	//replir avec ia
+	if (tournament.remainingPlaces > 0){
+		for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
+			await addNewPlayerToTournament(tournamentId, '0:ia;');
+	}
 	const updatedTournament = await startTournamentInternal(tournamentId);
 	if (!updatedTournament)
 		return reply.code(500).send({ error: 'Could not start tournament' });
 
+	// fetch User: recuperer les stats de tous les joueurs
+	// dans user: au prealable calculer win rate des joueurs (victoires / matchs joues)
+	// faire ici un classement des joueurs selon leurs win rates
+	// joueurs les plus nazes jouent contre l'I.A.?
+	// requete a match pour set tous les matchs et les recuperer
+	//! 23/09/2025 ajout ia pour remplir les places restantes
 	return reply.code(200).send({ tournament: updatedTournament, message: 'Tournament started' });
 }
 
@@ -234,6 +284,25 @@ export async function getTournamentById(request, reply){
 		tournament: tournament,
 		message: 'Tournament info'
 	});
+};
+
+export async function nextRound(request, reply){
+
+	const user = request.user;
+	const tournamentId = request.params.id;
+	if ( !tournamentId || tournamentId <= 0 )
+		return reply.code(400).send({ error: 'tournamentId invalid' });
+
+	const currentTournament = await getTournament(tournamentId);
+	if (!currentTournament)
+		return reply.code(400).send({ error: 'tournamentId invalid' });
+
+	if (user.id != currentTournament.creatorId)
+		return reply.code(400).send({ error: 'Only creator can authenticate nextRound' });
+
+	// set les prochains match
+	//update les match 
+	
 };
 
 //!ajout 22/09/2025

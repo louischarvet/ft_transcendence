@@ -313,7 +313,6 @@ export	async function fetchUserById(request, reply){
 	delete userInfos.email;
 	delete userInfos.telephone;
 	delete userInfos.friend_ship;
-	delete userInfos.type;
 
 	return reply.code(200).send({
 		user: userInfos
@@ -394,5 +393,5 @@ export async function changeStatus(request, reply) {
 	// et si les deux jouerus concernes cherchent a /random en meme temps?
 	await updateStatus('registered', name, newState);
 	console.log("####\n");
-	return reply.code(201).send({message : 'Status updated!'});
+	return reply.code(201).send({user: user, message : 'Status updated!'});
 }
