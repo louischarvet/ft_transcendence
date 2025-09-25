@@ -85,17 +85,17 @@ export async function createVsMatch(p1, p2) {
 }
 
 
-export async function insertInTable(table, p1_id, p1_type, p2_id, p2_type) {
+export async function insertInTable(table, p1_id, p1_type, p2_id, p2_type, tournamentID) {
 //	const time = Math.floor( Date.now() / 1000 );
 	const date = Date().toLocaleString('fr-FR');
 	const shortDate = date.split(" GMT")[0];
 	await db.run(
-		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, p2_type, created_at)
-		VALUES(?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, p2_type, shortDate ]
+		`INSERT INTO ` + table + `(p1_id, p1_type, p2_id, p2_type, created_at, tournament_id)
+		VALUES(?, ?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, p2_type, shortDate, tournamentID ]
 	);
 	return (await db.get(
-		`SELECT * FROM ` + table + ` WHERE p1_id = ? AND p2_id = ? AND created_at = ?`,
-		[ p1_id, p2_id, shortDate ]
+		`SELECT * FROM ` + table + ` WHERE p1_id = ? AND p2_id = ? AND created_at = ? AND tournament_id = ?`,
+		[ p1_id, p2_id, shortDate, tournamentID ]
 	));
 }
 

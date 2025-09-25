@@ -92,7 +92,7 @@ export async function registeredMatch(request, reply) {
 	const user2 = await fetchChangeStatus(player2, 'in_game');
 
 	// Cree le match en DB et le renvoie
-	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered');
+	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered', 0);
 
 	return reply.code(200).send({
 		match: match,
@@ -115,7 +115,7 @@ export async function guestMatch(request, reply) {
 	);
 	const user = await fetchChangeStatus(player1, 'in_game');
 
-	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type);
+	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type, 0);
 
 	return reply.code(200).send({
 		match: match,
@@ -132,7 +132,7 @@ export async function iaMatch(request, reply) {
 
 	const user = await fetchChangeStatus(player1, 'in_game');
 
-	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia');
+	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia', 0);
 
 	return reply.code(200).send({
 		match: match,
@@ -184,6 +184,16 @@ export async function finish(request, reply) {
 		user2: user2,
 		match: historyMatch,
 		message: 'Finished match.'
+	});
+}
+
+// Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
+export async function tournamentMatch(request, reply) {
+	const { player1, player2, tournamentID } = request.body;
+	const match = await insertInTable('matches', player1.id, player1.type, player2.id, player2.type, tournamentID);
+	return reply.code(200).send({
+		match: match,
+		message: 'Tournament match created'
 	});
 }
 
