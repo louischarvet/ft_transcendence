@@ -83,6 +83,12 @@ async function deleteUserInTable(table, userName) {
 	await db.run('DELETE FROM ' + table + ' WHERE name = ?', [userName]);
 }
 
+async function getUserTournament(listLogin, listGuests) {
+	const registered = await db.all(`SELECT win_rate , id , type FROM registered WHERE id IN (${listLogin.join(',')})`);
+	const guests = await db.all(`SELECT win_rate , id , type FROM guest WHERE id IN (${listGuests.join(',')})`);
+	return { registered, guests };
+}
+
 export { insertInTable, getUserByName, getUsers,
 	getColumnFromTable, getAvailableUser, updateValue,
-	insertRevokedToken, isRevokedToken, updateStatus, deleteUserInTable, getUserById};
+	insertRevokedToken, isRevokedToken, updateStatus, deleteUserInTable, getUserById, getUserTournament};

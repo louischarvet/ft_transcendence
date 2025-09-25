@@ -9,6 +9,26 @@ import {
 } from '../models/model.js';
 //import fetch from 'node-fetch';
 
+//! ajout le 25/09/2025
+export async function fetchUserTournament(ArrayIdAndType){
+	const res = await fetch(`http://user-service:3000/tournament`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ ArrayIdAndType })
+	});
+
+	//console.log("####Function fetchUserTournament called:\n");
+	//console.log("res -> ", res, " \n");
+	if(!res.ok)
+		return ({ error : 'Users not found'});
+
+	const users = await res.json();
+	const usersInfos = JSON.parse(users.users);
+
+	console.log("usersInfos ", usersInfos, " \n");
+	console.log("#######\n");
+	return (usersInfos);
+}
 
 //// //! ajout 19/09/2025
  export async function fetchGetUserById(id){
@@ -21,7 +41,7 @@ import {
 
  	const currentUser = await user.json();
 	return (currentUser.user);
- };
+};
 
 //! ajout 24/09/2025
 export async function fetchGetGuestById(id){
@@ -361,7 +381,7 @@ export async function startTournament(request, reply) {
 		return reply.code(400).send({ error: 'tournamentId invalid' });
 	
 	const tournament = await getTournament(tournamentId);
-	console.log("###########tournament\n", tournament ,"#############\n");
+	//console.log("###########tournament\n", tournament ,"####	#####\n");
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.status !== 'waiting')
@@ -381,10 +401,56 @@ export async function startTournament(request, reply) {
 	// fetch User: recuperer les stats de tous les joueurs
 	// tableau d'objet user
 	const stringPlayers = updatedTournament.players;
-	const playersArray = stringPlayers.split(';').filter(p => p);
-	//creation d'un tableau d'objet {id: number, type: string, rank: number, winRate: number};
-	console.log("###########playersArray\n", playersArray ,"#############\n");
+	const playersArray = stringPlayers.split(';');
 
+	let countIa = 0;
+	for (let i = 0; i < playersArray.length - 1; i++){
+		if(playersArray[i] === '0:ia')
+			countIa++;
+	}
+	let playersInfos = new Array(playersArray.length - 1 - countIa);
+
+	for (let i = 0, j = 0; i < playersArray.length - 1; i++){
+		if (playersArray[i] !== '0:ia'){
+			const [id, type] = playersArray[i].toString().split(':');
+			playersInfos[j] = { id: Number(id), type: type};
+			j++;
+		}
+	}
+
+
+	//console.log("playersInfos -> ", playersInfos, " \n");
+
+	let listPlayers = await fetchUserTournament(playersInfos);
+	console.log("listPlayers -> ", listPlayers, " \n");
+	if (listPlayers.error)	
+		return reply.code(500).send({ error: 'Could not fetch users for tournament' });
+
+	// trier les joueurs par win rate
+	let rankedUsers = listPlayers.registered.sort((a, b) => a.win_rate - b.win_rate);
+	rankedUsers = rankedUsers.concat(listPlayers.guests.sort((a, b) => a.win_rate - b.win_rate));
+	//ici a correspond au joueur le plus faible et b le plus fort
+	console.log("rankedUsers -> ", rankedUsers, " \n");
+
+	rankedUsers = rankedUsers.sort((a, b) => a.win_rate - b.win_rate);
+	// rankedUsers est un tableau d'objet {id: number, type: string, win_rate: number}
+	// il est trié par win_rate croissant
+
+	let finalPlayers = new Array();
+	if (countIa > 0){
+		//on va ajouter les ia apres chaques joueur en partant du plus faible
+		for (let i = 0; i < rankedUsers.length; i++){
+			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString() + ';');
+			if (countIa > 0){
+				const { win_rate, id, type } = { win_rate: 0, id: 0, type: 'ia' };
+				finalPlayers.push(win_rate + ',' + id + ',' + type + ';');
+				countIa--;
+			}
+		}
+	}
+
+	console.log("finalPlayers -> ", finalPlayers, " \n");
+	// final player remplie avec userlogin et guest, plus les ia
 	// Les guest prioritaire pour se battre contre les ia
 	//sinon rank le plus faible contre ia en priorite
 
