@@ -445,13 +445,24 @@ export async function updateStats(request, reply) {
 	if (loser_id > 0)
 		await updateStatsLoser(loser_type, loser_id);
 
-	const user = await getUserById(p1_type, p1_id);
-	delete user.hashedPassword;
-	delete user.email;
-	delete user.telephone;
+	const user1 = p1_id > 0 ? await getUserById(p1_type, p1_id) : {
+		id: 0,
+		type: 'ia'
+	};
+	const user2 = p2_id > 0 ? await getUserById(p2_type, p2_id) : {
+		id: 0,
+		type: 'ia'
+	};
+	delete user1.hashedPassword;
+	delete user2.hashedPassword;
+	delete user1.email;
+	delete user2.email;
+	delete user1.telephone;
+	delete user2.telephone;
 
 	return reply.code(200).send({
-		user: user,
+		user1: user1,
+		user2: user2,
 		message: 'Stats updated.'
 	});
 }

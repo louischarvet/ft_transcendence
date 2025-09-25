@@ -38,3 +38,35 @@ export const matchSchema = {
 		additionalProperties: false,
   	}
 }
+
+export const tournamentMatchSchema = {
+	$id: 'tournamentMatchSchema',
+	body: {
+		type: 'object',
+		required: [ 'player1', 'player2', 'tournamentID' ],
+		properties: {
+			player1 : {
+				type: 'object',
+				properties: {
+					id: { type: 'integer' },
+					type: {
+						type: 'string',
+						enum: [ 'registered', 'guest', 'ia' ]
+					}
+				}
+			},
+			player2: {
+				type: 'object',
+				properties: {
+					id: { type: 'integer' },
+					type: {
+						type: 'string',
+						enum: [ 'registered', 'guest', 'ia' ]
+					}
+				}
+			},
+			tournamentID: { type: 'integer' }
+		},
+		additionalProperties: false,
+	}
+}

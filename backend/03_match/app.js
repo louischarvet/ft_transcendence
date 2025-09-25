@@ -3,7 +3,7 @@ import jwt from '@fastify/jwt'
 
 import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
-import { matchSchema, registeredMatchSchema } from './schema/matchSchema.js';
+import { matchSchema, registeredMatchSchema, tournamentMatchSchema } from './schema/matchSchema.js';
 
 
 const fastify = Fastify({ logger: true });
@@ -16,6 +16,7 @@ fastify.decorate('authentication', authenticateJWT);
 
 fastify.addSchema(registeredMatchSchema);	
 fastify.addSchema(matchSchema);
+fastify.addSchema(tournamentMatchSchema);
 fastify.register(routes);
 
 async function start() {

@@ -42,13 +42,28 @@ async function fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id) {
 		body: body,
 	});
 	const resBody = await res.json();
-	const user = resBody.user;
+	const { user1, user2 } = resBody;
 	// console.log("############################ festchUpdateStats Res\n",
 	// 			"##### BODY\n", resBody,
 	// 			"##########\n",
 	// 			"##### USER\n", user,
 	// 			"##########\n");
-	return (user);
+	return ({ user1, user2 });
+}
+
+async function fetchCreateGuest() {
+	const body = JSON.stringify({
+		tmp: true
+	});
+	const res = await fetch('http://user-service:3000/guest', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: body,
+	});
+	const guest = (await res.json()).user;
+	return (guest);
 }
 
 // Route POST pour creer un match contre un joueur inscrit
@@ -77,7 +92,7 @@ export async function registeredMatch(request, reply) {
 	const user2 = await fetchChangeStatus(player2, 'in_game');
 
 	// Cree le match en DB et le renvoie
-	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered');
+	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered', 0);
 
 	return reply.code(200).send({
 		match: match,
@@ -91,15 +106,21 @@ export async function registeredMatch(request, reply) {
 // Route POST pour creer un match contre un guest
 export async function guestMatch(request, reply) {
 	const player1 = request.user;
-	const guestID = 0;
+//	const guestID = 0;
 
+	// creer un guest en db user ! GuestID !
+	const guest = await fetchCreateGuest();
+	console.log("######### guestMatch\n", guest,
+				"\n####################\n"
+	);
 	const user = await fetchChangeStatus(player1, 'in_game');
 
-	const match = await insertInTable('matches', player1.id, player1.type, guestID, 'guest');
+	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type, 0);
 
 	return reply.code(200).send({
 		match: match,
 		user1: user,
+		user2: guest,
 		message: 'Guest match successfully created',
 	});
 }
@@ -107,15 +128,19 @@ export async function guestMatch(request, reply) {
 // Route POST pour creer un match contre IA
 export async function iaMatch(request, reply) {
 	const player1 = request.user;
-	const iaID = -1;
+	const iaID = 0;
 
 	const user = await fetchChangeStatus(player1, 'in_game');
 
-	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia');
+	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia', 0);
 
 	return reply.code(200).send({
 		match: match,
 		user1: user,
+		user2: {
+			id: 0,
+			type: 'ia',
+		},
 		message: 'IA match successfully created',
 	});
 }
@@ -150,15 +175,25 @@ export async function finish(request, reply) {
 	await deleteMatch(match.id);
 
 	// mettre a jour les stats et le status des joueurs
-	const user = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+	const { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
 
 	// Renvoie le profil du player1 (session user) + player2 (si pas IA) + le match historique
 	// + message de reussite
 	return reply.code(200).send({
-		user: user,
-		// user2
+		user1: user1,
+		user2: user2,
 		match: historyMatch,
 		message: 'Finished match.'
+	});
+}
+
+// Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
+export async function tournamentMatch(request, reply) {
+	const { player1, player2, tournamentID } = request.body;
+	const match = await insertInTable('matches', player1.id, player1.type, player2.id, player2.type, tournamentID);
+	return reply.code(200).send({
+		match: match,
+		message: 'Tournament match created'
 	});
 }
 

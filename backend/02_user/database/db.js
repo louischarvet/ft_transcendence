@@ -20,10 +20,10 @@ export async function initDB(){
 			win_rate INTEGER NOT NULL DEFAULT 0,
 			tournament_wins INTEGER NOT NULL DEFAULT 0,
 			friends	TEXT,
-			wallet INTEGER NOT NULL DEFAULT 0,
+			wallet INTEGER NOT NULL DEFAULT 100,
 
 			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
-			
+	
 			hashedPassword TEXT NOT NULL,
 			email TEXT
 		);
@@ -35,15 +35,16 @@ export async function initDB(){
 			name TEXT NOT NULL,
 			type TEXT NOT NULL DEFAULT "guest",
 			status TEXT NOT NULL DEFAULT "available",
-
+			
 			played_matches INTEGER NOT NULL DEFAULT 0,
 			match_wins INTEGER NOT NULL DEFAULT 0,
 			wins_streak INTEGER NOT NULL DEFAULT 0,
 			win_rate INTEGER NOT NULL DEFAULT 0,
 			tournament_wins INTEGER NOT NULL DEFAULT 0,
-			wallet INTEGER NOT NULL DEFAULT 0,
+			friends	TEXT,
+			wallet INTEGER NOT NULL DEFAULT 100,
 
-			pic TEXT NOT NULL DEFAULT "./pictures/BG.webp"
+			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp"
 		);
 	`);
 
