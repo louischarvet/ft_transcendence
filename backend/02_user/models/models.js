@@ -67,15 +67,28 @@ async function updateStatus(table, name, newStatus) {
 }
 
 export async function updateStatsWinner(table, userID) {
-	await db.run(`UPDATE ` + table + ` SET match_wins = (match_wins + 1),
-		wins_streak = (wins_streak + 1), played_matches = (played_matches + 1),
-		status = 'available' WHERE id = ?`, [ userID ]);
+	// recuper played_matches et match_wins
+	// faire les updates
+	// calculer le win_rate en pourcentage
+	let { played_matches, match_wins } = await db.get(`SELECT played_matches, match_wins FROM ` + table + ` WHERE id = ?`, [ userID ]);
+	played_matches++;
+	match_wins++;
+	const win_rate = (match_wins / played_matches) * 100;
+	await db.run(`UPDATE ` + table + ` SET match_wins = ?,
+		wins_streak = (wins_streak + 1), played_matches = ?,
+		win_rate = ? WHERE id = ?`, [ match_wins, played_matches, win_rate, userID ]);
 }
 
 export async function updateStatsLoser(table, userID) {
+	// recuper played_matches et match_wins
+	// faire les updates avant l'insertion
+	// calculer le win_rate en pourcentage
+	let { played_matches, match_wins } = await db.get(`SELECT played_matches, match_wins FROM ` + table + ` WHERE id = ?`, [ userID ]);
+	played_matches++;
+	const win_rate = (match_wins / played_matches) * 100;
 	await db.run(`UPDATE ` + table + ` SET wins_streak = 0,
-		played_matches = (played_matches + 1), status = 'available'
-		WHERE id = ?`, [ userID ]);
+		played_matches = ?, win_rate = ?
+		WHERE id = ?`, [ played_matches, win_rate, userID ]);
 }
 
 // Delete user i ntable
