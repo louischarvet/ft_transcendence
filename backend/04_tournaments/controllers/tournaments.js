@@ -98,6 +98,20 @@ export async function fetchCreateGuest(){
 	return (guestUser.user);
 }
 
+//! ajout le 26/09/2025
+export async function fetchMatchForTournament(matchData){
+	const res = await fetch(`http://match-service:3000/tournament`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(matchData)
+	});
+	if(!res.ok)
+		return ({ error : 'Match creation failed'});
+
+	const match = await res.json();
+	return (match);
+}
+
 //! ajout 19/09/2025
 //Recupere tout les tournoie gagne par un user
 export async function getTournamentWinUserId(request, reply){
@@ -436,31 +450,70 @@ export async function startTournament(request, reply) {
 	// rankedUsers est un tableau d'objet {id: number, type: string, win_rate: number}
 	// il est trié par win_rate croissant
 
+	console.log("count ia : " , countIa, "\n");
 	let finalPlayers = new Array();
 	if (countIa > 0){
 		//on va ajouter les ia apres chaques joueur en partant du plus faible
 		for (let i = 0; i < rankedUsers.length; i++){
-			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString() + ';');
+			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
 			if (countIa > 0){
-				const { win_rate, id, type } = { win_rate: 0, id: 0, type: 'ia' };
-				finalPlayers.push(win_rate + ',' + id + ',' + type + ';');
+				const { id, type } = { id: 0, type: 'ia' };
+				finalPlayers.push(id.toString() + ':' + type.toString());
 				countIa--;
 			}
 		}
 	}
+	// complete d'ia si nbre ia > nbUsers
+	for (let i = 0; i < countIa; i++){
+		const { id, type } = { id: 0, type: 'ia' };
+		finalPlayers.push(id.toString() + ':' + type.toString());
+	}
 
 	console.log("finalPlayers -> ", finalPlayers, " \n");
+
+	// creer les matchs
+	const matches = new Array();
+	for(let i = 0; i < tournament.nbPlayersTotal / 2; i++){
+		let j = 0;
+		let player1Id = 0;
+		let player2Id = 0;
+		let player1Type = 'ia';
+		let player2Type = 'ia';
+		console.log("finaleplayuer[j]", finalPlayers[j], "\n");
+		for ( ; j < finalPlayers.length; j++){
+			if (finalPlayers[i][j] === ':')
+				break;
+			player1Id = finalPlayers[j].split(':')[0] || 0;
+			player1Type = finalPlayers[j].split(':')[1] || 'ia';
+			player2Id = finalPlayers[j + 1].split(':')[0] || 0;
+			player2Type = finalPlayers[j + 1].split(':')[1] || 'ia';
+			j++;
+			break;
+		}
+		matches.push({ player1: { id: player1Id, type: player1Type }, player2: { id: player2Id, type: player2Type}, tournamentID: tournamentId });
+	}
+
+	console.log("matches -> ", matches, "\n");
 	// final player remplie avec userlogin et guest, plus les ia
 	// Les guest prioritaire pour se battre contre les ia
 	//sinon rank le plus faible contre ia en priorite
 
+	// on parcur les matches et on les enregistre dans matchservice
+	// fetch matchservice pour creer les matchs
+	let tournamentMatchData = new Array();
+	for (let i = 0; i < matches.length; i++){
+		const res = await fetchMatchForTournament(matches[i]);
+		if (res.error)
+			return reply.code(500).send({ error: 'Could not create matches for tournament' });
+		tournamentMatchData.push(res.match);
+	}
 
 	// dans user: au prealable calculer win rate des joueurs (victoires / matchs joues)
 	// faire ici un classement des joueurs selon leurs win rates
 	// joueurs les plus nazes jouent contre l'I.A.?
 	// requete a match pour set tous les matchs et les recuperer
 	//! 23/09/2025 ajout ia pour remplir les places restantes
-	return reply.code(200).send({ tournament: updatedTournament, message: 'Tournament started' });
+	return reply.code(200).send({ tournament: tournamentMatchData, message: 'Tournament started' });
 }
 
 //! ajout 22/09/2025

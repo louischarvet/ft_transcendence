@@ -189,6 +189,8 @@ export async function finish(request, reply) {
 
 // Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
 export async function tournamentMatch(request, reply) {
+	//!ajout le 26/09/2025
+	console.log("tournamentMatch body -> ", request.body, "\n");
 	const { player1, player2, tournamentID } = request.body;
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, player2.type, tournamentID);
 	return reply.code(200).send({
