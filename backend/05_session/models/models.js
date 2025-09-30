@@ -43,9 +43,16 @@ export async function getAllFromTable(table) {
 }
 
 export async function deleteExpiredTokens(time) {
+	await db.run(`DELETE FROM active_tokens WHERE exp <= ?`, [ time ]);
 	await db.run("DELETE FROM revoked_tokens WHERE exp <= ?", [ time ]);
 }
 
 export async function deleteInActiveTokensTable(name) {
 	await db.run("DELETE FROM active_tokens WHERE user_name = ?", [ name ]);
+}
+
+export async function getExpiredTokens(time) {
+	return (await db.all(`SELECT * FROM active_tokens WHERE exp <= ?`,
+		[ time ]
+	));
 }

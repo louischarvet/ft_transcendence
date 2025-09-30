@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import { userAndTokenMatch, insertInActiveTokensTable, insertInTable,
-	isInTable, deleteExpiredTokens, deleteInActiveTokensTable } from '../models/models.js';
+	isInTable, deleteExpiredTokens, deleteInActiveTokensTable, getExpiredTokens }
+	from '../models/models.js';
 import { fetchChangeStatus } from './fetchFunctions.js';
 
 //const secret = speakeasy.generateSecret().base32;
@@ -16,7 +17,7 @@ export async function generateToken(request, reply) {
 		id: id,
 	},
 		secret,
-		{ expiresIn : '2h' }
+		{ expiresIn : '1m' }
 	);
 
 	const { iat, exp } = jwt.verify(token, secret);
@@ -73,11 +74,13 @@ export async function revokeToken(request, reply) {
 		if (await isInTable('revoked_tokens', 'token', token))
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
+		// fonction a part
 		const decoded = jwt.verify(token, secret);
 		const { name, id, type, exp } = decoded;
 		await insertInTable('revoked_tokens', { token: token, exp: exp });
 		await deleteInActiveTokensTable(name);
 		await fetchChangeStatus({ name, id, type }, 'logged_out');
+
 		return reply.code(200).send({ message: 'Token has been revoked' });
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
@@ -88,4 +91,21 @@ export async function revokeToken(request, reply) {
 export async function pruneExpiredTokens() {
 	const time = Math.floor( Date.now() / 1000 );
 	await deleteExpiredTokens(time);
+}
+
+// cron pour revoquer les tokens actifs mais expires
+export async function revokeExpiredTokens() {
+	const time = Math.floor( Date.now() / 1000 );
+	const tokens = await getExpiredTokens(time);
+	console.log("###################### revokeExpiredTokens\n");
+	console.log("###################### tokens:\n", tokens);
+	for (let i = 0; i < tokens.length; i++) {
+		const token = tokens[i];
+		console.log("####################### token: ", token);
+
+		const { user_name, user_id, user_type, exp } = token;
+		await insertInTable('revoked_tokens', { token: token, exp: exp });
+		await deleteInActiveTokensTable(user_name);
+		await fetchChangeStatus({ name: user_name, id: user_id, type: user_type }, 'logged_out');
+	}
 }

@@ -22,6 +22,9 @@ async function generateCode() {
 
 // Envoyer le mail
 async function sendMail(name, email, code) {
+	console.log("##### USR_ADDR = ", process.env.USR_ADDR,
+				"\n##### APP_PASS = ", process.env.APP_PASS
+	);
 	const transporter = nodemailer.createTransport({
 		service: 'gmail',
 		auth: {
@@ -68,7 +71,10 @@ export async function sendCode(request, reply) {
 	const code = await generateCode();
 
 	await sendMail(name, email, code);
+	console.log("##### sendCode after sendMail\n");
 	await insertInTable(id, name, code);
+	console.log("##### sendCode after insertInTable\n");
+
 }
 
 // Route POST pour verifier le code généré
