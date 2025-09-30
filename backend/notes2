@@ -157,3 +157,4 @@ TO DO
 - Penser a fermer les DBs a la fin du programme !
 - /session : quand le token expire, requete a /user pour changer le status: logged_out
 - mettre toutes les fonctions fetch dans un fichier a part
+- remplacer winner_id par winner : "3:registered"

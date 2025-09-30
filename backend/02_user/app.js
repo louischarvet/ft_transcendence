@@ -42,7 +42,7 @@ await fastify.register(helmet, {
 fastify.register(fastifyCron, {
 	jobs: [
 		{
-			cronTime: '*/15 * * * *',
+			cronTime: '*/1 * * * *',
 			onTick: prunePendingRegistered,
 			start: true,
 			timeZone: 'Europe/Paris'
