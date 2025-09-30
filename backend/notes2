@@ -141,7 +141,7 @@ _ base image en local.
 
 TO DO
 
-- Proteger la route /user/changeStatus
+- Proteger la route /user/changeStatus -> cles API
 - /session : envoyer une requete a /user/changeStatus apres la revocation du token
 - /session : verifier en arriere plan dans active_tokens les JWT expires -> requete a /user/changeStatus
 - /match : historique des matches pour un player
@@ -156,3 +156,4 @@ TO DO
 - /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
 - Penser a fermer les DBs a la fin du programme !
 - /session : quand le token expire, requete a /user pour changer le status: logged_out
+- mettre toutes les fonctions fetch dans un fichier a part

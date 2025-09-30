@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import { userAndTokenMatch, insertInActiveTokensTable, insertInTable,
 	isInTable, deleteExpiredTokens, deleteInActiveTokensTable } from '../models/models.js';
+import { fetchChangeStatus } from './fetchFunctions.js';
 
 //const secret = speakeasy.generateSecret().base32;
 const secret = 'secret-key';
@@ -73,8 +74,10 @@ export async function revokeToken(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		const decoded = jwt.verify(token, secret);
-		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
-		await deleteInActiveTokensTable(decoded.name);
+		const { name, id, type, exp } = decoded;
+		await insertInTable('revoked_tokens', { token: token, exp: exp });
+		await deleteInActiveTokensTable(name);
+		await fetchChangeStatus({ name, id, type }, 'logged_out');
 		return reply.code(200).send({ message: 'Token has been revoked' });
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
