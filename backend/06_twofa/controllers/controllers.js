@@ -68,7 +68,7 @@ export async function sendCode(request, reply) {
 	const code = await generateCode();
 
 	await sendMail(name, email, code);
-	await insertInTable(id, code);
+	await insertInTable(id, name, code);
 }
 
 // Route POST pour verifier le code généré
@@ -77,8 +77,8 @@ export async function verifyCode(request, reply) {
 	// 	request.headers, "####################################################\n"
 	// );
 	const { code, id, name, type, tmp } = request.body;
-	// tchecher que le name est bon
-	const codeToCompare = await getFromTable(id);
+	// tchecker que le name est bon
+	const codeToCompare = await getFromTable(id, name);
 	if (codeToCompare === undefined)
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
 //	console.log("\t/// body verifiCode \n", request.body);
@@ -86,8 +86,8 @@ export async function verifyCode(request, reply) {
 
 
 //////////////////////////// DECOMMENTER POUR ACTIVER LE 2FA !!!!!!
-//	if (code !== codeToCompare.code)
-//		return reply.code(401).send({error : 'bad code. Retry !'});
+	if (code !== codeToCompare.code)
+		return reply.code(401).send({error : 'bad code. Retry !'});
 ///////////////////////////////////////////////////////////////////
 
 
