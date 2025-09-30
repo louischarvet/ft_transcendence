@@ -1,6 +1,7 @@
 //app.js
 
 import Fastify from 'fastify';
+import fastifyCron from 'fastify-cron';
 import jwt from '@fastify/jwt'
 import userRoutes from './routes/routes.js';
 import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
@@ -19,6 +20,7 @@ const fastify = Fastify({ logger: true });
 
 // CORS configuration
 import fastifyCors from '@fastify/cors';
+import { prunePendingRegistered } from './controllers/controllers.js';
 fastify.register(fastifyCors, {
     origin: true, // Réfléchit le domaine de la requête
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
@@ -34,6 +36,18 @@ fastify.register(jwt, {
 //permet de gerer les attaques XSS
 await fastify.register(helmet, {
 	global: true
+});
+
+// supprimer toutes les 15 minutes les registered pending qui n'ont pas fait le 2fa
+fastify.register(fastifyCron, {
+	jobs: [
+		{
+			cronTime: '*/15 * * * *',
+			onTick: prunePendingRegistered,
+			start: true,
+			timeZone: 'Europe/Paris'
+		}
+	]
 });
 
 // On instencie les Schemas de JSONs

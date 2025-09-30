@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS registered (
 	
 	hashedPassword TEXT NOT NULL,
 	email TEXT,
-	telephone TEXT
+	telephone TEXT,
+
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS guests (
@@ -29,5 +31,7 @@ CREATE TABLE IF NOT EXISTS guests (
 	wins_streak INTEGER NOT NULL DEFAULT 0,
 	tournament_wins INTEGER NOT NULL DEFAULT 0,
 
-	pic TEXT NOT NULL DEFAULT "./pictures/BG.webp"
+	pic TEXT NOT NULL DEFAULT "./pictures/BG.webp",
+
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

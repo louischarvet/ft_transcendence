@@ -8,7 +8,7 @@ RUN npm install && npm install -g nodemon
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install sqlite3 -y
 RUN npm install @fastify/jwt
-
+RUN npm install fastify-cron
 # helmet pour proteger contre attaques XSS
 # RUN npm install @fastify/helmet
 RUN npm install bcrypt

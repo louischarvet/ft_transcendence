@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
-	updateStatsWinner, updateStatsLoser, deleteUserInTable } from '../models/models.js'
+	updateStatsWinner, updateStatsLoser, deleteUserInTable, deletePendingRegistered } from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
@@ -99,7 +99,7 @@ export async function logIn(request, reply) {
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		updateStatus('registered', name, 'available');
+		await updateStatus('registered', name, 'available');
 
 		const user = await getUserByName('registered', name);
 		delete user.hashedPassword;
@@ -125,15 +125,16 @@ export async function logIn(request, reply) {
 }
 
 // Route PUT /logout
+// Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
 	console.log("####Function logOut called:\n");
 	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
 		//! ajout le 17/09/2025
 		//! nom de la table "guests" au lieu de "guest"
-		console.log("chek type : ", request.user.type, "\n");
+//		console.log("chek type : ", request.user.type, "\n");
 		if (request.user.type == "guest")
-			deleteUserInTable("guest", request.user.name);
+			deleteUserInTable(request.user.type, request.user.name);
 		else
 			updateStatus(request.user.type, request.user.name, 'logged_out');
 
@@ -465,4 +466,10 @@ export async function updateStats(request, reply) {
 		user2: user2,
 		message: 'Stats updated.'
 	});
+}
+
+// cron pour supprimer les registered pending depuis + de 15 minutes
+export async function prunePendingRegistered() {
+	const time = Math.floor( Date.now() / 1000 ) - (15 * 60);
+	await deletePendingRegistered(time);
 }

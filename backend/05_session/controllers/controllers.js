@@ -86,6 +86,6 @@ export async function revokeToken(request, reply) {
 
 // cron pour supprimer les tokens revoques ~ toutes les 30 minutes
 export async function pruneExpiredTokens() {
-	const time = await Math.floor( await Date.now() / 1000 );
+	const time = Math.floor( Date.now() / 1000 );
 	await deleteExpiredTokens(time);
 }
