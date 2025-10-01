@@ -15,7 +15,8 @@ const db = await getDB();
 
 export async function userAndTokenMatch(decoded) {
 	const user = await db.get("SELECT * FROM active_tokens WHERE USER_NAME = ?", decoded.name);
-	return (user.user_name === decoded.name
+	return (user !== undefined
+		&& user.user_name === decoded.name
 		&& user.user_id === decoded.id
 		&& user.user_type === decoded.type
 		&& user.iat === decoded.iat

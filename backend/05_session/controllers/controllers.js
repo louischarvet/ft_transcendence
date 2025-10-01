@@ -17,7 +17,7 @@ export async function generateToken(request, reply) {
 		id: id,
 	},
 		secret,
-		{ expiresIn : '1m' }
+		{ expiresIn : '2h' }
 	);
 
 	const { iat, exp } = jwt.verify(token, secret);
@@ -55,12 +55,12 @@ export async function authenticateUser(request, reply) {
 				message: 'Valid token'
 			});
 		} else {
-			console.log("Token and user infos don't match");
-			return reply.code(401).send({ error: "Token and user infos don't match" });
+		//	console.log("Token and user infos don't match");
+			return reply.code(401).send({ error: "Token is invalid." });
 		}
 	} catch (err) {
-		console.log('Invalid token');
-		return reply.code(401).send({ error: 'Invalid token' });
+	//	console.log('Invalid token');
+		return reply.code(401).send({ error: 'Token cannot be verified.' });
 	}
 }
 
@@ -97,14 +97,10 @@ export async function pruneExpiredTokens() {
 export async function revokeExpiredTokens() {
 	const time = Math.floor( Date.now() / 1000 );
 	const tokens = await getExpiredTokens(time);
-	console.log("###################### revokeExpiredTokens\n");
 	console.log("###################### tokens:\n", tokens);
 	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
-		console.log("####################### token: ", token);
-
-		const { user_name, user_id, user_type, exp } = token;
-		await insertInTable('revoked_tokens', { token: token, exp: exp });
+		const { user_name, user_id, user_type } = tokens[i];
+	//	await insertInTable('revoked_tokens', { token: token, exp: exp });
 		await deleteInActiveTokensTable(user_name);
 		await fetchChangeStatus({ name: user_name, id: user_id, type: user_type }, 'logged_out');
 	}
