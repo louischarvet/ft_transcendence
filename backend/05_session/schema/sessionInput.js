@@ -17,3 +17,14 @@ export const sessionInput = {
 		additionalProperties: false
 	}
 }
+
+export const replaceSchema = {
+	$id: 'replaceSchema',
+	body: {
+		required: [ 'token' ],
+		properties: {
+			token: { type: 'string' }
+		},
+		additionalProperties: false
+	}
+}

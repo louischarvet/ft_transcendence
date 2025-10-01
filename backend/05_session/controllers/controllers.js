@@ -11,7 +11,9 @@ const secret = 'secret-key';
 // Route POST /generate
 export async function generateToken(request, reply) {
 	const { name, type, id } = request.body;
-	const token = jwt.sign({
+
+	// fonction a part ? (utiliser dans replace egalement)
+	const token = await jwt.sign({
 		name: name,
 		type: type,
 		id: id,
@@ -20,8 +22,9 @@ export async function generateToken(request, reply) {
 		{ expiresIn : '2h' }
 	);
 
-	const { iat, exp } = jwt.verify(token, secret);
+	const { iat, exp } = await jwt.verify(token, secret);
 	await insertInActiveTokensTable(name, id, type, iat, exp);
+	//
 
 	return reply.code(200).send({
 		token: token,
@@ -43,7 +46,7 @@ export async function authenticateUser(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 		}
 
-		const decoded = jwt.verify(token, secret);
+		const decoded = await jwt.verify(token, secret);
 //		if (await userAndTokenMatch(decoded, request.body)) {
 		if (await userAndTokenMatch(decoded)) {
 			return reply.code(200).send({
@@ -75,7 +78,7 @@ export async function revokeToken(request, reply) {
 			return reply.code(401).send({ error: 'Token is already revoked' });
 
 		// fonction a part
-		const decoded = jwt.verify(token, secret);
+		const decoded = await jwt.verify(token, secret);
 		const { name, id, type, exp } = decoded;
 		await insertInTable('revoked_tokens', { token: token, exp: exp });
 		await deleteInActiveTokensTable(name);
@@ -84,6 +87,36 @@ export async function revokeToken(request, reply) {
 		return reply.code(200).send({ message: 'Token has been revoked' });
 	} catch (err) {
 		return reply.code(401).send({ error: 'Invalid token' });
+	}
+}
+
+// Route POST pour renouveller un token au lancement d'un match ou d'un tournoi
+export async function replaceToken(request, reply) {
+	console.log("########## BODY:\n", request.body);
+	const oldToken = request.body.token;
+
+	try {
+		const decoded = await jwt.verify(oldToken, secret);
+		const { name, id, type } = decoded;
+		deleteInActiveTokensTable(name);
+
+		// fonction a part ?
+		const newToken = await jwt.sign({
+			name: name,
+			type: type,
+			id: id,
+		},
+			secret,
+			{ expiresIn : '2h' }
+		);
+		const { iat, exp } = await jwt.verify(newToken, secret);
+		await insertInActiveTokensTable(name, id, type, iat, exp);
+		//
+
+		return reply.code(200).send({ token: newToken, message: 'New token created.' })
+	} catch (err) {
+		console.log(err);
+		return reply.code(400).send({ error: 'Invalid token' });
 	}
 }
 
@@ -97,7 +130,7 @@ export async function pruneExpiredTokens() {
 export async function revokeExpiredTokens() {
 	const time = Math.floor( Date.now() / 1000 );
 	const tokens = await getExpiredTokens(time);
-	console.log("###################### tokens:\n", tokens);
+
 	for (let i = 0; i < tokens.length; i++) {
 		const { user_name, user_id, user_type } = tokens[i];
 	//	await insertInTable('revoked_tokens', { token: token, exp: exp });

@@ -3,6 +3,25 @@
 import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
 
+// Requete pour renouveller le JWT
+async function fetchReplaceJWT(token) {
+	console.log("###### TOKEN: ", token);
+	const body = JSON.stringify({
+		token: token
+	});
+	// envoyer le token brut sans "Bearer : "
+	const res = await fetch('http://session-service:3000/replace', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: body
+	});
+	if (!res.ok)
+		return (res);
+	return ((await res.json()).token);
+}
+
 // Requete a user-service pour update le status d'un joueur
 async function fetchChangeStatus(player, status) {
 	const body = JSON.stringify({
@@ -94,10 +113,14 @@ export async function registeredMatch(request, reply) {
 	// Cree le match en DB et le renvoie
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered', 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user1,
 		user2: user2,
+		token: newToken,
 		message: 'Registered match successfully created',
 	});
 
@@ -117,10 +140,14 @@ export async function guestMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type, 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user,
 		user2: guest,
+		token: newToken,
 		message: 'Guest match successfully created',
 	});
 }
@@ -134,6 +161,9 @@ export async function iaMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia', 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user,
@@ -141,6 +171,7 @@ export async function iaMatch(request, reply) {
 			id: 0,
 			type: 'ia',
 		},
+		token: newToken,
 		message: 'IA match successfully created',
 	});
 }
