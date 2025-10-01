@@ -5,9 +5,12 @@ import {
   getTournamentsWonByUser,
   startTournamentInternal,
   setTournamentWinner,
-  updateMatchAndPlaces
+  updateMatchAndPlaces,
+  addMatchesStringToTournament,
+  addMatchesAndPlayersToHistory,
+  addDataRoundTable,
+  getRoundTable
 } from '../models/model.js';
-//import fetch from 'node-fetch';
 
 //! ajout le 25/09/2025
 export async function fetchUserTournament(ArrayIdAndType){
@@ -25,13 +28,11 @@ export async function fetchUserTournament(ArrayIdAndType){
 	const users = await res.json();
 	const usersInfos = JSON.parse(users.users);
 
-	console.log("usersInfos ", usersInfos, " \n");
-	console.log("#######\n");
 	return (usersInfos);
 }
 
 //// //! ajout 19/09/2025
- export async function fetchGetUserById(id){
+export async function fetchGetUserById(id){
 
  	const user = await fetch(`http://user-service:3000/${id}`, {
 		method: 'GET'
@@ -110,6 +111,37 @@ export async function fetchMatchForTournament(matchData){
 
 	const match = await res.json();
 	return (match);
+}
+
+//! ajout le 29/09/2025
+export async function fetchHistoryMatchForTournament(tournamentId){
+	const res = await fetch(`http://match-service:3000/history/tournament/${tournamentId}`, {
+		method: 'GET',
+		headers: { 'Content-Type': 'application/json' },
+	});
+	if(!res.ok)
+		return ({ error : 'Match history retrieval failed'});
+
+	const matchHistory = await res.json();
+	return (matchHistory);
+}
+
+//! ajout le 30/09/2025
+export async function fetchFinishMatchForTournament(match, token){
+
+	const res = await fetch('http://match-service:3000/finish', {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `${token}` 
+		},
+		body: JSON.stringify(match)
+	});
+	if(!res.ok)
+		return ({ error : 'Match creation failed'});
+
+	const matchFinish = await res.json();
+	return (matchFinish);
 }
 
 //! ajout 19/09/2025
@@ -268,8 +300,8 @@ export async function joinTournamentSession(request, reply){
 	//TODO 23/09/2025 fetchChangeStatuUser ===> ingame
 	await fetchChangeStatusUser(currentUser);
 
-	if (updatedTournament.remainingPlaces  === 0)
-		updatedTournament = await startTournamentInternal(updatedTournament.id);
+	//if (updatedTournament.remainingPlaces  === 0)
+	//	updatedTournament = await startTournamentInternal(updatedTournament.id);
 
 	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
 };
@@ -293,10 +325,10 @@ export async function joinTournamentRegistered(request, reply){
 	const tournament = await getTournament(tournamentId);
 	if (!tournament)
 		return reply.code(404).send( { error : 'Tournament not found'});
-	if (tournament.status !== 'waiting')
-		return reply.code(400).send( { error : 'Tournament already started'});
+	//if (tournament.status !== 'waiting')
+	//	return reply.code(400).send( { error : 'Tournament already started'});
 
-		if (tournament.remainingPlaces < 1)
+	if (tournament.remainingPlaces < 1)
 		return reply.code(400).send( { error : 'Could not join tournament (full or already joined)'});
 
 	const currentUser = await fetchGetUserById(player2.id);
@@ -312,8 +344,8 @@ export async function joinTournamentRegistered(request, reply){
 
 	await fetchChangeStatusUser(currentUser);
 
-	if (updatedTournament.remainingPlaces  === 0)
-		updatedTournament = await startTournamentInternal(updatedTournament.id);
+	//if (updatedTournament.remainingPlaces  === 0)
+	//	updatedTournament = await startTournamentInternal(updatedTournament.id);
 
 	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
 	
@@ -334,8 +366,8 @@ export async function joinTournamentGuest(request, reply){
 	const tournament = await getTournament(tournamentId);
 	if (!tournament)
 		return reply.code(404).send( { error : 'Tournament not found'});
-	if (tournament.status !== 'waiting')
-		return reply.code(400).send( { error : 'Tournament already started'});
+	//if (tournament.status !== 'waiting')
+	//	return reply.code(400).send( { error : 'Tournament already started'});
 
 	if (tournament.remainingPlaces < 1)
 		return reply.code(400).send( { error : 'Could not join tournament (full or already joined)'});
@@ -352,10 +384,10 @@ export async function joinTournamentGuest(request, reply){
 	const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
 	let updatedTournament = await addNewPlayerToTournament(tournamentId, addPlayer);
 
-	await fetchChangeStatusUser(currentUser);
+	//await fetchChangeStatusUser(currentUser);
 
-	if (updatedTournament.remainingPlaces  === 0)
-		updatedTournament = await startTournamentInternal(updatedTournament.id);
+	//if (updatedTournament.remainingPlaces  === 0)
+	//	updatedTournament = await startTournamentInternal(updatedTournament.id);
 
 	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
 	
@@ -388,33 +420,39 @@ export async function endTournament(request, reply) {
 
 //! ajout 22/09/2025
 export async function startTournament(request, reply) {
-	// fetch create tournament matches
+
 	const user = request.user;
+	/***********************/
+	/***** TEST TOURNOI *****/
+	/***********************/
+	/* test la validité du tournoi et la que l'user est bien le createur du tournoi */
+
 	const tournamentId = request.params.id;
 	if ( !tournamentId || tournamentId <= 0 )
 		return reply.code(400).send({ error: 'tournamentId invalid' });
 	
-	const tournament = await getTournament(tournamentId);
-	//console.log("###########tournament\n", tournament ,"####	#####\n");
+	let tournament = await getTournament(tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.status !== 'waiting')
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
 	if (tournament.creatorId != user.id)
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
-	// si remaining place > 0
-	//replir avec ia
-	if (tournament.remainingPlaces > 0){
-		for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
-			await addNewPlayerToTournament(tournamentId, '0:ia;');
-	}
-	const updatedTournament = await startTournamentInternal(tournamentId);
-	if (!updatedTournament)
-		return reply.code(500).send({ error: 'Could not start tournament' });
 
-	// fetch User: recuperer les stats de tous les joueurs
-	// tableau d'objet user
-	const stringPlayers = updatedTournament.players;
+	// on verifie les place restantent
+	for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
+		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
+
+	console.log("###\nFonction startTournament : Valeur du tournoi récupéré --> ", tournament, "\n###\n");
+
+	/***********************************************************/
+	/**** creation des objets user a envoyer a USER SERVICE ****/
+	/***********************************************************/
+
+	//liste des joueur du tournoie (format -> '1:registered;  0:ia;   ....)
+	const stringPlayers = tournament.players;
+	if (stringPlayers === undefined)
+		return reply.code(500).send({ error: 'Impossible to get list of players tournament' });
 	const playersArray = stringPlayers.split(';');
 
 	let countIa = 0;
@@ -422,84 +460,81 @@ export async function startTournament(request, reply) {
 		if(playersArray[i] === '0:ia')
 			countIa++;
 	}
+
+	//Data des joueur
 	let playersInfos = new Array(playersArray.length - 1 - countIa);
 
 	for (let i = 0, j = 0; i < playersArray.length - 1; i++){
 		if (playersArray[i] !== '0:ia'){
 			const [id, type] = playersArray[i].toString().split(':');
+			//liste d'objet a envoyé au service match apres
 			playersInfos[j] = { id: Number(id), type: type};
 			j++;
 		}
 	}
-
-
 	//console.log("playersInfos -> ", playersInfos, " \n");
 
 	let listPlayers = await fetchUserTournament(playersInfos);
-	console.log("listPlayers -> ", listPlayers, " \n");
+	console.log("###\nFonction startTournament : liste des objets user(guest et registered) recupéré depuis service user --> ", listPlayers, "\n###\n");
 	if (listPlayers.error)	
 		return reply.code(500).send({ error: 'Could not fetch users for tournament' });
 
 	// trier les joueurs par win rate
 	let rankedUsers = listPlayers.registered.sort((a, b) => a.win_rate - b.win_rate);
-	rankedUsers = rankedUsers.concat(listPlayers.guests.sort((a, b) => a.win_rate - b.win_rate));
+	
 	//ici a correspond au joueur le plus faible et b le plus fort
-	console.log("rankedUsers -> ", rankedUsers, " \n");
-
-	rankedUsers = rankedUsers.sort((a, b) => a.win_rate - b.win_rate);
-	// rankedUsers est un tableau d'objet {id: number, type: string, win_rate: number}
+	rankedUsers = rankedUsers.concat(listPlayers.guests.sort((a, b) => a.win_rate - b.win_rate));
+	
 	// il est trié par win_rate croissant
+	rankedUsers = rankedUsers.sort((a, b) => a.win_rate - b.win_rate);
+	console.log("###\nFonction startTournament : liste des objets user trié pas rank", rankedUsers, "\n###\n");
 
-	console.log("count ia : " , countIa, "\n");
 	let finalPlayers = new Array();
 	if (countIa > 0){
 		//on va ajouter les ia apres chaques joueur en partant du plus faible
 		for (let i = 0; i < rankedUsers.length; i++){
 			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
-			if (countIa > 0){
+			if (countIa >= 0 ){
 				const { id, type } = { id: 0, type: 'ia' };
 				finalPlayers.push(id.toString() + ':' + type.toString());
 				countIa--;
 			}
 		}
 	}
+	else{
+		//on va ajouter les joueurs (guest et registered) en partant du plus faible
+		for (let i = 0; i < rankedUsers.length; i++)
+			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
+	}
+
 	// complete d'ia si nbre ia > nbUsers
 	for (let i = 0; i < countIa; i++){
 		const { id, type } = { id: 0, type: 'ia' };
 		finalPlayers.push(id.toString() + ':' + type.toString());
 	}
+	console.log("###\nFonction startTournament : liste finalPlayers avec les ia si besoin --> ", finalPlayers, "\n###\n");
 
-	console.log("finalPlayers -> ", finalPlayers, " \n");
 
-	// creer les matchs
+	/**************************************************************/
+	/**** creation des objets match a envoyer a MATCH SERVICE ****/
+	/*************************************************************/
+
+	//!regler avec 2 guest et un user login et lancer tournoi
+	//Data des matchs
 	const matches = new Array();
-	for(let i = 0; i < tournament.nbPlayersTotal / 2; i++){
-		let j = 0;
-		let player1Id = 0;
-		let player2Id = 0;
-		let player1Type = 'ia';
-		let player2Type = 'ia';
-		console.log("finaleplayuer[j]", finalPlayers[j], "\n");
-		for ( ; j < finalPlayers.length; j++){
-			if (finalPlayers[i][j] === ':')
-				break;
-			player1Id = finalPlayers[j].split(':')[0] || 0;
-			player1Type = finalPlayers[j].split(':')[1] || 'ia';
-			player2Id = finalPlayers[j + 1].split(':')[0] || 0;
-			player2Type = finalPlayers[j + 1].split(':')[1] || 'ia';
-			j++;
-			break;
-		}
-		matches.push({ player1: { id: player1Id, type: player1Type }, player2: { id: player2Id, type: player2Type}, tournamentID: tournamentId });
-	}
+	for(let i = 0; i < finalPlayers.length; i+=2){
+		const [p1Id, p1Type] = finalPlayers[i].split(':');
+		const [p2Id, p2Type] = finalPlayers[i + 1].split(':');
+		matches.push({
+			player1: { id: Number(p1Id), type: p1Type },
+			player2: { id: Number(p2Id), type: p2Type },
+			tournamentID: tournamentId
+		});
+	};
 
-	console.log("matches -> ", matches, "\n");
-	// final player remplie avec userlogin et guest, plus les ia
-	// Les guest prioritaire pour se battre contre les ia
-	//sinon rank le plus faible contre ia en priorite
+	console.log("###\nFonction startTournament : -> liste d'objet match a envoyé au SERVICE MATCH", matches, "\n###\n");
 
-	// on parcur les matches et on les enregistre dans matchservice
-	// fetch matchservice pour creer les matchs
+	// fetch matchservice pour recupérer les matchs initialisé depuis le MATCH SERVICE 
 	let tournamentMatchData = new Array();
 	for (let i = 0; i < matches.length; i++){
 		const res = await fetchMatchForTournament(matches[i]);
@@ -508,13 +543,37 @@ export async function startTournament(request, reply) {
 		tournamentMatchData.push(res.match);
 	}
 
-	// dans user: au prealable calculer win rate des joueurs (victoires / matchs joues)
-	// faire ici un classement des joueurs selon leurs win rates
-	// joueurs les plus nazes jouent contre l'I.A.?
-	// requete a match pour set tous les matchs et les recuperer
-	//! 23/09/2025 ajout ia pour remplir les places restantes
+	//chaine string match a ajouter a la db tournament et tournament history
+	let matchesString = '';
+	for (let i = 0; i < tournamentMatchData.length; i++){
+		const match = tournamentMatchData[i];
+		matchesString += (match.id + ';');
+	}
+
+	//AJOUT matches(string) et players(string) a DB HISTORY TOURNOI
+	const updateHistoryTournament = await addMatchesAndPlayersToHistory(tournamentId, matchesString, tournament.players);
+	if (!updateHistoryTournament)
+		return reply.code(500).send({ error: 'Could not update history for tournament' });
+	
+	//AJOUT match(string) a DB TOURNOI
+	const addMatchToTournament = await addMatchesStringToTournament(tournamentId, matchesString);
+	if (!addMatchToTournament)
+		return reply.code(500).send({ error: 'Could not update matches for tournament' });
+	
+	//AJOUT match(string) et players(string) a DB ROUND
+	let addRoundTable = await addDataRoundTable(tournamentId, tournament.rounds, matchesString, tournament.players);
+	if (!addRoundTable)
+		return reply.code(500).send({ error: 'Impossible to add Data into round table' });
+	
+	//INITIALISE tournoi a 'started'
+	let updatedTournament = await startTournamentInternal(tournamentId);
+	if (!updatedTournament)
+		return reply.code(500).send({ error: 'Could not start tournament' });
+
+	console.log("###\nFonction startTournament : -> INFOS TOURNOI ", updatedTournament, "\n###\n");
 	return reply.code(200).send({ tournament: tournamentMatchData, message: 'Tournament started' });
 }
+
 
 //! ajout 22/09/2025
 export async function getTournamentById(request, reply){
@@ -534,20 +593,133 @@ export async function getTournamentById(request, reply){
 	});
 };
 
+//!modification 01/10/2025
 export async function nextRound(request, reply){
 
+	const { match } = request.body;
 	const user = request.user;
-	const tournamentId = request.params.id;
-	if ( !tournamentId || tournamentId <= 0 )
-		return reply.code(400).send({ error: 'tournamentId invalid' });
 
-	const currentTournament = await getTournament(tournamentId);
-	if (!currentTournament)
-		return reply.code(400).send({ error: 'tournamentId invalid' });
+	console.log("###\nFonction nextRound : -> match dans le body ", match, "\n###\n");
 
-	if (user.id != currentTournament.creatorId)
-		return reply.code(400).send({ error: 'Only creator can authenticate nextRound' });
+	/***********************/
+	/***** TEST TOURNOI *****/
+	/***********************/
+	if (!match.tournament_id || match.tournament_id <= 0)
+		return reply.code(400).send( { error : 'TournamentId is required'});
 
+	const tournament = await getTournament(match.tournament_id);
+	if (!tournament)
+		return reply.code(404).send( { error : 'TournamentId not found'});
+	if (tournament.status !== 'started')
+		return reply.code(404).send( { error : 'Tournament not started or finished'});
+	
+	if (match.tournament_id !== tournament.id)
+		return reply.code(404).send( { error : 'tournament id does not match'});
+	
+	console.log("###\nFonction nextRound : -> infos tournoi -->", tournament, "\n###\n");
+
+	// verifier si l'user(tofind) fait bien partit du round string(players)
+	const toFind = user.id + ':' + user.type + ';';
+	if (!tournament.players.toString().includes(toFind))
+		return reply.code(404).send( { error: 'User not in tournament'});
+
+	/***********************/
+	/***** LOGIQUES .. *****/
+	/***********************/
+
+	//recupere la DB ROUND
+	let round = await getRoundTable(tournament.id, tournament.rounds);
+	console.log("###\nFonction nextRound : -> DB ROUND -->", round, "\n###\n");
+
+	if (round === undefined)
+		return reply.code(404).send( { error : 'Impossible to get data round'});
+
+	/***********************/
+	/******** MATCH ********/
+	/***********************/
+
+	// GET recupérer l'historique des match du tournoiID
+	let matchHistory = await fetchHistoryMatchForTournament(match.tournament_id);
+	if (matchHistory.error)
+		return reply.code(500).send({ error: 'Could not fetch match history' });
+	console.log("###\nFonction nextRound : matchHistory --> ", matchHistory, "\n###\n");
+
+	//tableau des matchs deja fini 
+	const matchesArray = matchHistory.tournamentData || [];
+	if (!Array.isArray(matchesArray))
+  		return reply.code(500).send({ error: 'Invalid match history format: tournamentData is not an array' });
+	console.log("###\nFonction nextRound : matchesArray --> ", matchesArray, "\n###\n");
+
+	if (matchesArray.length > 0){
+		// si le match a finir est dans l'historique
+		const currentMatch = matchesArray.find(element => element.id === match.id);
+		if (currentMatch && currentMatch.winner_id >= 0)
+			return reply.code(404).send({ error: `Match already finish` });
+		console.log("###\nFonction nextRound : currentMatch pour savoir si le match a deja ete joué--> ", currentMatch, "\n###\n");
+	}
+
+	// verifier si le match est dans le round
+	const roundMatchString = round.matchs.split(';').filter(Boolean);
+	console.log("###\nFonction nextRound : roundMatchString --> ", roundMatchString, "\n###\n");
+	if (!roundMatchString.includes(match.id.toString()))
+		return reply.code(404).send( { error : 'Does not found match in round'});
+
+	// PUT mettre a jour la DB history MATCH . on fini le match(recu dans la request)
+	const finishMatch = await fetchFinishMatchForTournament(match, request.headers.authorization);
+	if (!finishMatch)
+		return reply.code(500).send( { error: 'Impossible to finish match'});
+	console.log("###\nFonction nextRound : finishMatch (return la db history match a jour)--> ", finishMatch, "\n###\n");
+
+	/***********************/
+	/******** ROUND ********/
+	/***********************/
+
+	// liste d'IDs (strings) pour les compter apres et les comparer aux match finis
+	const roundMatchIds = round.matchs.split(';').filter(Boolean);
+	console.log("###\nFonction nextRound : roundMatchIds --->",roundMatchIds, "\n###\n");
+	
+	// recupere l'historique des match
+	matchHistory = await fetchHistoryMatchForTournament(match.tournament_id);
+	if (matchHistory.error)
+		return reply.code(500).send({ error: 'Could not fetch match history' });
+
+	// filtrer uniquement les matchs dont l'id est dans la liste
+	const matchesInRound = matchHistory.tournamentData.filter(m =>
+		roundMatchIds.includes(String(m.id)) // on cast en string pour comparer
+	);
+	console.log("###\nFonction nextRound : matchHistory --->",matchHistory, "\n###\n");
+	console.log("###\nFonction nextRound : len:roundMatchIds len:matchHistory --->",roundMatchIds.length , matchesInRound.length, "\n###\n");
+
+	//if (tournament.rounds === 1){
+	//	if ( matchHistory.length !== 2 && matchHistory.length !== 4 && matchHistory.length !== 8)
+	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
+	//	tournament.rounds += 1;
+	//}
+	//else if (tournament.rounds === 2 ){
+	//	if ( matchHistory.length !== 4 && matchHistory.length !== 6 && matchHistory.length !== 12)
+	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
+	//	tournament.rounds += 1;
+	//}
+	//else if (tournament.rounds === 3){
+	//	if ( matchHistory.length !== 8 && matchHistory.length !== 14 )
+	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
+	//	tournament.rounds += 1;
+	//}
+	//else if (tournament.rounds === 4){
+	//	if ( matchHistory.length !== 16 )
+	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
+	//	// finish tournament
+	//}
+	//else if (tournament.rounds > 4 && tournament.rounds <= 0)
+	//		return reply.code(500).send({ error: 'Nbr of round invalid ' });
+	
+	//// verifie si tout les matches sont fini
+	//for (let i = 0; i < matchHistory.history.length; i++){
+	//	if (!matchHistory.history[i].winnerId)
+	//		return reply.code(400).send( { error : "One match has no winner "});
+	//}
+
+	
 	// set les prochains match
 	//update les match 
 	

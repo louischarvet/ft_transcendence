@@ -1,6 +1,6 @@
 //controllers/controllers.js
 
-import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID } from '../models/models.js';
+import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID, getHistoryTournamentID } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
 
 // Requete a user-service pour update le status d'un joueur
@@ -160,6 +160,8 @@ export async function getHistory(request, reply) {
 // Route PUT pour mettre fin au match, update les infos necessaires
 export async function finish(request, reply) {
 	const match = request.body;
+
+	console.log("SERVICE MATCH : match ---> ", match, "SERVICE MATCH\n");
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
 	match.winner_id = winner_id;
@@ -189,10 +191,9 @@ export async function finish(request, reply) {
 
 // Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
 export async function tournamentMatch(request, reply) {
-	//!ajout le 26/09/2025
-	console.log("tournamentMatch body -> ", request.body, "\n");
 	const { player1, player2, tournamentID } = request.body;
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, player2.type, tournamentID);
+	console.log("matches insert in tables match -> ", match, "\n");
 	return reply.code(200).send({
 		match: match,
 		message: 'Tournament match created'
@@ -220,3 +221,15 @@ export async function updateMatchResultController(request, reply) {
 	return reply.code(200).send({ match });
 }
 
+//!ajout le 29/09/2025 pour recupérer l'historique des match appartemenant a un tournoi
+// route GET pour recuperer les match d'un tournoi
+export async function getHistoryByTournamentID(request, reply) {
+	const tournamentId = request.params.id;
+	if (!tournamentId)
+		return reply.code(200).send({ error : 'Need tournament Id' });
+
+	const tournamentData = await getHistoryTournamentID( tournamentId );
+	if (!tournamentData) 
+		return reply.code(200).send({ error : 'No data for this tournament' });
+	return reply.code(200).send({ tournamentData });
+}

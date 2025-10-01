@@ -34,6 +34,7 @@ export const matchSchema = {
 			},
 			scoreP2: { type: 'integer', minimum: 0 },
 			created_at: { type: 'string' },
+			tournament_id: { type: 'integer', minimum: 0 }
 		},
 		additionalProperties: false,
   	}
