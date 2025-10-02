@@ -143,19 +143,20 @@ TO DO
 
 - Re-generer un JWT au lancement d'un match ou d'un tournoi
 - /!\ Refaire les JWT !! Access token / Refresh token
+
 - Proteger la route /user/changeStatus -> cles API
 - /match : historique des matches pour un player
 - /user : empecher les registered de s'appeler "Guest(...)"
-- /user : get friends list
 - /user & /match : login par email OU par name
 - verifier l'existence des ENV 
-- service stats ? db : wins, losses, win streak, ... ?
-- /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
 - Penser a fermer les DBs a la fin du programme !
 
 - remplacer winner_id par winner : "3:registered"
 
+- /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
+- service stats ? db : wins, losses, win streak, ... ?
 
+DONE /user : get friends list
 DONE mettre toutes les fonctions fetch dans un fichier a part
 DONE /user : en arriere plan: supprimer les pending trop anciens
 DONE /session : verifier en arriere plan dans active_tokens les JWT expires -> requete a /user/changeStatus
