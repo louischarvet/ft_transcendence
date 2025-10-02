@@ -8,7 +8,7 @@ import { sessionRoutes } from './routes/routes.js';
 //import { sessionInput } from './schema/sessionInput.js';
 import { userSchema } from './schema/userSchema.js';
 
-import { pruneExpiredTokens, revokeExpiredTokens } from './controllers/controllers.js';
+import { pruneExpiredTokens, revokeExpiredTokens } from './cron/cronFunctions.js';
 
 //const secret = "secret-key";
 const fastify = Fastify({ logger: true });

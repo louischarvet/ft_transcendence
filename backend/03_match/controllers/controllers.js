@@ -2,88 +2,7 @@
 
 import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
-
-// Requete pour renouveller le JWT
-async function fetchReplaceJWT(token) {
-	console.log("###### TOKEN: ", token);
-	const body = JSON.stringify({
-		token: token
-	});
-	// envoyer le token brut sans "Bearer : "
-	const res = await fetch('http://session-service:3000/replace', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body
-	});
-	if (!res.ok)
-		return (res);
-	return ((await res.json()).token);
-}
-
-// Requete a user-service pour update le status d'un joueur
-async function fetchChangeStatus(player, status) {
-	const body = JSON.stringify({
-		name: player.name,
-		id: player.id,
-		status: status,
-		type: player.type,
-	});
-
-	const res = await fetch('http://user-service:3000/changestatus', {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	if (!res.ok)
-		return res;
-	return ((await res.json()).user);
-}
-
-// Requete a user-service pour mettre a jour les stats d'un ou deux joueurs
-async function fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id) {
-	const body = JSON.stringify({
-		p1_id: p1_id,
-		p1_type: p1_type,
-		p2_id: p2_id,
-		p2_type: p2_type,
-		winner_id: winner_id,
-	});
-
-	const res = await fetch('http://user-service:3000/updatestats', {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	const resBody = await res.json();
-	const { user1, user2 } = resBody;
-	// console.log("############################ festchUpdateStats Res\n",
-	// 			"##### BODY\n", resBody,
-	// 			"##########\n",
-	// 			"##### USER\n", user,
-	// 			"##########\n");
-	return ({ user1, user2 });
-}
-
-async function fetchCreateGuest() {
-	const body = JSON.stringify({
-		tmp: true
-	});
-	const res = await fetch('http://user-service:3000/guest', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	const guest = (await res.json()).user;
-	return (guest);
-}
+import { fetchReplaceJWT, fetchChangeStatus, fetchUpdateStats, fetchCreateGuest } from './fetchFunctions.js'
 
 // Route POST pour creer un match contre un joueur inscrit
 export async function registeredMatch(request, reply) {
@@ -129,7 +48,6 @@ export async function registeredMatch(request, reply) {
 // Route POST pour creer un match contre un guest
 export async function guestMatch(request, reply) {
 	const player1 = request.user;
-//	const guestID = 0;
 
 	// creer un guest en db user ! GuestID !
 	const guest = await fetchCreateGuest();

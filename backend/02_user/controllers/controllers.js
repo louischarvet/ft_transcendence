@@ -50,10 +50,6 @@ export async function register(request, reply) {
 	if (!await checkEmailFormat(email))
 		return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 
-	////! ajout le 17/09/2025
-	//if (!await checkPhoneFormat(telephone))
-	//	return reply.code(400).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
-
 	const exists = await getUserByName('registered', name);
 	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
@@ -105,13 +101,6 @@ export async function logIn(request, reply) {
 		delete user.hashedPassword;
 		delete user.email;
 		delete user.telephone;
-
-		// 2FA disabled for login
-		// await sendCode({
-		// 	name: name,
-		// 	email: email,
-		// 	id: user.id
-		// });
 
 		const token = tmp == true ? undefined : await generateJWT(user);
 		const body = {
@@ -294,7 +283,7 @@ export	async function fetchUserByIdToken(request, reply){
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
 	delete userInfos.telephone;
-	delete userInfos.friend_ship;
+	delete userInfos.friends;
 	delete userInfos.type;
 
 	return reply.code(200).send({
@@ -319,7 +308,7 @@ export	async function fetchUserById(request, reply){
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
 	delete userInfos.telephone;
-	delete userInfos.friend_ship;
+	delete userInfos.friends;
 
 	return reply.code(200).send({
 		user: userInfos
@@ -347,8 +336,8 @@ export async function addFriend(request, reply) {
 
 	//! ajout le 09/06/2025
 	const currentUser = request.user;
-	if (!currentUser)
-		return reply.code(401).send({ error : 'Bad Token'});
+	// if (!currentUser)
+	// 	return reply.code(401).send({ error : 'Bad Token'});
 	if (currentUser.type !== 'registered')
 		return reply.code(401).send({ error: 'Only registered users can add friends' });
 	
@@ -365,7 +354,7 @@ export async function addFriend(request, reply) {
 		return reply.code(404).send({ error: 'User friend not found' });
 
 	
-	let friendListString = user.friend_ship || "";
+	let friendListString = user.friends || "";
 	//split en tableau sans ; pour verifier apres si l'ami est deja dans la liste en js
 	const friendList = friendListString ? friendListString.split(";").filter(f => f) : [];
 	console.log("friendList before add friend :", friendList);
@@ -374,7 +363,7 @@ export async function addFriend(request, reply) {
 	if (friendList.includes(String(friend.id)))
 		return reply.code(409).send({ error: 'Friend already in the list' });
 
-	const col = 'friend_ship';
+	const col = 'friends';
 	const val = friendListString + friend.id + ";";
 
 	//ajouter via la methode updateValue
@@ -466,10 +455,4 @@ export async function updateStats(request, reply) {
 		user2: user2,
 		message: 'Stats updated.'
 	});
-}
-
-// cron pour supprimer les registered pending depuis + de 15 minutes
-export async function prunePendingRegistered() {
-	const time = Math.floor( Date.now() / 1000 ) - (15 * 60);
-	await deletePendingRegistered(time);
 }

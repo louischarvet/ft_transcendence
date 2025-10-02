@@ -1,7 +1,6 @@
 // controllers/fetchFunctions.js
 
 export async function fetchChangeStatus(player, status) {
-	console.log("######### fetchChangeStatus\n", player);
 	const body = JSON.stringify({
 		name: player.name,
 		id: player.id,

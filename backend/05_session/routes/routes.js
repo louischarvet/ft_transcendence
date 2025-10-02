@@ -13,7 +13,4 @@ export async function sessionRoutes(fastify, options) {
 
 	// Route interne pour renouveller un token au lancement d'un match ou d'un tournoi
 	fastify.post('/replace', { schema: replaceSchema }, replaceToken);
-
-	// route test pour supprimer les JWT expires
-//	fastify.get('/test', pruneExpiredTokens);
 }

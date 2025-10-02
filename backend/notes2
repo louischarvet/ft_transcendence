@@ -152,10 +152,11 @@ TO DO
 - service stats ? db : wins, losses, win streak, ... ?
 - /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
 - Penser a fermer les DBs a la fin du programme !
-- mettre toutes les fonctions fetch dans un fichier a part
+
 - remplacer winner_id par winner : "3:registered"
 
 
+DONE mettre toutes les fonctions fetch dans un fichier a part
 DONE /user : en arriere plan: supprimer les pending trop anciens
 DONE /session : verifier en arriere plan dans active_tokens les JWT expires -> requete a /user/changeStatus
 DONE /session : envoyer une requete a /user/changeStatus apres la revocation du token
