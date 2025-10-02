@@ -149,6 +149,8 @@ export async function logOut(request, reply) {
 export async function deleteUser(request, reply) {
 	console.log("####Function deleteUser called:\n");
 
+	//! ajout le 02/10/2025
+	//! verifier le token de l'user ?
 	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
 		console.log("###request.user.type : ", request.user.type, "\n###");

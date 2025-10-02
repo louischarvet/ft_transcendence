@@ -234,7 +234,6 @@ export async function launchTournament(request, reply) {
 	if (!tournament)
 		return reply.code(500).send({ error: 'Could not create tournament' });
 
-
 	const type = user.type;
 	if (!type)
 		return reply.code(400).send({ error: 'Type is required' });
@@ -243,21 +242,6 @@ export async function launchTournament(request, reply) {
 	if (!tmpTournament)
 		return reply.code(404).send({ error: 'Tournament not found after creation' });
 	tmpTournament = await addPlayerToTournament(tmpTournament.id, creatorId.toString() + ':' + type.toString() + ';');
-
-	//// pour lancer le timer avec de remplir avec les bots
-	//const TWO_MINUTES_TIMEOUT = 2 * 60 * 1000;
-	//setTimeout(async () => {
-	//	const tmpTournament = await getTournament(tournament.id);
-	//	if (!tmpTournament || tmpTournament.status !== 'waiting')
-	//		return;
-
-	//	if (tmpTournament.remainingPlaces > 0) {
-	//		for (let i = 0; i < tmpTournament.remainingPlaces; i++)
-	//			await addPlayerToTournament(tmpTournament.id, -1, 'ia');
-	//	}
-	//	//! faudrais ici remplir les match avec matchservice ???
-	//	await startTournamentInternal(tmpTournament.id);
-	//}, TWO_MINUTES_TIMEOUT );
 	
 	return reply.code(201).send({ tmpTournament, message: 'Tournament created. Waiting for players.' });
 };
@@ -440,7 +424,7 @@ export async function startTournament(request, reply) {
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
 
 	// on verifie les place restantent
-	for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
+	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--)
 		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
 
 	console.log("###\nFonction startTournament : Valeur du tournoi récupéré --> ", tournament, "\n###\n");
@@ -455,11 +439,14 @@ export async function startTournament(request, reply) {
 		return reply.code(500).send({ error: 'Impossible to get list of players tournament' });
 	const playersArray = stringPlayers.split(';');
 
+	// console.log("###\nFonction startTournament : playersArray --> ", playersArray, "\n###\n");
+
 	let countIa = 0;
-	for (let i = 0; i < playersArray.length - 1; i++){
+	for (let i = 0; i < playersArray.length; i++){
 		if(playersArray[i] === '0:ia')
 			countIa++;
 	}
+	// console.log("###\nFonction startTournament :nombre d'ia a ajouter prochainement --> ", countIa, "\n###\n");
 
 	//Data des joueur
 	let playersInfos = new Array(playersArray.length - 1 - countIa);
@@ -472,7 +459,7 @@ export async function startTournament(request, reply) {
 			j++;
 		}
 	}
-	//console.log("playersInfos -> ", playersInfos, " \n");
+	//console.log("###\nFonction startTournament : playersInfos -> ", playersInfos, "\n###\n");
 
 	let listPlayers = await fetchUserTournament(playersInfos);
 	console.log("###\nFonction startTournament : liste des objets user(guest et registered) recupéré depuis service user --> ", listPlayers, "\n###\n");
@@ -690,39 +677,23 @@ export async function nextRound(request, reply){
 	console.log("###\nFonction nextRound : matchHistory --->",matchHistory, "\n###\n");
 	console.log("###\nFonction nextRound : len:roundMatchIds len:matchHistory --->",roundMatchIds.length , matchesInRound.length, "\n###\n");
 
-	//if (tournament.rounds === 1){
-	//	if ( matchHistory.length !== 2 && matchHistory.length !== 4 && matchHistory.length !== 8)
-	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
-	//	tournament.rounds += 1;
-	//}
-	//else if (tournament.rounds === 2 ){
-	//	if ( matchHistory.length !== 4 && matchHistory.length !== 6 && matchHistory.length !== 12)
-	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
-	//	tournament.rounds += 1;
-	//}
-	//else if (tournament.rounds === 3){
-	//	if ( matchHistory.length !== 8 && matchHistory.length !== 14 )
-	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
-	//	tournament.rounds += 1;
-	//}
-	//else if (tournament.rounds === 4){
-	//	if ( matchHistory.length !== 16 )
-	//		return reply.code(500).send({ error: 'Nbr of matches ended invalid ' });
-	//	// finish tournament
-	//}
-	//else if (tournament.rounds > 4 && tournament.rounds <= 0)
-	//		return reply.code(500).send({ error: 'Nbr of round invalid ' });
-	
-	//// verifie si tout les matches sont fini
-	//for (let i = 0; i < matchHistory.history.length; i++){
-	//	if (!matchHistory.history[i].winnerId)
-	//		return reply.code(400).send( { error : "One match has no winner "});
-	//}
+	if(roundMatchIds.length !== matchesInRound.length){
+		return reply.code(200).send({
+			tournament: tournament,
+			matchFinish : matchHistory,
+			mathcmessage: 'All matchs round not finished'
+		});
+	}
 
-	
-	// set les prochains match
-	//update les match 
-	
+
+
+
+	//!init prochain match 
+	return reply.code(200).send({
+		tournament: tournament,
+		matchFinish : matchHistory,
+		message: 'next round'
+	});
 };
 
 //!ajout 22/09/2025
