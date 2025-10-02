@@ -24,7 +24,7 @@ export const matchSchema = {
 			p1_id: { type: 'integer' },
 			p1_type: {
 				type: 'string',
-				enum: [ 'registered', 'guest' ],
+				enum: [ 'registered', 'guest', 'ia' ],
 			},
 			scoreP1: { type: 'integer', minimum: 0 },
 			p2_id: { type: 'integer' },
@@ -34,6 +34,7 @@ export const matchSchema = {
 			},
 			scoreP2: { type: 'integer', minimum: 0 },
 			created_at: { type: 'string' },
+			tournament_id: { type: 'integer', minimum: 0 }
 		},
 		additionalProperties: false,
   	}

@@ -16,6 +16,7 @@ export async function initDB() {
 			status TEXT DEFAULT 'waiting',
 			matchs TEXT DEFAULT '',
 			players TEXT DEFAULT '',
+			rounds INTEGER DEFAULT 1,
 			nbPlayersTotal INTEGER NOT NULL,
 			remainingPlaces INTEGER NOT NULL,
 			created_at TEXT NOT NULL
@@ -26,9 +27,16 @@ export async function initDB() {
 			matchs TEXT,
 			players TEXT,
 			ranking TEXT,
-			winnerId INTEGER,
+			winnerId INTEGER default NULL,
 			ended_at TEXT,
 			created_at TEXT NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS round (
+			tournament_id	INTEGER NOT NULL,
+			round INTEGER DEFAULT 1,
+			matchs TEXT DEFAULT '',
+			players	TEXT DEFAULT ''
 		);
 	`);
 	return db;

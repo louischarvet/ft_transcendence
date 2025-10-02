@@ -13,7 +13,7 @@ export async function generateJWT(user) {
 		},
 		body: JSON.stringify(user)
 	});
-	console.log("######## genRes\n", genRes, "#######\n");
+	console.log("######## Function GENERATEJWT --> ", genRes, "\n#######\n");
 	return genRes;
 }
 
@@ -44,7 +44,6 @@ export async function authenticateJWT(request, reply) {
     //     return reply.code(401).send({ error: 'Unauthorized' });
 
     request.user = currentuser;
-    console.log("Utilisateur attaché à la request :", request.user);
 }
 
 
@@ -60,6 +59,6 @@ export async function revokeJWT(token) {
 			'Authorization': token,
 		},
 	});
-	console.log("/// REVRES\n", revRes);
+	console.log("######## Function revokeJWT : revRes -->", revRes, "\n#######\n");
 	return (revRes);
 }

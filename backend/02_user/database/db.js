@@ -52,6 +52,8 @@ export async function initDB(){
 		);
 	`);
 
+	await db.exec(`UPDATE registered SET win_rate = 10 WHERE id = 3;`);
+
 	console.log('Database user initialized');
 	return db;
 };

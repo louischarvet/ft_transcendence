@@ -60,7 +60,7 @@ services:
       - user-service
       - match-service
     volumes:
-      - tournament_db:/usr/src/app/data
+      - ./04_tournaments/data:/usr/src/app/data/
 #    command: npm run dev
 
   session-service:

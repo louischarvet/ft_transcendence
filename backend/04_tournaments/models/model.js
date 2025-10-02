@@ -65,4 +65,41 @@ export async function setTournamentWinner(id, winnerId) {
 export async function updateMatchAndPlaces(tournamentId, newMatches, newPlayers) {
 	await db.run(`UPDATE tournament SET matches = ?, nbPlayersTotal = nbPlayersTotal - 1, players = ? WHERE id = ?`, [newMatches, newPlayers, tournamentId]);
 	return await getTournament(tournamentId);
-};	
+};
+
+//!ajout le 29/09/2025
+export async function addMatchesStringToTournament(tournamentId, matchesString){
+	await db.run(`UPDATE tournament SET matchs = ? WHERE id = ?`, [matchesString, tournamentId]);
+	return await getTournament(tournamentId);
+}
+
+//!ajout le 29/09/2025
+export async function addMatchesAndPlayersToHistory(tournamentId, matchesString, playersString){
+	const time = Math.floor(Date.now() / 1000);
+	await db.run(
+		`INSERT INTO history (id, matchs, players, created_at)
+		VALUES (?, ?, ?, ?)`,
+		[tournamentId, matchesString, playersString, time]
+	);
+	return await db.get(`SELECT * FROM history WHERE id = ?`, [tournamentId]);
+}
+
+//!ajout le 01/10/2021
+export async function getRoundTable(tournamentId, roundNumber) {
+	return await db.get(
+		`SELECT * FROM round WHERE tournament_id = ? AND round = ?`,
+		[tournamentId, roundNumber]
+	);
+}
+
+//!ajout le 01/10/2025
+export async function addDataRoundTable(tournamentId, roundNumber, matchsString, playersString) {
+	await db.run(
+		`INSERT INTO round (tournament_id, round, matchs, players) VALUES (?, ?, ?, ?)`,
+		[tournamentId, roundNumber, matchsString, playersString]
+	);
+	return await db.get(
+		`SELECT * FROM round WHERE tournament_id = ? AND round = ?`,
+		[tournamentId, roundNumber]
+	);
+}

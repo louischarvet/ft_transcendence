@@ -1,4 +1,4 @@
-import { registeredMatch, guestMatch, iaMatch, getHistory, finish, tournamentMatch, getAllMatchesController, getMatchById, updateMatchResultController } from '../controllers/controllers.js';
+import { registeredMatch, guestMatch, iaMatch, getHistory, finish, tournamentMatch, getAllMatchesController, getMatchById, updateMatchResultController , getHistoryByTournamentID} from '../controllers/controllers.js';
 import { registeredMatchSchema, matchSchema, tournamentMatchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 import { isAvailable } from '../common_tools/isAvailable.js';
@@ -26,6 +26,10 @@ export default async function matchRoutes(fastify, opts) {
 
 	// Route GET pour recuperer l'historique des matchs d'un joueur (par ID)
 	fastify.get('/history/:id', { preHandler: authenticateJWT }, getHistory);
+	
+	//!ajout le 29/09/2025
+	// Route GET pour recuperer l'historique des matchs d'un tournoi (par ID)
+	fastify.get('/history/tournament/:id', getHistoryByTournamentID);
 	
 	// Route PUT pour mettre fin au match, update les infos necessaires
 	fastify.put('/finish', { preHandler: [ authenticateJWT, unalteredMatch ], schema: matchSchema }, finish);

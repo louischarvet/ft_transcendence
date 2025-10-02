@@ -1,6 +1,6 @@
 import { createGuest, register, logIn, logOut, deleteUser, fetchUserStatus,
 	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
-	fetchUserByIdToken,fetchUserById, getGuestById, getFriendsProfiles }
+	fetchUserByIdToken,fetchUserById, getGuestById, getFriendsProfiles, fetchUserTournament }
 	from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema, guestTmp } from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
@@ -48,6 +48,11 @@ async function userRoutes(fastify, options) {
 	//fastify.get('/find/:name', fetchUserByName);
 
 	fastify.get('/find/:name/status', fetchUserStatus);
+
+	//! ajout le 25/09/2025
+	// a voir pour schema route tournament
+	// faut t il mettre un prehandler ?
+	fastify.post('/tournament', fetchUserTournament);
 
 
 	// Dédié aux autres dockers 

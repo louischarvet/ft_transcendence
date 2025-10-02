@@ -1,4 +1,4 @@
-import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces } from '../controllers/tournaments.js';
+import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces, nextRound } from '../controllers/tournaments.js';
 import { authenticateJWT } from '../authentication/auth.js';
 import { tournamentSchema } from '../schema/tournamentSchema.js';
 import { loginInput } from '../schema/userInput.js';
@@ -26,6 +26,10 @@ export default async function routesPlugin(fastify, options) {
 	fastify.post('/starttournament/:id', { preHandler: authenticateJWT }, startTournament);
 	fastify.get('/:id', getTournamentById);
 	fastify.get('/all', getAllTournaments);
+
+	//! ajout le 30/09/2025
+	// route PUT pour generer les matchs du prochain round, et MAJ les data de tournoi
+	fastify.put('/next', { preHandler: authenticateJWT }, nextRound);
 
 	//! ajout le 22/09/2025
 	//pour louis
