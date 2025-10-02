@@ -369,7 +369,36 @@ export async function addFriend(request, reply) {
 	//ajouter via la methode updateValue
 	await updateValue('registered', col, user.name, val);
 	console.log("####\n");
+
+	// renvoyer le profil user mis a jour!
     return reply.code(200).send({ message: `Friend ${friendName} added.` });
+}
+
+// Route GET pour recuperer les profiles des amis
+export async function getFriendsProfiles(request, reply) {
+	const user = await getUserById('registered', request.user.id);
+	const { friends } = user;
+	
+	if (friends === undefined)
+		return reply.code(204).send({ message: "User has no friends :'(" });
+	else {
+//		console.log("friends : ", friends);
+		const friendsIDs = await friends.split(';').filter(p => p);
+		let friendsProfiles = new Array();
+		for (let i = 0, n = friendsIDs.length; i < n; i++) {
+			friendsProfiles[i] = await getUserById('registered', friendsIDs[i]);
+			delete friendsProfiles[i].hashedPassword;
+			delete friendsProfiles[i].email;
+			delete friendsProfiles[i].telephone;
+			
+			if (friendsProfiles[i] === undefined)
+				return reply.code(400).send({ error: 'Bad friend ID.' });
+		}
+		return reply.code(200).send({
+			friends: friendsProfiles,
+			message: 'Friends profiles.'
+		});
+	}
 }
 
 // Récupère le statut d'un utilisateur par son nom

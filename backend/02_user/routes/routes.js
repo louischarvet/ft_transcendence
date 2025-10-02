@@ -1,6 +1,7 @@
-import { createGuest, register, logIn, logOut, deleteUser,
-	fetchUserStatus, updateAvatar, updateInfo,
-	addFriend, changeStatus, updateStats, fetchUserByIdToken,fetchUserById, getGuestById } from '../controllers/controllers.js';
+import { createGuest, register, logIn, logOut, deleteUser, fetchUserStatus,
+	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
+	fetchUserByIdToken,fetchUserById, getGuestById, getFriendsProfiles }
+	from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema, guestTmp } from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
@@ -35,6 +36,7 @@ async function userRoutes(fastify, options) {
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
 	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT},  addFriend);
+	fastify.get('/getfriendsprofiles', { preHandler: authenticateJWT }, getFriendsProfiles);
 
 	fastify.get('/getguest/:id', getGuestById);
 
