@@ -34,11 +34,14 @@ export async function authenticateJWT(request, reply) {
     });
 
     const data = await authRes.json();
-//	console.log("/// DATA\n", data);
+	if (data.error)
+		return reply.code(401).send({ error: data.error });
+
     const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
 
-    if (!authRes.ok || !currentuser)
-        return reply.code(401).send({ error: 'Unauthorized' });
+    // if (authRes.ok === false || currentuser === undefined) {
+	// 	return reply.code(401).send({ error: 'Unauthorized' });
+	// }
 
     request.user = currentuser;
     console.log("Utilisateur attaché à la request :", request.user);

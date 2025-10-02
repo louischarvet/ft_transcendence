@@ -12,13 +12,15 @@ export async function authenticateJWT(request, reply) {
     });
 
     const data = await authRes.json();
+    	if (data.error)
+    		return reply.code(401).send({ error: data.error });
 
     let currentuser;
     if (authRes.ok)
       currentuser = data.user || data.body.user;
 
-    if (!authRes.ok || !currentuser)
-      return reply.code(401).send({ error: 'Unauthorized' });
+    // if (!authRes.ok || !currentuser)
+    //   return reply.code(401).send({ error: 'Unauthorized' });
 
     request.user = currentuser;
 //    console.log("Utilisateur attaché à la request :", request.user);
