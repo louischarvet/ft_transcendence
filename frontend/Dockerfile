@@ -2,10 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# RUN apt update && apt install bash -y
-
 COPY package.json ./
 RUN npm install
 
 COPY . .
-CMD ["npm", "run", "dev", "--", "--host"]
+
+# Expose Vite port
+EXPOSE 5173
+
+# CMD en forme exec JSON correcte pour Alpine et Vite
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

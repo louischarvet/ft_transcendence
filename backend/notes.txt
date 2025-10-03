@@ -141,3 +141,61 @@ Todo :
 
 modules:
 	
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+----------------------------------      SERVICE TOURNOI      -------------------------------------
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+## 1 . Infos général 
+
+Création / affichage des tournois
+	- L’utilisateur peut créer un tournoi ou voir la liste des tournois existants.
+
+Rejoindre un tournoi
+	- Un joueur enregistré, un autre navigateur du même user, ou un guest peut rejoindre.
+
+Lancement du tournoi
+	- Le créateur démarre le tournoi quand toutes les places sont remplies.
+
+Rounds et matchs
+	- Le front récupère les matchs du round courant.
+	- Lorsqu’un match est terminé, le front notifie le backend pour avancer.
+
+Fin du tournoi
+	- Le backend calcule le gagnant final et met à jour le tournoi.
+
+
+## 2 . Routes backend à utiliser côté front-end
+
+| Action front 							  | Route backend 					  | Méthode | Body / Paramètres                     |
+|-----------------------------------------|-----------------------------------|---------|---------------------------------------|
+| Voir tous les tournois 				  | `/tournaments` 					  | GET 	| -                                     |
+| Créer un tournoi 						  | `/tournaments/launch` 			  | POST    | `{ nbPlayers: 4 }`                    |
+| Rejoindre un tournoi loggué 			  | `/tournaments/join/:id` 		  | POST    | -                                     |
+| Rejoindre un tournoi enregistré 		  | `/tournaments/join-registered/:id`| POST    | `{ name, password }`                  |
+| Rejoindre un tournoi guest 			  | `/tournaments/join-guest/:id` 	  | POST    | -                                     |
+| Lancer un tournoi (start) 			  | `/tournaments/start/:id` 		  | POST    | -                                     |
+| Récupérer un tournoi 					  | `/tournaments/:id` 				  | GET     | -                                     |
+| Terminer un match / next round 		  | `/tournaments/next-round` 		  | POST    | `{ match }`                           |
+| Terminer un tournoi 					  | `/tournaments/end` 				  | POST    | `{ tournamentId, winnerId }`          |
+| Mettre à jour match et places restantes | `/tournaments/update-match` 	  | POST    | `{ tournamentId, matchId, playerId }` |
+| Voir tournois gagnés par un user 		  | `/tournaments/wins/:id` 		  | GET     | -                                     |
+
+-------
+
+exemple pour la creation d'un tournoi : 
+	
+	async function createTournament(nbPlayers) {
+	  const res = await fetch('http://backend/tournaments/launch', {
+	    method: 'POST',
+	    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+	    body: JSON.stringify({ nbPlayers })
+	  });
+	  const data = await res.json();
+	  return data;
+	}
+
+Le front envoie le nombre de joueurs et récupère le tournoi créé avec le créateur déjà ajouté.
+Afficher le tournoi dans la page “Mes tournois / En attente”

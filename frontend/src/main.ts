@@ -7,15 +7,19 @@ import PongScene from './pages/Pong3D';
 import Blackjack from './pages/Blackjack';
 import Tournament from './pages/Tournament';
 import Register from './pages/Register';
+import ApiTester from './pages/ApiTester';
+import RegisterTester from './pages/RegisterTester';
 
 defineRoutes([
   { path: '/', render: Home },
-  // { path: '/select-game', render: SelectGame },
   { path: '/pong', render: GameCanvas },
   { path: '/pong3d', render: PongScene },
   { path: '/blackjack', render: Blackjack },
   { path: '/tournament', render: Tournament },
   { path: '/register', render: Register },
+  { path: '/api-tester', render: ApiTester },
+  { path: '/register-tester', render: RegisterTester },
+  // { path: '/select-game', render: SelectGame },
 ]);
 
 document.addEventListener('DOMContentLoaded', () => {

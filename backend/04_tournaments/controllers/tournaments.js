@@ -9,7 +9,9 @@ import {
   addMatchesStringToTournament,
   addMatchesAndPlayersToHistory,
   addDataRoundTable,
-  getRoundTable
+  getRoundTable,
+  getHistoryTournament,
+  finishRound
 } from '../models/model.js';
 
 //! ajout le 25/09/2025
@@ -424,7 +426,7 @@ export async function startTournament(request, reply) {
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
 
 	// on verifie les place restantent
-	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--)
+	for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
 		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
 
 	console.log("###\nFonction startTournament : Valeur du tournoi récupéré --> ", tournament, "\n###\n");
@@ -446,7 +448,7 @@ export async function startTournament(request, reply) {
 		if(playersArray[i] === '0:ia')
 			countIa++;
 	}
-	// console.log("###\nFonction startTournament :nombre d'ia a ajouter prochainement --> ", countIa, "\n###\n");
+	 console.log("###\nFonction startTournament :nombre d'ia a ajouter prochainement --> ", countIa, "\n###\n");
 
 	//Data des joueur
 	let playersInfos = new Array(playersArray.length - 1 - countIa);
@@ -477,28 +479,16 @@ export async function startTournament(request, reply) {
 	console.log("###\nFonction startTournament : liste des objets user trié pas rank", rankedUsers, "\n###\n");
 
 	let finalPlayers = new Array();
-	if (countIa > 0){
-		//on va ajouter les ia apres chaques joueur en partant du plus faible
-		for (let i = 0; i < rankedUsers.length; i++){
+	for (let i = 0; i < tournament.nbPlayersTotal; i++){
+		if (rankedUsers[i])
 			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
-			if (countIa >= 0 ){
-				const { id, type } = { id: 0, type: 'ia' };
-				finalPlayers.push(id.toString() + ':' + type.toString());
-				countIa--;
-			}
+		if (countIa >= 0 ){
+			const { id, type } = { id: 0, type: 'ia' };
+			finalPlayers.push(id.toString() + ':' + type.toString());
+			countIa--;
 		}
 	}
-	else{
-		//on va ajouter les joueurs (guest et registered) en partant du plus faible
-		for (let i = 0; i < rankedUsers.length; i++)
-			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
-	}
 
-	// complete d'ia si nbre ia > nbUsers
-	for (let i = 0; i < countIa; i++){
-		const { id, type } = { id: 0, type: 'ia' };
-		finalPlayers.push(id.toString() + ':' + type.toString());
-	}
 	console.log("###\nFonction startTournament : liste finalPlayers avec les ia si besoin --> ", finalPlayers, "\n###\n");
 
 
@@ -580,6 +570,14 @@ export async function getTournamentById(request, reply){
 	});
 };
 
+function getWinnerInfo(match) {
+	if (match.winner_id === match.p1_id)
+		return { id: Number(match.p1_id), type: match.p1_type };
+	if (match.winner_id === match.p2_id)
+		return { id: Number(match.p2_id), type: match.p2_type };
+	return null; // pas encore joué
+}
+
 //!modification 01/10/2025
 export async function nextRound(request, reply){
 
@@ -600,7 +598,7 @@ export async function nextRound(request, reply){
 	if (tournament.status !== 'started')
 		return reply.code(404).send( { error : 'Tournament not started or finished'});
 	
-	if (match.tournament_id !== tournament.id)
+	if (match.tournament_id !== tournament.id || request.body.tournamentId !== tournament.id )
 		return reply.code(404).send( { error : 'tournament id does not match'});
 	
 	console.log("###\nFonction nextRound : -> infos tournoi -->", tournament, "\n###\n");
@@ -685,12 +683,82 @@ export async function nextRound(request, reply){
 		});
 	}
 
+	/*************************************************/
+	/******** INITIALISATION PROCHAINS MATCHS ********/
+	/*************************************************/
 
+	//Data des matchs
+	
+	// filter les match : uniquement les match du round en cours dans l'historique des matchs du tournoi
+	let matchesOfRound = matchHistory.tournamentData.filter(e => roundMatchIds.includes(String(e.id)));
+	console.log("###\nFonction nextRound : matchesOfRound --->",matchesOfRound, "\n###\n");
+	
+	let users = [];
+	for (const match of matchesOfRound){
+		
+		//!temporaire
+		users.push({ id: Number(match.winner_id) , type: match.p1_type });
+		
+		//if(match.winnerId == 1)
+		//	user.push({ id: Number(match.p1Id) , type: match.p1Type });
+		//else
+		//	user.push({ id: Number(match.p2Id) , type: match.p2Type });
+	}
+	
+	console.log("###\nFonction nextRound : users --->",users, "\n###\n");
+	
+	// tableau a envoyer a MATCH SERVICE pour generer les prochain matches
+	const arrayMatchesNextRound = [];
 
+	for (let i = 0; i < users.length; i += 2) {
+		const p1 = users[i];
+		const p2 = users[i + 1];
 
+		// Vérifie qu’on a bien un joueur 2 (au cas où nombre impair de gagnants)
+		if (!p1 || !p2) continue;
+
+		arrayMatchesNextRound.push({
+			player1: { id: Number(p1.id), type: p1.type },
+			player2: { id: Number(p2.id), type: p2.type },
+			tournamentID: tournament.id
+		});
+	}
+	console.log("###\nFonction nextRound : arrayMatchesNextRound --->",arrayMatchesNextRound, "\n###\n");
+
+	let matchsNextRound = new Array();
+	for (let i = 0; i < arrayMatchesNextRound.length; i++){
+		const res = await fetchMatchForTournament(arrayMatchesNextRound[i]);
+		if (res.error)
+			return reply.code(500).send({ error: 'Could not create matches for tournament' });
+		matchsNextRound.push(res.match);
+	}
+	console.log("###\nFonction nextRound : getTournament --->",await getTournament(tournament.id, round.round), "\n###\n");
+	console.log("###\nFonction nextRound : getRoundTable --->",await getRoundTable(tournament.id, round.round), "\n###\n");
+	console.log("###\nFonction nextRound : getHistoryTournament --->",await getHistoryTournament(tournament.id), "\n###\n");
+	console.log("###\nFonction nextRound : matchsNextRound --->",matchsNextRound, "\n###\n");
+
+	// passer au round++
+	let nextRound = await finishRound(tournament.id, round.round);
+
+	////AJOUT matches(string) et players(string) a DB HISTORY TOURNOI
+	//const updateHistoryTournament = await addMatchesAndPlayersToHistory(tournament.id, matchesString, tournament.players);
+	//if (!updateHistoryTournament)
+	//	return reply.code(500).send({ error: 'Could not update history for tournament' });
+	
+	////AJOUT match(string) a DB TOURNOI
+	//const addMatchToTournament = await addMatchesStringToTournament(tournament.id, matchesString);
+	//if (!addMatchToTournament)
+	//	return reply.code(500).send({ error: 'Could not update matches for tournament' });
+	
+	////AJOUT match(string) et players(string) a DB ROUND
+	//let addRoundTable = await addDataRoundTable(tournament.id, tournament.rounds, matchesString, tournament.players);
+	//if (!addRoundTable)
+	//	return reply.code(500).send({ error: 'Impossible to add Data into round table' });
+	
+	console.log("###\nFonction nextRound : nextRound --->",nextRound, "\n###\n");
 	//!init prochain match 
 	return reply.code(200).send({
-		tournament: tournament,
+		matchsNextRound: matchsNextRound,
 		matchFinish : matchHistory,
 		message: 'next round'
 	});

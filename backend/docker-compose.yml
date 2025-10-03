@@ -24,8 +24,9 @@ services:
       - transcendence-net
     restart: unless-stopped
     volumes:
+    - user_db:/usr/src/app/data
     - ./02_user/pictures:/usr/src/app/pictures
-    - ./02_user/data:/usr/src/app/data/
+    #- ./02_user/data:/usr/src/app/data/
 #    command: npm run dev
 
 
@@ -41,8 +42,8 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
-    #volumes:
-      #- match_db:/usr/src/app/data
+    volumes:
+      - match_db:/usr/src/app
 #    command: npm run dev
 
 
@@ -60,7 +61,7 @@ services:
       - user-service
       - match-service
     volumes:
-      - ./04_tournaments/data:/usr/src/app/data/
+    - tournament_db:/usr/src/app/data/
 #    command: npm run dev
 
   session-service:
@@ -75,8 +76,8 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
-    #volumes:
-      #- session_db:/usr/src/app/data
+    volumes:
+      - session_db:/usr/src/app/
 
   twofa-service:
 
@@ -90,8 +91,8 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
-    #volumes:
-      #- twofa_db:/usr/src/app/data
+    volumes:
+      - twofa_db:/usr/src/app/
 
 networks:
   transcendence-net:
@@ -100,6 +101,6 @@ networks:
 volumes:
   user_db:
   tournament_db:
-  #match_db:
-  #session_db:
-  #twofa_db:
+  match_db:
+  session_db:
+  twofa_db:
