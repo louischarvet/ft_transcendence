@@ -9,10 +9,10 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install sqlite3 -y
 # RUN npm install sqlite3
 # RUN npm install sqlite
-RUN npm install @fastify/cookie
 RUN npm install @fastify/jwt
 RUN npm install jsonwebtoken
 RUN npm install fastify-cron
+RUN npm install speakeasy
 
 COPY . .
 
