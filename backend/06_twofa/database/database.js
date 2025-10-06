@@ -21,8 +21,9 @@ export async function initDB() {
 	if( db ){
 		db.run(
 			`CREATE TABLE IF NOT EXISTS twofa (
-				id INTEGER,
-				code INTEGER
+				id INTEGER NOT NULL,
+				name TEXT NOT NULL,
+				code INTEGER NOT NULL
 				)
 			;`
 		)

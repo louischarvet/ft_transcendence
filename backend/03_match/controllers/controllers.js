@@ -2,69 +2,7 @@
 
 import { insertInTable, getHistoryByUserID, insertInHistory, deleteMatch, getMatchByID, getHistoryTournamentID } from '../models/models.js';
 // import { createLocalMatch, createVsMatch, getAllMatches, getMatch, updateMatchResult } from '../models/models.js';
-
-// Requete a user-service pour update le status d'un joueur
-async function fetchChangeStatus(player, status) {
-	const body = JSON.stringify({
-		name: player.name,
-		id: player.id,
-		status: status,
-		type: player.type,
-	});
-
-	const res = await fetch('http://user-service:3000/changestatus', {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	if (!res.ok)
-		return res;
-	return ((await res.json()).user);
-}
-
-// Requete a user-service pour mettre a jour les stats d'un ou deux joueurs
-async function fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id) {
-	const body = JSON.stringify({
-		p1_id: p1_id,
-		p1_type: p1_type,
-		p2_id: p2_id,
-		p2_type: p2_type,
-		winner_id: winner_id,
-	});
-
-	const res = await fetch('http://user-service:3000/updatestats', {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	const resBody = await res.json();
-	const { user1, user2 } = resBody;
-	// console.log("############################ festchUpdateStats Res\n",
-	// 			"##### BODY\n", resBody,
-	// 			"##########\n",
-	// 			"##### USER\n", user,
-	// 			"##########\n");
-	return ({ user1, user2 });
-}
-
-async function fetchCreateGuest() {
-	const body = JSON.stringify({
-		tmp: true
-	});
-	const res = await fetch('http://user-service:3000/guest', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: body,
-	});
-	const guest = (await res.json()).user;
-	return (guest);
-}
+import { fetchReplaceJWT, fetchChangeStatus, fetchUpdateStats, fetchCreateGuest } from './fetchFunctions.js'
 
 // Route POST pour creer un match contre un joueur inscrit
 export async function registeredMatch(request, reply) {
@@ -94,10 +32,14 @@ export async function registeredMatch(request, reply) {
 	// Cree le match en DB et le renvoie
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered', 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user1,
 		user2: user2,
+		token: newToken,
 		message: 'Registered match successfully created',
 	});
 
@@ -106,7 +48,6 @@ export async function registeredMatch(request, reply) {
 // Route POST pour creer un match contre un guest
 export async function guestMatch(request, reply) {
 	const player1 = request.user;
-//	const guestID = 0;
 
 	// creer un guest en db user ! GuestID !
 	const guest = await fetchCreateGuest();
@@ -117,10 +58,14 @@ export async function guestMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type, 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user,
 		user2: guest,
+		token: newToken,
 		message: 'Guest match successfully created',
 	});
 }
@@ -134,6 +79,9 @@ export async function iaMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia', 0);
 
+	// Remplacer le JWT pour eviter d'etre delog pendant un match
+	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+
 	return reply.code(200).send({
 		match: match,
 		user1: user,
@@ -141,6 +89,7 @@ export async function iaMatch(request, reply) {
 			id: 0,
 			type: 'ia',
 		},
+		token: newToken,
 		message: 'IA match successfully created',
 	});
 }
@@ -164,7 +113,9 @@ export async function finish(request, reply) {
 	console.log("SERVICE MATCH : match ---> ", match, "SERVICE MATCH\n");
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
+	const loser_id = scoreP1 > scoreP2 ? p2_id : p1_id;
 	match.winner_id = winner_id;
+	match.loser_id = loser_id;
 
 	// verifier que le match est bien en cours
 	if (await getMatchByID(match.id) === undefined)

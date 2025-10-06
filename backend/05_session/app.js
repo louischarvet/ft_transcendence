@@ -8,7 +8,7 @@ import { sessionRoutes } from './routes/routes.js';
 //import { sessionInput } from './schema/sessionInput.js';
 import { userSchema } from './schema/userSchema.js';
 
-import { pruneExpiredTokens } from './controllers/controllers.js';
+import { pruneExpiredTokens, revokeExpiredTokens } from './cron/cronFunctions.js';
 
 //const secret = "secret-key";
 const fastify = Fastify({ logger: true });
@@ -20,6 +20,12 @@ fastify.register(fastifyCron, {
 		{
 			cronTime: '*/30 * * * *',
 			onTick: pruneExpiredTokens,
+			start: true,
+			timeZone: 'Europe/Paris'
+		},
+		{
+			cronTime: '*/1 * * * *',
+			onTick: revokeExpiredTokens,
 			start: true,
 			timeZone: 'Europe/Paris'
 		}

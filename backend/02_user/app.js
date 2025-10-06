@@ -1,24 +1,26 @@
 //app.js
 
 import Fastify from 'fastify';
+import fastifyCron from 'fastify-cron';
 import jwt from '@fastify/jwt'
+// Pour le upload les images
+import fastifyMultipart from '@fastify/multipart';
+import fastifyCors from '@fastify/cors';
+//!ajout le 18/09/2025
+//permet de gerer les attaques XSS
+import helmet from '@fastify/helmet';
 import userRoutes from './routes/routes.js';
 import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 //! ajout le 16/09/2025
 import { initDB } from './database/db.js';
 
-//!ajout le 18/09/2025
-//permet de gerer les attaques XSS
-import helmet from '@fastify/helmet';
 
-// Pour le upload les images
-import fastifyMultipart from '@fastify/multipart';
+import { prunePendingRegistered } from './cron/cronFunctions.js';
 
 const fastify = Fastify({ logger: true });
 
 // CORS configuration
-import fastifyCors from '@fastify/cors';
 fastify.register(fastifyCors, {
     origin: true, // Réfléchit le domaine de la requête
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
@@ -34,6 +36,18 @@ fastify.register(jwt, {
 //permet de gerer les attaques XSS
 await fastify.register(helmet, {
 	global: true
+});
+
+// supprimer toutes les 15 minutes les registered pending qui n'ont pas fait le 2fa
+fastify.register(fastifyCron, {
+	jobs: [
+		{
+			cronTime: '*/1 * * * *',
+			onTick: prunePendingRegistered,
+			start: true,
+			timeZone: 'Europe/Paris'
+		}
+	]
 });
 
 // On instencie les Schemas de JSONs

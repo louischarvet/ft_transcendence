@@ -23,9 +23,11 @@ export async function initDB(){
 			wallet INTEGER NOT NULL DEFAULT 100,
 
 			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
-	
+
 			hashedPassword TEXT NOT NULL,
-			email TEXT
+			email TEXT,
+
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
 
@@ -44,7 +46,9 @@ export async function initDB(){
 			friends	TEXT,
 			wallet INTEGER NOT NULL DEFAULT 100,
 
-			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp"
+			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
+
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
 

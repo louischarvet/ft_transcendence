@@ -20,11 +20,12 @@ async function getUserById(table, id) {
 
 
 async function insertInTable(table, toInsert) {
+	const time = Math.floor( Date.now() / 1000 );
 	const name = toInsert.name;
 	if (toInsert.hashedPassword) { // signin -- with password
 		const hashedPassword = toInsert.hashedPassword;
-		await db.run("INSERT INTO " + table + "(name, hashedPassword, email) VALUES (?, ?, ?)",
-			[name, hashedPassword, toInsert.email]);
+		await db.run("INSERT INTO " + table + "(name, hashedPassword, email, created_at) VALUES (?, ?, ?, ?)",
+			[name, hashedPassword, toInsert.email, time]);
 	} else // guest -- no password
 		await db.run("INSERT INTO " + table + "(name) VALUES (?)",
 			[name]);
@@ -94,6 +95,14 @@ export async function updateStatsLoser(table, userID) {
 // Delete user i ntable
 async function deleteUserInTable(table, userName) {
 	await db.run('DELETE FROM ' + table + ' WHERE name = ?', [userName]);
+}
+
+// Supprimer les registered pending depuis plus de 15 minutes
+export async function deletePendingRegistered(time) {
+	console.log("############# deletePendingRegistered\n");
+	await db.run(`DELETE FROM registered WHERE status = ? AND created_at <= ?`,
+		[ 'pending', time ]
+	);
 }
 
 async function getUserTournament(listLogin, listGuests) {

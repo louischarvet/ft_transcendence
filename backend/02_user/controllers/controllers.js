@@ -50,10 +50,6 @@ export async function register(request, reply) {
 	if (!await checkEmailFormat(email))
 		return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 
-	////! ajout le 17/09/2025
-	//if (!await checkPhoneFormat(telephone))
-	//	return reply.code(400).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
-
 	const exists = await getUserByName('registered', name);
 	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
@@ -99,19 +95,12 @@ export async function logIn(request, reply) {
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		updateStatus('registered', name, 'available');
+		await updateStatus('registered', name, 'available');
 
 		const user = await getUserByName('registered', name);
 		delete user.hashedPassword;
 		delete user.email;
 		delete user.telephone;
-
-		// 2FA disabled for login
-		// await sendCode({
-		// 	name: name,
-		// 	email: email,
-		// 	id: user.id
-		// });
 
 		const token = tmp == true ? undefined : await generateJWT(user);
 		const body = {
@@ -125,15 +114,16 @@ export async function logIn(request, reply) {
 }
 
 // Route PUT /logout
+// Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
 	console.log("####Function logOut called:\n");
 	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
 		//! ajout le 17/09/2025
 		//! nom de la table "guests" au lieu de "guest"
-		console.log("chek type : ", request.user.type, "\n");
+//		console.log("chek type : ", request.user.type, "\n");
 		if (request.user.type == "guest")
-			deleteUserInTable("guest", request.user.name);
+			deleteUserInTable(request.user.type, request.user.name);
 		else
 			updateStatus(request.user.type, request.user.name, 'logged_out');
 
@@ -295,7 +285,7 @@ export	async function fetchUserByIdToken(request, reply){
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
 	delete userInfos.telephone;
-	delete userInfos.friend_ship;
+	delete userInfos.friends;
 	delete userInfos.type;
 
 	return reply.code(200).send({
@@ -320,7 +310,7 @@ export	async function fetchUserById(request, reply){
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
 	delete userInfos.telephone;
-	delete userInfos.friend_ship;
+	delete userInfos.friends;
 
 	return reply.code(200).send({
 		user: userInfos
@@ -348,8 +338,8 @@ export async function addFriend(request, reply) {
 
 	//! ajout le 09/06/2025
 	const currentUser = request.user;
-	if (!currentUser)
-		return reply.code(401).send({ error : 'Bad Token'});
+	// if (!currentUser)
+	// 	return reply.code(401).send({ error : 'Bad Token'});
 	if (currentUser.type !== 'registered')
 		return reply.code(401).send({ error: 'Only registered users can add friends' });
 	
@@ -366,7 +356,7 @@ export async function addFriend(request, reply) {
 		return reply.code(404).send({ error: 'User friend not found' });
 
 	
-	let friendListString = user.friend_ship || "";
+	let friendListString = user.friends || "";
 	//split en tableau sans ; pour verifier apres si l'ami est deja dans la liste en js
 	const friendList = friendListString ? friendListString.split(";").filter(f => f) : [];
 	console.log("friendList before add friend :", friendList);
@@ -375,13 +365,42 @@ export async function addFriend(request, reply) {
 	if (friendList.includes(String(friend.id)))
 		return reply.code(409).send({ error: 'Friend already in the list' });
 
-	const col = 'friend_ship';
+	const col = 'friends';
 	const val = friendListString + friend.id + ";";
 
 	//ajouter via la methode updateValue
 	await updateValue('registered', col, user.name, val);
 	console.log("####\n");
+
+	// renvoyer le profil user mis a jour!
     return reply.code(200).send({ message: `Friend ${friendName} added.` });
+}
+
+// Route GET pour recuperer les profiles des amis
+export async function getFriendsProfiles(request, reply) {
+	const user = await getUserById('registered', request.user.id);
+	const { friends } = user;
+	
+	if (friends === undefined)
+		return reply.code(204).send({ message: "User has no friends :'(" });
+	else {
+//		console.log("friends : ", friends);
+		const friendsIDs = await friends.split(';').filter(p => p);
+		let friendsProfiles = new Array();
+		for (let i = 0, n = friendsIDs.length; i < n; i++) {
+			friendsProfiles[i] = await getUserById('registered', friendsIDs[i]);
+			delete friendsProfiles[i].hashedPassword;
+			delete friendsProfiles[i].email;
+			delete friendsProfiles[i].telephone;
+			
+			if (friendsProfiles[i] === undefined)
+				return reply.code(400).send({ error: 'Bad friend ID.' });
+		}
+		return reply.code(200).send({
+			friends: friendsProfiles,
+			message: 'Friends profiles.'
+		});
+	}
 }
 
 // Récupère le statut d'un utilisateur par son nom

@@ -32,17 +32,16 @@ export async function authenticateJWT(request, reply) {
         }
     });
     const data = await authRes.json();
-	//! modifier le 17/09/2025 
-	if (!data)
-		return reply.code(401).send({ error: 'Unauthorized: No data received from auth service' });
+	if (data.error)
+		return reply.code(401).send({ error: data.error });
 
 	//! modifier le 17/09/2025 
     const currentuser = data.user ; // fallback si le service renvoie "user"
     //const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
 
-	console.log("######## Function authenticateJWT : current user -->", currentuser, "\n#######\n");
-    if (!authRes.ok || !currentuser)
-        return reply.code(401).send({ error: 'Unauthorized' });
+//	console.log("####\n", currentuser, "####\n");
+    // if (!authRes.ok || !currentuser)
+    //     return reply.code(401).send({ error: 'Unauthorized' });
 
     request.user = currentuser;
 }

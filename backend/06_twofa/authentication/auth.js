@@ -1,7 +1,7 @@
 // ./authentification.auth.js
 
 export async function generateJWT(user) {
-	console.log("///generateGWT twofaservice . user : \t", user);
+//	console.log("///generateGWT twofaservice . user : \t", user);
 	const genRes = await fetch('http://session-service:3000/generate', {
 		method: 'POST',
 		headers: {
