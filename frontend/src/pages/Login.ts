@@ -1,71 +1,65 @@
 import { postJson } from '../utils/authFetch';
 import { navigate } from '../router';
 
-export default function RegisterTester(): HTMLElement {
+export default function Login(): HTMLElement {
   const container = document.createElement('div');
   container.className = 'flex flex-col items-center justify-center min-h-screen gap-6 bg-gray-900 text-white p-8';
 
   const title = document.createElement('h1');
-  title.textContent = 'Register Tester';
+  title.textContent = 'Connexion';
   title.className = 'text-3xl font-bold';
   container.appendChild(title);
 
   const nameInput = document.createElement('input');
-  nameInput.placeholder = 'Name';
+  nameInput.placeholder = "Nom d'utilisateur";
   nameInput.className = 'p-2 rounded w-72 text-black';
   container.appendChild(nameInput);
 
-  const emailInput = document.createElement('input');
-  emailInput.placeholder = 'Email';
-  emailInput.type = 'email';
-  emailInput.className = 'p-2 rounded w-72 text-black';
-  container.appendChild(emailInput);
-
   const passwordInput = document.createElement('input');
-  passwordInput.placeholder = 'Password';
+  passwordInput.placeholder = 'Mot de passe';
   passwordInput.type = 'password';
   passwordInput.className = 'p-2 rounded w-72 text-black';
   container.appendChild(passwordInput);
 
   const btn = document.createElement('button');
-  btn.textContent = 'Register';
+  btn.textContent = 'Se connecter';
   btn.className = 'mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded';
   container.appendChild(btn);
 
   const responseBox = document.createElement('pre');
-  responseBox.className = 'bg-gray-700 p-2 rounded w-96 h-48 overflow-auto text-sm mt-4';
+  responseBox.className = 'bg-gray-700 p-2 rounded w-96 h-24 overflow-auto text-sm mt-4';
   container.appendChild(responseBox);
 
   btn.onclick = async () => {
     btn.disabled = true;
     const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
 
-    if (!name || !email || !password) {
-      responseBox.textContent = 'Name, email and password are required!';
+    if (!name || !password) {
+      responseBox.textContent = 'Nom d’utilisateur et mot de passe requis';
       btn.disabled = false;
       return;
     }
 
     try {
-      const res = await postJson('/api/user/register', { name, email, password });
-      if (!res.user) {
-        responseBox.textContent = JSON.stringify(res, null, 2);
-        btn.disabled = false;
-        return;
-      }
+		const res = await fetch('/api/user/login', {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name, password }),
+		credentials: 'include',
+		});
+		const data = await res.json();
 
-      if (res.user.token) localStorage.setItem('authToken', res.user.token);
-      responseBox.textContent = 'Inscription réussie ! Redirection...';
+      localStorage.setItem('authToken', data.token);
+      responseBox.textContent = 'Connexion réussie ! Redirection...';
 
       const gameRoute = localStorage.getItem('gameRoute') || '/';
-      setTimeout(() => navigate(gameRoute), 1000);
+      setTimeout(() => navigate(gameRoute), 800);
     } catch (err: any) {
       responseBox.textContent = 'Erreur : ' + JSON.stringify(err);
       btn.disabled = false;
     }
-  };
+  }; // <-- fermeture du onclick
 
   return container;
-}
+} // <-- fermeture de Login()

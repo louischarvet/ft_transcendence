@@ -2,25 +2,31 @@ import { defineRoutes, renderRoute } from './router';
 import './style.css';
 import Home from './pages/Home';
 // import SelectGame from './pages/SelectGame';
-import GameCanvas from './pages/Pong';
 import PongScene from './pages/Pong3D';
 import Blackjack from './pages/Blackjack';
 import Tournament from './pages/Tournament';
 import Register from './pages/Register';
-import ApiTester from './pages/ApiTester';
 import RegisterTester from './pages/RegisterTester';
+import GameAccess from './pages/GameAccess';
+import Login from './pages/Login';
+import Guest from './pages/Guest';
 
 defineRoutes([
-  { path: '/', render: Home },
-  { path: '/pong', render: GameCanvas },
-  { path: '/pong3d', render: PongScene },
-  { path: '/blackjack', render: Blackjack },
-  { path: '/tournament', render: Tournament },
-  { path: '/register', render: Register },
-  { path: '/api-tester', render: ApiTester },
-  { path: '/register-tester', render: RegisterTester },
-  // { path: '/select-game', render: SelectGame },
+	{ path: '/', render: Home },
+
+	{ path: '/pong3d', render: () => GameAccess('/pong3d/play') },
+	{ path: '/blackjack', render: () => GameAccess('/blackjack/play') },
+
+	{ path: '/pong3d/play', render: PongScene },
+	{ path: '/blackjack/play', render: Blackjack },
+
+	{ path: '/login', render: Login },
+	{ path: '/guest', render: Guest },
+	{ path: '/register-tester', render: RegisterTester },
+	{ path: '/tournament', render: Tournament },
+	{ path: '/register', render: Register },
 ]);
+
 
 document.addEventListener('DOMContentLoaded', () => {
   renderRoute();
