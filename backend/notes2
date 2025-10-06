@@ -18,7 +18,8 @@ transcendence/
 │   └── ...
 
 ne pas lire....
-fqwr odcx igae hjfv
+# APP_PASS="fqwr odcx igae hjfv"
+# USR_ADDR="nathantrijaud@gmail.com"
 
 Rôle de chaque service et modèle dans ta stack
 
@@ -141,6 +142,9 @@ _ base image en local.
 
 TO DO
 
+- Retaper les DBs (ouverture, globale forbidden !)
+- /user : renvoyer l'email dans la reponse
+
 - Re-generer un JWT au lancement d'un match ou d'un tournoi
 - /!\ Refaire les JWT !! Access token / Refresh token
 
@@ -150,6 +154,7 @@ TO DO
 - /user & /match : login par email OU par name
 - verifier l'existence des ENV 
 - Penser a fermer les DBs a la fin du programme !
+- liste d'amis: si un ami delete son compte, mettre a jour la liste d'amis ?
 
 - remplacer winner_id par winner : "3:registered"
 

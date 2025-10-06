@@ -1,4 +1,5 @@
 // routes/routes.js
+import { generateSchema } from "../schema/generateSchema.js";
 
 export async function sessionRoutes(fastify, options) {
 /////////////////////////////////////// Accessible depuis le service twofa
@@ -6,7 +7,7 @@ export async function sessionRoutes(fastify, options) {
     // generer access + refresh tokens
     // refresh token stocke en base de donnees
     // en cas de register ou login
-    fastify.post('/generate', generate);
+    fastify.post('/generate', { schema: generateSchema }, generate);
 
 ////////////////// Accessible depuis tous les autres services (preHandler)
     /////////////////////////////////////// Avec l'access token uniquement
@@ -15,7 +16,7 @@ export async function sessionRoutes(fastify, options) {
     // si l'access token est expire, renvoie une erreur 401
     // le front doit ensuite renvoyer une requete a /refresh
     // puis relancer la requete initiale (acces a des ressources)
-    fastify.post('/authenticate', authenticate);
+    fastify.get('/authenticate', authenticate);
 
 ////////////////////////////////// Accessibles directement par le frontend
     ///////////////////////////////////// Avec le refresh token uniquement

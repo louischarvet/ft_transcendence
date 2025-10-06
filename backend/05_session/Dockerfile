@@ -11,12 +11,12 @@ RUN apt-get install sqlite3 -y
 # RUN npm install sqlite
 RUN npm install @fastify/cookie
 RUN npm install @fastify/jwt
-RUN npm install jsonwebtoken
+# RUN npm install jsonwebtoken
 RUN npm install fastify-cron
 
 COPY . .
 
-RUN cat ./database/initDatabase.sqlite | sqlite3 users_db
+# RUN cat ./database/initDatabase.sqlite | sqlite3 users_db
 
 EXPOSE 3000
 #CMD ["node", "index.js"]
