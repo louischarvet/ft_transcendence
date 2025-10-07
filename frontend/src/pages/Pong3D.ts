@@ -1,33 +1,41 @@
-import { Engine, Scene,
-  FreeCamera, HemisphericLight,
+import { Engine, Scene, FreeCamera,
   Vector3, Color3, GlowLayer,
   StandardMaterial, MeshBuilder,
   ParticleSystem, Texture
 } from "@babylonjs/core";
 import Victor from "victor";
-import Path from "./usePath";
+import Path from "../tools/games/PgPath";
 import { AdvancedDynamicTexture, Button, InputText, TextBlock } from "@babylonjs/gui";
 
-export default function PongScene(): HTMLElement {
+export default function Pong3D(): HTMLElement {
   const container = document.createElement('div');
   container.className = 'flex justify-center items-center h-screen bg-gray-900';
 
   const canvas = document.createElement('canvas');
-  canvas.className = 'fixed top-0 left-0 w-full h-full';
+  canvas.className = 'block fixed w-full h-full';
+
+  let width = window.innerWidth;
+  let height = window.innerHeight;
   const resizeCanvas = () => {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.style.width = "100vw";
-    canvas.style.height = "100vh";
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
+    if (window.innerHeight / window.innerWidth > 0.5) {
+      canvas.width = window.innerWidth;
+      canvas.height = canvas.width * 0.5;
+    } else {
+      canvas.height = window.innerHeight;
+      canvas.width = canvas.height / 0.5;
+    }
+    width = canvas.width;
+    height = canvas.height;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
   };
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
   container.appendChild(canvas);
 
-  const keys: Record<string, boolean> = {};
-
+  
   function init() {
+    const keys: Record<string, boolean> = {};
     
     const handleKeyDown = (e: KeyboardEvent) => {
       keys[e.code] = true;
@@ -314,7 +322,7 @@ export default function PongScene(): HTMLElement {
     // Création de la scène Babylon.js
     function createScene() {
       // Initialisation de la scène
-      const engine = new Engine(canvas, true, {adaptToDeviceRatio: true});
+      const engine = new Engine(canvas, true);
       const scene = new Scene(engine);
       scene.clearColor = new Color3(0.035, 0.02, 0.05).toColor4(); // Couleur de fond
 
@@ -463,6 +471,37 @@ export default function PongScene(): HTMLElement {
 
     const { engine, scene, camera, ball3D, paddleLeft3D, paddleRight3D, fontParticles, collisionParticles } = createScene();
 
+    // Gui
+    const ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    function initGui() {
+      // Play Button for nickname input
+      const buttonPlay = Button.CreateSimpleButton("playButton", "PLAY");
+      buttonPlay.top = "50px";
+      buttonPlay.width = "120px";
+      buttonPlay.height = "30px";
+      buttonPlay.color = "grey";
+      buttonPlay.cornerRadius = 15;
+      buttonPlay.thickness = 1;
+      buttonPlay.background = "black";
+      buttonPlay.onPointerEnterObservable.add(() => {
+      buttonPlay.color = "white"; // Change color on hover
+      });
+      buttonPlay.onPointerOutObservable.add(() => {
+        buttonPlay.color = "grey"; // Change color back on hover out
+      });
+      buttonPlay.onPointerClickObservable.add(() => {
+        buttonPlay.isVisible = false; // Hide the button
+      });
+      ui.addControl(buttonPlay);
+
+      return {
+        buttonPlay
+      };
+    }
+
+    const { buttonPlay } = initGui();
+
     function triggerCollisionEffect(direction: Vector3) {
       collisionParticles.direction1 = new Vector3(-1, 1, -1);
       collisionParticles.direction2 = new Vector3(1, -1, 1);
@@ -481,50 +520,6 @@ export default function PongScene(): HTMLElement {
 
     let gameStarted = false;
     let gameStartTime = 2000;
-
-   
-    // GUI
-    const ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-    // ui.idealWidth = 2560;
-    // ui.idealHeight = 1440;
-    // ui.useSmallestIdeal = true;
-    // ui.renderAtIdealSize = true;
-
-    
-    // nickname input
-    let nickname = "Player";
-    const inputNickname = new InputText("nicknameInput")
-    inputNickname.width = "150px";
-    inputNickname.height = "30px";
-    inputNickname.placeholderText = nickname + "...";
-    inputNickname.thickness = 1;
-    inputNickname.color = "grey";
-    inputNickname.background = "black";
-    ui.addControl(inputNickname);
-
-    // Play Button for nickname input
-    const buttonPlay = Button.CreateSimpleButton("playButton", "PLAY");
-    buttonPlay.top = "50px";
-    buttonPlay.width = "120px";
-    buttonPlay.height = "30px";
-    buttonPlay.color = "grey";
-    buttonPlay.cornerRadius = 15;
-    buttonPlay.thickness = 1;
-    buttonPlay.background = "black";
-    buttonPlay.onPointerEnterObservable.add(() => {
-      buttonPlay.color = "white"; // Change color on hover
-    });
-    buttonPlay.onPointerOutObservable.add(() => {
-      buttonPlay.color = "grey"; // Change color back on hover out
-    });
-    buttonPlay.onPointerClickObservable.add(() => {
-      // get Input nickname
-      nickname = inputNickname.text || nickname;
-      console.log("nickname: ", nickname);
-      inputNickname.isVisible = false; // Hide the input
-      buttonPlay.isVisible = false; // Hide the button
-    });
-    ui.addControl(buttonPlay);
 
     scene.onBeforeRenderObservable.add(() => {
       const deltaTime = engine.getDeltaTime(); // en millisecondes
@@ -599,6 +594,8 @@ export default function PongScene(): HTMLElement {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
     };
+
+    // return cleanup;
   }
 
   init();

@@ -34,8 +34,10 @@ export async function generateToken(request, reply) {
 
 // Route GET /authenticate
 export async function authenticateUser(request, reply) {
-	const token = request.headers.authorization.split(' ')[1];
+	const token = request.headers.authorization.split(' ')[1] || request.headers.authorization;
 
+	console.log("### authenticateUser : request.headers.authorization -->",request.headers.authorization);
+	console.log("### authenticateUser : token -->",token);
 	if (!token) {
 		console.log('Missing token');
 		return reply.code(401).send({ error: 'Missing token' });
@@ -69,7 +71,8 @@ export async function authenticateUser(request, reply) {
 
 // Route POST /revoke
 export async function revokeToken(request, reply) {
-	const token = request.headers.authorization.split(' ')[1];
+	const token = request.headers.authorization.split(' ')[1] || request.headers.authorization;
+	console.log("token in revToken 05-SESSION --->", token);
 	if (!token)
 		return reply.code(401).send({ error: 'Missing token' });
 

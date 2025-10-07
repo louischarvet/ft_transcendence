@@ -10,9 +10,8 @@ export function defineRoutes(r: Route[]) {
 }
 
 export function navigate(path: string) {
-
-	history.pushState({}, '', path);
-	renderRoute();
+  history.pushState({}, '', path);
+  renderRoute();
 }
 
 export function renderRoute() {
@@ -24,9 +23,13 @@ export function renderRoute() {
   if (match) {
     app.appendChild(match.render());
   } else {
-    const el = document.createElement('h1');
-    el.textContent = '404 - Not Found';
-    app.appendChild(el);
+    const notFoundWrapper = document.createElement('div');
+    notFoundWrapper.className = 'flex justify-center items-center h-screen';
+    const notFound = document.createElement('h1');
+    notFound.className = 'text-4xl font-bold text-red-500';
+    notFound.textContent = '404 - Not Found';
+    notFoundWrapper.appendChild(notFound);
+    app.appendChild(notFoundWrapper);
   }
 }
 

@@ -1,44 +1,45 @@
 import { navigate } from '../router';
+import { checkConnection } from '../tools/APIStorageManager';
+import ContinueAs from '../tools/ContinueAs';
+import Login from '../tools/Login';
+import Register from '../tools/Register';
+import GameSelection from '../tools/GameSelection';
+import TwofaVerification from '../tools/2faVerification';
+import DropDownMenu from '../tools/DropDownMenu';
 
-export default function Home(): HTMLElement {
+export default function Home(subPage?: string): HTMLElement {
   const container = document.createElement('div');
-  container.className = 'flex flex-col items-center h-screen bg-[url(/assets/background.png)] bg-cover bg-center';
+  container.className = 'flex flex-col justify-center items-center w-screen h-screen min-h-screen bg-[url(/assets/background.png)] bg-cover bg-center bg-no-repeat';
+  container.style.backgroundSize = '100% 100%';
 
   // Titre
   const title = document.createElement('h1');
   title.textContent = 'BlackPong';
-  title.className = 'text-[12rem] font-extrabold text-green-400 drop-shadow-[0_0_30px_#535bf2] mt-12';
+  title.className = 'w-screen font-extrabold text-green-400 drop-shadow-[0_0_30px_#535bf2] text-6xl sm:text-8xl md:text-9xl lg:text-[12rem]';
   container.appendChild(title);
 
-  // Sous-titre
-  const subtitle = document.createElement('h2');
-  subtitle.textContent = 'Choose your game';
-  subtitle.className = 'text-4xl font-bold text-white mb-16 drop-shadow-[0_0_10px_black]';
-  container.appendChild(subtitle);
+  const separator = document.createElement('hr'); // Ligne de séparation
+  separator.className = 'w-3/4 border-t border-white/20 my-5';
+  container.appendChild(separator);
 
-  // Conteneur des boutons de jeu
-  const buttonsWrapper = document.createElement('div');
-  buttonsWrapper.className = 'flex flex-wrap justify-center gap-16 p-16';
+  if (subPage === 'login') {
+    container.appendChild(Login());
+  } else if (subPage === 'register') {
+    container.appendChild(Register());
+  } else if (subPage === 'select-game') {
+    container.appendChild(GameSelection());
+  } else if (subPage === '2fa-verification') {
+    container.appendChild(TwofaVerification());
+  } else {
+    container.appendChild(ContinueAs());
+    checkConnection().then((connected) => {
+      if (connected) {
+        navigate('/select-game');
+      }
+    });
+  }
 
-  const createGameButton = (label: string, route: string): HTMLElement => {
-    const button = document.createElement('button');
-    button.className =
-      'flex items-center justify-center w-[420px] h-[280px] bg-[#646cff50] rounded-xl backdrop-blur-2xl ' +
-      'hover:scale-105 hover:bg-[#535bf2] hover:drop-shadow-[0_0_20px_#535bf2] transition-all duration-300';
-
-    const p = document.createElement('p');
-    p.textContent = label;
-    p.className = 'text-white text-5xl font-bold';
-    button.appendChild(p);
-
-    button.onclick = () => navigate(route);
-    return button;
-  };
-
-  buttonsWrapper.appendChild(createGameButton('Pong 3D', '/pong3d'));
-  buttonsWrapper.appendChild(createGameButton('Blackjack', '/blackjack'));
-
-  container.appendChild(buttonsWrapper);
+  container.appendChild(DropDownMenu());
 
   return container;
 }

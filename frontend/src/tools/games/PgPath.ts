@@ -1,16 +1,16 @@
-// usePath.tsx
+// PgPath.tsx
 import Victor from "victor";
 
-export default class Path {
-  next: Path | null = null;
+export default class PgPath {
+  next: PgPath | null = null;
   position: Victor;
   speed: Victor;
   deltaTime: number;
 
   constructor(position: Victor, direction?: Victor, deltaTime?: number);
-  constructor(copyFrom: Path);
+  constructor(copyFrom: PgPath);
 
-  constructor(arg1: Victor | Path, arg2?: Victor, arg3?: number) {
+  constructor(arg1: Victor | PgPath, arg2?: Victor, arg3?: number) {
     if (arg1 instanceof Victor) {
       // Regular constructor
       this.position = arg1.clone();
@@ -24,12 +24,12 @@ export default class Path {
     }
   }
 
-  last(): Path {
+  last(): PgPath {
     if (this.next === null) return this;
     else return this.next.last();
   }
 
-  move(factor: number = 1): Path {
+  move(factor: number = 1): PgPath {
     const time = this.deltaTime * factor;
     this.position.add(this.speed.clone().multiplyScalar(time));
     this.deltaTime -= time;
@@ -39,12 +39,12 @@ export default class Path {
 
   extend(): void;
   extend<T extends any[]>(
-    collisionFunc: (path: Path, ...args: T) => Path,
+    collisionFunc: (path: PgPath, ...args: T) => PgPath,
     ...args: T
   ): void;
 
   extend<T extends any[]>(
-    collisionFunc?: (path: Path, ...args: T) => Path,
+    collisionFunc?: (path: PgPath, ...args: T) => PgPath,
     ...args: T
   ): void {
     const lastPath = this.last();
@@ -53,7 +53,7 @@ export default class Path {
     if (lastPath.deltaTime < 1e-6) return;
 
     if (!collisionFunc) {
-      lastPath.next = new Path(lastPath).move();
+      lastPath.next = new PgPath(lastPath).move();
       return;
     } else {
       lastPath.next = collisionFunc(lastPath, ...args);

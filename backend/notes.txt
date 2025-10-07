@@ -172,7 +172,7 @@ Fin du tournoi
 | Action front 							  | Route backend 					  | Méthode | Body / Paramètres                     |
 |-----------------------------------------|-----------------------------------|---------|---------------------------------------|
 | Voir tous les tournois 				  | `/tournaments` 					  | GET 	| -                                     |
-| Créer un tournoi 						  | `/tournaments/launch` 			  | POST    | `{ nbPlayers: 4 }`                    |
+| Créer un tournoi 						  | `/tournaments/launch` 			  | POST    | `{ nbPlayers: 4 }` . TOKEN                   |
 | Rejoindre un tournoi loggué 			  | `/tournaments/join/:id` 		  | POST    | -                                     |
 | Rejoindre un tournoi enregistré 		  | `/tournaments/join-registered/:id`| POST    | `{ name, password }`                  |
 | Rejoindre un tournoi guest 			  | `/tournaments/join-guest/:id` 	  | POST    | -                                     |

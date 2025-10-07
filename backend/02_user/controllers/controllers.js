@@ -117,7 +117,13 @@ export async function logIn(request, reply) {
 // Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
 	console.log("####Function logOut called:\n");
-	const revRes = await revokeJWT(request.headers.authorization);
+	const token = request.headers.authorization;
+	if (!token)
+		return reply.code(400).send({ error: 'Need token' });
+
+	console.log("token in logOut --> ", token);
+
+	const revRes = await revokeJWT(token);
 	if (revRes.status == 200) {
 		//! ajout le 17/09/2025
 		//! nom de la table "guests" au lieu de "guest"
@@ -168,8 +174,8 @@ export async function updateInfo(request, reply) {
 	console.log("currentUser : ", currentUser, "\n");
 
 	const body = request.body;
-	const { name, password, toUpdate, newValue } = body;
-	if (!body || !name || !password || !toUpdate || !newValue)
+	const { password, toUpdate, newValue } = body;
+	if (!body || !password || !toUpdate || !newValue)
 		reply.code(401).send( { error : 'Need all infos in body caca'});
 	console.log();
 	//! modifié le 17/09/2025
@@ -207,11 +213,11 @@ export async function updateInfo(request, reply) {
 			return reply.code(401).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 	}
 
-	//! pour modifier le telephone
-	if (toUpdate === 'telephone'){
-		if (!await checkPhoneFormat(newValue))
-			return reply.code(401).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
-	}
+	// //! pour modifier le telephone
+	// if (toUpdate === 'telephone'){
+	// 	if (!await checkPhoneFormat(newValue))
+	// 		return reply.code(401).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
+	// }
 
 	//! ajout le 18/09/2025
 	// newValue , name enleve
@@ -378,13 +384,13 @@ export async function addFriend(request, reply) {
 
 // Route GET pour recuperer les profiles des amis
 export async function getFriendsProfiles(request, reply) {
+	const test = request.user;
 	const user = await getUserById('registered', request.user.id);
 	const { friends } = user;
-	
-	if (friends === undefined)
-		return reply.code(204).send({ message: "User has no friends :'(" });
+	if (friends === undefined || friends === null)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
 	else {
-//		console.log("friends : ", friends);
+		// console.log("friends : ", friends);
 		const friendsIDs = await friends.split(';').filter(p => p);
 		let friendsProfiles = new Array();
 		for (let i = 0, n = friendsIDs.length; i < n; i++) {

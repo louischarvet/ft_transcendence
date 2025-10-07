@@ -60,14 +60,14 @@ export const updateSchema = {
 	$id: 'updateSchema',
 	body: {
 		type: 'object',
-		required: ['name', 'password', 'toUpdate', 'newValue'],
+		required: ['password', 'toUpdate', 'newValue'],
 		properties: {
-			name: {
-				type: 'string',
-				minLength: 1,
-				maxLength: 64,
-				pattern: '^[^<>{}"\'`]*$'
-			},
+			// name: {
+			// 	type: 'string',
+			// 	minLength: 1,
+			// 	maxLength: 64,
+			// 	pattern: '^[^<>{}"\'`]*$'
+			// },
 			password: {
 				type: 'string',
 				minLength: 8,
@@ -76,7 +76,7 @@ export const updateSchema = {
 			},
 			toUpdate: {
 				type: 'string',
-				enum: ['picture', 'password', 'email', 'telephone']
+				enum: ['password', 'email']
 			},
 			newValue: {
 				type: 'string',
