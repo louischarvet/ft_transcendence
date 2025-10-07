@@ -44,13 +44,15 @@ export default function Login(): HTMLElement {
 
 		if (!form.name || !form.email || !form.password)
 			return;
-		const logged = login(form.name, form.password);
-		if (!logged) {
-			console.error('User creation failed');
-			return;
-		}
-		console.log("logged infos --->", logged);
-		navigate('/select-game');
+		login(form.name, form.password).then( (res) => {
+			if (!res){
+				console.error('User creation failed');
+				history.back();
+				return;
+			}
+			else
+				navigate('/select-game');
+		});
 	};
 	buttonsWrapper.appendChild(loginButton);
 

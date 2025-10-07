@@ -44,15 +44,20 @@ export default function Register(): HTMLElement {
   registerButton.onclick = () => {
     console.log('Register Form:', form);
 
-    if (!form.name || !form.email || !form.password || !form.confirmPassword
-        || form.password !== form.confirmPassword)
-        return;
-
-    if (!register(form.name, form.email, form.password)) {
-      console.error('User creation failed');
+    if (!form.name || !form.email || !form.password || !form.confirmPassword){
+      alert("All fields are required");
       return;
     }
-    navigate('/2fa-verification');
+    if (form.password !== form.confirmPassword){
+      alert("The two passwords are different");
+      return;
+    }
+    register(form.name, form.email, form.password).then( (res) => {
+      if(!res)
+        console.error('User creation failed');
+      else
+        navigate('/2fa-verification');
+    })
   };
   buttonsWrapper.appendChild(registerButton);
 

@@ -88,29 +88,37 @@ export async function logIn(request, reply) {
 	const { name, password, tmp } = request.body;
 
 	const exists = await getUserByName('registered', name);
-
-	if (exists === undefined)
+	if (!exists)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	else if (exists.status !== 'logged_out')
+	if (exists.status !== 'logged_out')
 		return reply.code(409).send({ error: 'User already logged in.' });
 
-	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		await updateStatus('registered', name, 'available');
-
-		const user = await getUserByName('registered', name);
-		delete user.hashedPassword;
-		delete user.email;
-		delete user.telephone;
-
-		const token = tmp == true ? undefined : await generateJWT(user);
-		const body = {
-			user: user,
-			token: token,
-			message: 'User ' + name + ' available.',
-		};
-		return reply.code(201).send(body);
-	} else
+	const passwordMatch = await bcrypt.compare(password, exists.hashedPassword);
+	if (!passwordMatch)
 		return reply.code(401).send({ error: 'Bad password' });
+
+	await updateStatus('registered', name, 'available');
+
+	const user = await getUserByName('registered', name);
+	// Nettoyage des infos sensibles
+	delete user.hashedPassword;
+	delete user.email;
+	delete user.telephone;
+
+	let token;
+	if (!tmp) {
+		const jwt = await generateJWT(user);
+		if (typeof jwt === 'string')
+			token = jwt;
+		else
+			console.error("Erreur lors de la génération du token :", jwt);
+	}
+
+	return reply.code(201).send({
+		user,
+		token,
+		message: `User ${name} available.`,
+	});
 }
 
 // Route PUT /logout

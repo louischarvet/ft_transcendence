@@ -1,3 +1,4 @@
+import { navigate } from "../router";
 
 function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
@@ -63,22 +64,7 @@ export async function checkConnection() { // TO DO
 	console.log("user and token -->", user, token);
 
 	if (!user || !token)
-		return false;
-
-	// const response = await fetch('http://localhost:3000/user/checkconnection', {
-	//   method: 'POST',
-	//   headers: {
-	//     'Content-Type': 'application/json',
-	//   },
-	//   body: JSON.stringify({
-	//     id: user.id,
-	//     name: user.name,
-	//     email: user.email,
-	//     type: user.type,
-	//   }),
-	// });
-	// const responseJson = await response.json();
-	
+		return false;	
 	return true;
 }
 
@@ -132,6 +118,7 @@ export async function login(name: string, password: string) {
 	const json = await response.json();
 	if (json.user) {
 		setUser(json.user);
+		setToken(json.token);
 		return true;
 	}
 	return false;

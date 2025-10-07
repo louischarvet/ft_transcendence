@@ -17,7 +17,8 @@ export async function generateJWT(user) {
 	}
 	console.log("######## res\n", res, "#######\n");
 
-	const data = await res.json(); // <-- ici on récupère { token: "..." }
+	const data = await res.json();
+	console.log("######## data\n", data, "#######\n");
 	return data.token;  
 }
 

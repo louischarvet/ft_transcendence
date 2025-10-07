@@ -3,9 +3,8 @@ import { checkConnection, verifyTwoFactorCode} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
   checkConnection().then((connected) => {
-    if (connected) {
+    if (connected)
       navigate('/select-game');
-    }
   });
 
   let code: string = '';
