@@ -2,6 +2,8 @@ FROM louischarvet/ft_transcendence_backend_base:1.0
 
 WORKDIR /usr/src/app
 
+RUN mkdir -p /usr/src/app/data/
+
 COPY ./package.json ./package-lock.json* ./
 
 RUN npm install && npm install -g nodemon
