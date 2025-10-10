@@ -2,7 +2,7 @@ import { createGuest, register, logIn, logOut, deleteUser, fetchUserStatus,
 	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
 	fetchUserByIdToken,fetchUserById, getGuestById, getFriendsProfiles, fetchUserTournament }
 	from '../controllers/controllers.js';
-import { registerInput, loginInput, updateSchema, guestTmp } from '../schema/userInput.js';
+import { registerInput, loginInput, updateSchema, guestTmp , deleteSchema} from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
 import { authenticateJWT } from '../authentication/auth.js';
 
@@ -31,7 +31,7 @@ async function userRoutes(fastify, options) {
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
 	fastify.put('/logout', {preHandler: authenticateJWT },  logOut);
-	fastify.delete('/delete', {schema: updateSchema },  deleteUser);
+	fastify.delete('/delete', {schema: deleteSchema },  deleteUser);
 
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema

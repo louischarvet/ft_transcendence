@@ -156,9 +156,25 @@ export default function Profile(): HTMLElement {
 
   getUserByToken().then((response) => {
     if(!response || !response.user)
-        console.log("User not found");
-    else
-      console.log(response.user);
+        navigate('/');
+    const user = response.user;
+    username.textContent = user.name;
+    email.textContent = user.email;
+    avatar.className = user.picture || './pictures/default.webp';
+
+    // --- Stats ---
+    ratio.querySelector('p:nth-child(2)')!.textContent =
+      user.win_rate?.toFixed(2) ?? '0.00';
+    gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
+      user.played_matches ?? '0';
+    wins.querySelector('p:nth-child(2)')!.textContent =
+      user.match_wins ?? '0';
+    bestStreak.querySelector('p:nth-child(2)')!.textContent =
+      user.wins_streak ?? '0';
+    currentStreak.querySelector('p:nth-child(2)')!.textContent =
+      user.currentStreak ?? '0';
+    wallet.querySelector('p:nth-child(2)')!.textContent =
+      `${user.wallet ?? 0} 🪙`;
   })
 
   return container;

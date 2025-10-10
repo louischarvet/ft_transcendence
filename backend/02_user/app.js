@@ -21,8 +21,6 @@ import { prunePendingRegistered } from './cron/cronFunctions.js';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
 
-
-
 const fastify = Fastify({ logger: true });
 
 // CORS configuration

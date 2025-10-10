@@ -100,6 +100,24 @@ export const guestTmp = {
 	}
 }
 
+// modifier le 18/09/2025
+export const deleteSchema = {
+	$id: 'deleteSchema',
+	body: {
+		type: 'object',
+		required: ['password'],
+		properties: {
+			password: {
+				type: 'string',
+				minLength: 8,
+				maxLength: 128,
+				pattern: '^[^<>{}"\'`]*$'
+			},
+		},
+		additionalProperties: false
+	}
+}
+
 // export const userInput = {
 // 	$id: 'userInput',
 // 	body: {

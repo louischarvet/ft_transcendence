@@ -154,6 +154,7 @@ export async function deleteUser(request, reply) {
 	console.log("####Function deleteUser called:\n");
 
 	const user = request.user;
+	console.log("user")
 	//! ajout le 02/10/2025
 	//! verifier le token de l'user ?
 	const { password} = request.body;
@@ -334,7 +335,6 @@ export	async function fetchUserById(request, reply){
 
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
-	delete userInfos.telephone;
 	delete userInfos.friends;
 
 	return reply.code(200).send({

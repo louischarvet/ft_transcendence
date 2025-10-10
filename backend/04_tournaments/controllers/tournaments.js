@@ -232,20 +232,20 @@ export async function launchTournament(request, reply) {
 	if (!creatorId || creatorId <= 0)
 		return reply.code(400).send({ error: 'creatorId is required' });
 
-	const tournament = await createTournamentRow(nbPlayers, creatorId);
-	if (!tournament)
+	const tmpTournament = await createTournamentRow(nbPlayers, creatorId);
+	if (!tmpTournament)
 		return reply.code(500).send({ error: 'Could not create tournament' });
 
 	const type = user.type;
 	if (!type)
 		return reply.code(400).send({ error: 'Type is required' });
 
-	let tmpTournament = await getTournament(tournament.id);
-	if (!tmpTournament)
+	let Tournament = await getTournament(tmpTournament.id);
+	if (!Tournament)
 		return reply.code(404).send({ error: 'Tournament not found after creation' });
-	tmpTournament = await addPlayerToTournament(tmpTournament.id, creatorId.toString() + ':' + type.toString() + ';');
+	Tournament = await addPlayerToTournament(Tournament.id, creatorId.toString() + ':' + type.toString() + ';');
 	
-	return reply.code(201).send({ tmpTournament, message: 'Tournament created. Waiting for players.' });
+	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
 };
 
 //! ajout le 22/09/2025

@@ -1,6 +1,6 @@
 // src/tools/DeletePopup.ts
 import { navigate } from '../router';
-
+import { getUserByToken } from './APIStorageManager'
 export function createDeleteAccount(onConfirm: (email: string, password: string) => void): HTMLElement {
   const overlay = document.createElement('div');
   overlay.className = `
@@ -60,10 +60,26 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
     bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg
     transition-all duration-200
   `;
+
+      let currentEmail = '';
+
+    getUserByToken().then((response) =>{
+      if (!response || !response.user){
+        return;
+      }
+      const user = response.user;
+      currentEmail = user.email;
+    });
   confirmBtn.onclick = () => {
     const email = emailInput.value.trim();
     const password = passInput.value;
     const confirm = confirmPassInput.value;
+
+    if (email !== currentEmail){
+      
+      errorMsg.textContent = 'Email do not match';
+      return;
+    }
 
     if (!email || !password || !confirm) {
       errorMsg.textContent = 'All fields are required.';
@@ -133,7 +149,7 @@ function FinalConfirmation(email: string, password: string) {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ password }),
       });
 
       if (!res.ok) throw new Error('Failed to delete account');
