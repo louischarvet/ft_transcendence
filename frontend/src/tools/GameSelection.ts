@@ -3,11 +3,9 @@ import { checkConnection, asGuest} from './APIStorageManager';
 
 export default function GameSelection(): HTMLElement {
   checkConnection().then((connected) => {
-    console.log("checkConnection response('connected') -> ", connected);
-    if (!connected) {
-      asGuest();
-      // Pop_up to warn the user that he is a guest
-    }
+    console.log("checkConnection : ", connected);
+    if (!connected)
+     	navigate("/");
   });
 
   const wrapper = document.createElement('div');

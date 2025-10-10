@@ -268,7 +268,7 @@ export async function updateAvatar(request, reply) {
 	const buffer = await data.toBuffer();
 	fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `./pictures/${fileName}`;
+	const relativePath = `/pictures/${fileName}`;
 	await updateValue('registered', 'picture', user.name, relativePath);
 	
 	console.log("####\n");
@@ -366,7 +366,7 @@ export async function addFriend(request, reply) {
 		return reply.code(401).send({ error: 'friendName is missing' });
 
 	const friend = await getUserByName('registered', friendName);
-	if (!friend) 
+	if (!friend)
 		return reply.code(404).send({ error: 'User friend not found' });
 
 	
@@ -379,11 +379,10 @@ export async function addFriend(request, reply) {
 	if (friendList.includes(String(friend.id)))
 		return reply.code(409).send({ error: 'Friend already in the list' });
 
-	const col = 'friends';
 	const val = friendListString + friend.id + ";";
 
 	//ajouter via la methode updateValue
-	await updateValue('registered', col, user.name, val);
+	await updateValue('registered', "friends", user.name, val);
 	console.log("####\n");
 
 	// renvoyer le profil user mis a jour!

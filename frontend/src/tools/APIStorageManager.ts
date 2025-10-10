@@ -22,27 +22,39 @@ export async function Logout(): Promise<Response | null> {
 	if (!token)
 		return null;
 
-	const response = await fetch('http://localhost:3000/user/logout', {
+	const response = await fetch('/api/user/logout', {
 		method: 'PUT',
-		headers: { 'Authorization': token },
+		headers: { 'Authorization': `Bearer ${token}`},
 	});
 
 	return response;
 }
 
+export async function addNewFriend(friendName: string){
+	const token = getToken();
+	if (!token)
+		return null;
+	//a mettre dans .env
+	const response = await fetch(`/api/user/addfriend/${encodeURIComponent(friendName)}`, {
+		method: "POST",
+		headers: {
+			"Authorization": `Bearer ${token}`,
+		},
+	});
+
+	return response;
+}
 
 export async function getFriendsList(): Promise<{ friends: { name: string; status: string }[] } | null> {
 	const token = getToken();
 	if (!token)
 		return null;
 
-  	console.log("token of getFriendsList ---> ", token);
-
-	const response = await fetch('http://localhost:3000/user/getfriendsprofiles', {
+	const response = await fetch('/api/user/getfriendsprofiles', {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': token 
+			'Authorization': `Bearer ${token}`,
 		},
 	});
 
@@ -61,15 +73,13 @@ export async function checkConnection() { // TO DO
 	const user = getUser();
 	const token = getToken();
 
-	console.log("user and token -->", user, token);
-
 	if (!user || !token)
 		return false;	
 	return true;
 }
 
 export async function register(name: string, email: string, password: string) {
-	const response = await fetch('http://localhost:3000/user/register', {
+	const response = await fetch('/api/user/register', {
 		method: 'POST',
 		headers: {
 		'Content-Type': 'application/json',
@@ -89,7 +99,7 @@ export async function register(name: string, email: string, password: string) {
 }
 
 export async function asGuest(asPlayer2: Boolean = false) { // TO DO
-	const response = await fetch('http://localhost:3000/user/guest', {
+	const response = await fetch('/api/user/guest', {
 		method: 'POST',
 		headers: {
 		'Content-Type': 'application/json',
@@ -110,7 +120,7 @@ export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 }
 
 export async function login(name: string, password: string) {
-	const response = await fetch('http://localhost:3000/user/login', {
+	const response = await fetch('/api/user/login', {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json'},
 		body: JSON.stringify({ name: name, password: password, tmp: false })
@@ -128,7 +138,7 @@ export async function login(name: string, password: string) {
 // 	const user = getUser();
 // 	const token = getToken();
 
-// 	const response = await fetch('http://localhost:3000/user/logout', {
+// 	const response = await fetch('/api/user/logout', {
 // 		method: 'PUT',
 // 		headers: {
 // 		'Content-Type': 'application/json',
@@ -147,7 +157,7 @@ export async function deleteUser() {
 	const user = getUser();
 	const token = getToken();
 
-	const response = await fetch('http://localhost:3000/user/delete', {
+	const response = await fetch('/api/user/delete', {
 		method: 'DELETE',
 		headers: {
 		'Content-Type': 'application/json',
@@ -172,7 +182,7 @@ export async function deleteUser() {
 export async function verifyTwoFactorCode(code: string) {
 	const user = getUser();
 
-	const response = await fetch('http://localhost:3000/twofa/verifycode', {
+	const response = await fetch('/api/twofa/verifycode', {
 		method: 'POST',
 		headers: {
 		'Content-Type': 'application/json',

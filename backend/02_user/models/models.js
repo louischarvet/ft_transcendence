@@ -61,6 +61,15 @@ async function updateValue(table, column, name, newValue) {
 		[ newValue, name ]);
 }
 
+//export async function updateValue(...) {
+//    return new Promise<void>((resolve, reject) => {
+//        db.run(sql, [newValue, name], function (err) {
+//            if (err) return reject(err);
+//            resolve();
+//        });
+//    });
+//}
+
 // Update Status
 async function updateStatus(table, name, newStatus) {
 //	const db = await getDB();

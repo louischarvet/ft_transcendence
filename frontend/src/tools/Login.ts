@@ -2,10 +2,6 @@ import { navigate } from "../router";
 import { checkConnection, login} from "./APIStorageManager";
 
 export default function Login(): HTMLElement {
-	checkConnection().then((connected) => {
-		if (connected)
-			navigate('/select-game');
-	});
 
 	const form: { [name: string]: string} = {};
 

@@ -38,8 +38,11 @@ export default function Home(subPage?: string): HTMLElement {
       }
     });
   }
-
-  container.appendChild(DropDownMenu());
+	checkConnection().then((connected) => {
+		console.log("checkConnection : ", connected);
+		if (connected)
+			container.appendChild(DropDownMenu());
+	});
 
   return container;
 }
