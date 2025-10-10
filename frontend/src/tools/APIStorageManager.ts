@@ -152,44 +152,24 @@ export async function login(name: string, password: string) {
 	return false;
 }
 
-// export async function logout() {
-// 	const user = getUser();
-// 	const token = getToken();
-
-// 	const response = await fetch('/api/user/logout', {
-// 		method: 'PUT',
-// 		headers: {
-// 		'Content-Type': 'application/json',
-// 		},
-// 		body: JSON.stringify({
-// 		id: user?.id,
-// 		name: user?.name,
-// 		type: user?.type,
-// 		status: user?.status,
-// 		}),
-// 	});
-// 	const json = await response.json();
-// }
-
-export async function deleteUser() {
-	const user = getUser();
+export async function deleteUser(password : string) {
 	const token = getToken();
 
 	const response = await fetch('/api/user/delete', {
 		method: 'DELETE',
 		headers: {
 		'Content-Type': 'application/json',
+		'Authorization': `Bearer ${token}`,
 		},
 		body: JSON.stringify({
-		id: user?.id,
-		name: user?.name,
-		type: user?.type,
-		status: user?.status,
+		password
 		}),
 	});
 	const json = await response.json();
 
-	if (json.success) {
+	console.log("fetch deleteUser here"); ////////////////////////
+	if (!json.error) {
+		console.log("deleteUser removeItem here");
 		localStorage.removeItem('user');
 		localStorage.removeItem('token');
 		return true;

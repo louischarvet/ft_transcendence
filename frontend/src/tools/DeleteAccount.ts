@@ -1,6 +1,6 @@
 // src/tools/DeletePopup.ts
 import { navigate } from '../router';
-import { getUserByToken } from './APIStorageManager'
+import { getUserByToken , deleteUser} from './APIStorageManager'
 export function createDeleteAccount(onConfirm: (email: string, password: string) => void): HTMLElement {
   const overlay = document.createElement('div');
   overlay.className = `
@@ -61,15 +61,16 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
     transition-all duration-200
   `;
 
-      let currentEmail = '';
+  let currentEmail = '';
 
-    getUserByToken().then((response) =>{
-      if (!response || !response.user){
-        return;
-      }
-      const user = response.user;
-      currentEmail = user.email;
-    });
+  getUserByToken().then((response) =>{
+    if (!response || !response.user){
+      return;
+    }
+    const user = response.user;
+    currentEmail = user.email;
+  });
+
   confirmBtn.onclick = () => {
     const email = emailInput.value.trim();
     const password = passInput.value;
@@ -142,24 +143,22 @@ function FinalConfirmation(email: string, password: string) {
     bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg
     transition-all duration-200
   `;
-  yesBtn.onclick = async () => {
+  // yesBtn.onclick = async () => {
+  yesBtn.onclick = () => {
     overlay.remove();
-    try {
-      const res = await fetch('/api/user/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ password }),
-      });
-
-      if (!res.ok) throw new Error('Failed to delete account');
-
-      console.log('Account deleted successfully!');
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-      alert('Error your account cannot be deleting.');
-    }
+    deleteUser(password).then( (res) => {
+      console.log("Res of deleteUser");
+      if (!res){
+        console.error('User delete failed');
+        history.back();
+        return;
+      }
+      else{
+        // localStorage.removeItem('user');
+        // localStorage.removeItem('token');
+        navigate('/');
+      }
+    });
   };
 
   const cancelBtn = document.createElement('button');

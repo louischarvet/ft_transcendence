@@ -154,7 +154,7 @@ export async function deleteUser(request, reply) {
 	console.log("####Function deleteUser called:\n");
 
 	const user = request.user;
-	console.log("user")
+	console.log("user", user);
 	//! ajout le 02/10/2025
 	//! verifier le token de l'user ?
 	const { password} = request.body;
@@ -162,8 +162,6 @@ export async function deleteUser(request, reply) {
 	const exists = await getUserByName('registered', user.name);
 	if (!exists)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	if (exists.status !== 'logged_out')
-		return reply.code(409).send({ error: 'User already logged in.' });
 
 	const passwordMatch = await bcrypt.compare(password, exists.hashedPassword);
 	if (!passwordMatch)
