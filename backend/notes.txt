@@ -178,7 +178,7 @@ Fin du tournoi
 | Rejoindre un tournoi guest 			  | `/tournaments/join-guest/:id` 	  | POST    | -                                     |
 | Lancer un tournoi (start) 			  | `/tournaments/start/:id` 		  | POST    | -                                     |
 | Récupérer un tournoi 					  | `/tournaments/:id` 				  | GET     | -                                     |
-| Terminer un match / next round 		  | `/tournaments/next-round` 		  | POST    | `{ match }`                           |
+| Terminer un match / next round 		  | `/tournaments/next` 		  	  | POST    | `{ match }`                           |
 | Terminer un tournoi 					  | `/tournaments/end` 				  | POST    | `{ tournamentId, winnerId }`          |
 | Mettre à jour match et places restantes | `/tournaments/update-match` 	  | POST    | `{ tournamentId, matchId, playerId }` |
 | Voir tournois gagnés par un user 		  | `/tournaments/wins/:id` 		  | GET     | -                                     |
