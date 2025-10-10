@@ -6,6 +6,7 @@ import Pong from './pages/Pong';
 import Pong3D from './pages/Pong3D';
 import Blackjack from './pages/Blackjack';
 import Tournament from './pages/Tournament';
+import Profil from './pages/Profil';
 // import { Logout } from './tools/APIStorageManager';
 
 defineRoutes([
@@ -18,6 +19,7 @@ defineRoutes([
 	{ path: '/pong3d', render: Pong3D },
 	{ path: '/blackjack', render: Blackjack },
 	{ path: '/tournament', render: Tournament },
+	{ path: '/profil', render: Profil },
 	// { path: '/logout', render: Logout },
 ]);
 

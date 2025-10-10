@@ -297,8 +297,6 @@ export	async function fetchUserByIdToken(request, reply){
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 	delete userInfos.hashedPassword;
-	delete userInfos.email;
-	delete userInfos.telephone;
 	delete userInfos.friends;
 	delete userInfos.type;
 

@@ -1,11 +1,14 @@
 import { navigate } from "../router";
-import { checkConnection, verifyTwoFactorCode} from "./APIStorageManager";
+import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
   checkConnection().then((connected) => {
     if (connected)
       navigate('/select-game');
   });
+
+  if (!getUser())
+      navigate('/');
 
   let code: string = '';
   

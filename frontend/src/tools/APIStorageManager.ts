@@ -17,6 +17,24 @@ function getToken() {
 	return localStorage.getItem('token');
 }
 
+export async function getUserByToken(){
+	const token = getToken();
+	if (!token)
+		return null;
+
+	const response = await fetch('/api/user/id', {
+		method: 'GET',
+		headers: { 'Authorization': `Bearer ${token}`},
+	});
+	const json = await response.json();
+	if (json.user) {
+		setUser(json.user);
+	}
+
+	return json;
+}
+
+
 export async function Logout(): Promise<Response | null> {
 	const token = getToken();
 	if (!token)
