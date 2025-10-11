@@ -361,8 +361,9 @@ export async function addFriend(request, reply) {
 
 	//! ajout le 09/06/2025
 	const currentUser = request.user;
-	// if (!currentUser)
-	// 	return reply.code(401).send({ error : 'Bad Token'});
+	if(request.params.friendName.length > 64)
+		return reply.code(401).send({ error: 'Invalid name' });
+
 	if (currentUser.type !== 'registered')
 		return reply.code(401).send({ error: 'Only registered users can add friends' });
 	
@@ -376,7 +377,7 @@ export async function addFriend(request, reply) {
 
 	const friend = await getUserByName('registered', friendName);
 	if (!friend)
-		return reply.code(404).send({ error: 'User friend not found' });
+		return reply.code(404).send({ error: 'Username not found' });
 
 	
 	let friendListString = user.friends || "";
@@ -394,8 +395,12 @@ export async function addFriend(request, reply) {
 	await updateValue('registered', "friends", user.name, val);
 	console.log("####\n");
 
+	delete friend.hashedPassword;
+	delete friend.type;
+	delete friend.friends;
+
 	// renvoyer le profil user mis a jour!
-    return reply.code(200).send({ message: `Friend ${friendName} added.` });
+    return reply.code(200).send({newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
 // Route GET pour recuperer les profiles des amis
@@ -411,9 +416,10 @@ export async function getFriendsProfiles(request, reply) {
 		let friendsProfiles = new Array();
 		for (let i = 0, n = friendsIDs.length; i < n; i++) {
 			friendsProfiles[i] = await getUserById('registered', friendsIDs[i]);
+			if(!friendsProfiles[i])
+				continue;
 			delete friendsProfiles[i].hashedPassword;
 			delete friendsProfiles[i].email;
-			delete friendsProfiles[i].telephone;
 			
 			if (friendsProfiles[i] === undefined)
 				return reply.code(400).send({ error: 'Bad friend ID.' });

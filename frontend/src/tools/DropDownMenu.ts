@@ -1,6 +1,7 @@
 import { getFriendsList, addNewFriend } from "./APIStorageManager";
 import { Logout } from "./APIStorageManager";
 import { checkConnection } from './APIStorageManager';
+import { navigate } from '../router';
 
 export default function DropDownMenu() {
 	checkConnection().then((connected) => {
@@ -50,10 +51,14 @@ export default function DropDownMenu() {
 	dropDownFriendList.appendChild(friendsListContainer);
 
 	// FONCTION CRÉATION D'UN AMI
-	function createFriendItem(friend: { name: string; status: string; picture?: string }) {
+	function createFriendItem(friend: { name: string; status: string; picture?: string ; id: number}) {
+		if (!friend)
+			return;
+
 		const friendItem = document.createElement('div');
 		friendItem.className = 'flex items-center gap-2 px-2 py-1';
-
+		friendItem.style.cursor = 'pointer';
+		
 		// Photo
 		const friendPic = document.createElement('img');
 		friendPic.src = friend.picture || './pictures/avatar_1.jpg';
@@ -74,7 +79,9 @@ export default function DropDownMenu() {
 		//const statusDot = document.createElement('span');
 		//statusDot.className = `w-3 h-3 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-red-500'}`;
 		//friendItem.appendChild(statusDot);
-
+		friendItem.onclick = () => {
+			navigate(`/profil/${friend.id}`);
+		};
 		friendsListContainer.appendChild(friendItem);
 	}
 
@@ -112,19 +119,35 @@ export default function DropDownMenu() {
 		if (!friendName) return;
 
 		try {
-			const response = await addNewFriend(friendName);
-			if (!response) return;
-			if (!response.ok) {
-				alert("Impossible d’ajouter cet ami (nom incorrect ou déjà ami).");
+			if(friendName.length > 64){
+				alert("Erreur : invalid name");
 				return;
 			}
-			const newFriend = { name: friendName, status: 'offline', picture: './pictures/BG.webp' };
+
+			const response = await addNewFriend(friendName);
+
+			if (!response) {
+				alert("Erreur : aucune réponse du serveur.");
+				return;
+			}
+
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const errorMessage = data.error || `Erreur inconnue (${response.status})`;
+				alert(errorMessage);
+				console.warn("Erreur backend:", errorMessage);
+				return;
+			}
+
+			alert(data.message || `Friend ${friendName} added!`);
+
+			const newFriend = { name: friendName, status: data.status, picture: data.picture , id: data.id};
 			friendsList.push(newFriend);
 			createFriendItem(newFriend);
 			addFriendInput.value = '';
 		} catch (err) {
-			alert("Erreur lors de l’ajout de l’ami.");
-			console.error(err);
+			alert("Erreur de connexion au serveur");
+			console.error("Erreur front: ", err);
 		}
 	}
 
@@ -156,7 +179,7 @@ export default function DropDownMenu() {
 		if (response?.ok) {
 			localStorage.removeItem("token");
 			localStorage.removeItem("user");
-			window.location.href = "/";
+			navigate("/");
 		} else alert("Erreur lors de la déconnexion");
 	};
 	menuSection2.appendChild(logoutLink);

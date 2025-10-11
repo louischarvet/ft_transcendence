@@ -52,6 +52,15 @@ export default function Register(): HTMLElement {
       alert("The two passwords are different");
       return;
     }
+	if (form.password.length < 8) {
+		alert("Password must be at least 8 characters long");
+		return;
+	}
+	if (!/[0-9]/.test(form.password)) {
+		alert("Password must contain a number");
+		return;
+	}
+
     register(form.name, form.email, form.password).then( (res) => {
       if(!res)
         console.error('User creation failed');

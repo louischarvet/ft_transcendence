@@ -21,7 +21,7 @@ export default function Profile(): HTMLElement {
   hover:drop-shadow-[0_0_40px_#535bf2]
   hover:scale-105 transition-all duration-300
   cursor-pointer select-none z-20`;
-  title.onclick = () => navigate('/'); // Retour à la home
+  title.onclick = () => navigate('/select-game'); // Retour à la home
   container.appendChild(title);
 
   const profileCard = document.createElement('div');

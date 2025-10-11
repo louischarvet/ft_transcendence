@@ -34,6 +34,38 @@ export async function getUserByToken(){
 	return json;
 }
 
+export async function getUserById(id: number): Promise<{ user: any } | null> {
+	const token = getToken();
+	if (!token)
+		return null;
+
+	const response = await fetch(`/api/user/${id}`, {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		console.warn("Erreur backend :", response.status);
+		return null;
+	}
+
+	const data = await response.json();
+	return data;
+}
+
+//export async function getFriendProfil(id) {
+//	const token = getToken();
+//	if (!token)
+//		return null;
+	
+//	const response = await fetch('/api/user/id', {
+//		method: 'GET',
+//		headers: { 'Authorization': `Bearer ${token}`},
+//	});
+//}
 
 export async function Logout(): Promise<Response | null> {
 	const token = getToken();
@@ -63,7 +95,7 @@ export async function addNewFriend(friendName: string){
 	return response;
 }
 
-export async function getFriendsList(): Promise<{ friends: { name: string; status: string }[] } | null> {
+export async function getFriendsList(): Promise<{ friends: { name: string; status: string , id: number }[] } | null> {
 	const token = getToken();
 	if (!token)
 		return null;
@@ -82,7 +114,7 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 		return { friends: [] };
   	};
 
-	const data = await response.json() as { friends: { name: string; status: string }[] };
+	const data = await response.json() as { friends: { name: string; status: string, id: number }[] };
 	return data;
 }
 
@@ -143,13 +175,18 @@ export async function login(name: string, password: string) {
 		headers: { 'Content-Type': 'application/json'},
 		body: JSON.stringify({ name: name, password: password, tmp: false })
 	});
+	
 	const json = await response.json();
+
+	if (!response.ok)
+		return { success: false, message: json.error || "Unknown error" };
+	
 	if (json.user) {
 		setUser(json.user);
 		setToken(json.token);
-		return true;
+		return { success: true };
 	}
-	return false;
+	return { success: false, message: "Unexpected response from server" };
 }
 
 export async function deleteUser(password : string) {
