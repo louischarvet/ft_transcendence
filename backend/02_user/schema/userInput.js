@@ -118,6 +118,24 @@ export const deleteSchema = {
 	}
 }
 
+export const deleteFriendSchema = {
+	$id: 'deleteFriendSchema',
+	body: {
+		type: 'object',
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'string',
+				pattern: '^[0-9]+$',
+				minLength: 1,
+				maxLength: 10
+			},
+		},
+		additionalProperties: false
+	}
+}
+
+
 // export const userInput = {
 // 	$id: 'userInput',
 // 	body: {

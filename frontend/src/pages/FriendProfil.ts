@@ -1,8 +1,8 @@
 // pages/FriendProfil.ts
 import { navigate } from '../router';
-import { getUserById, /*removeFriend*/ } from '../tools/APIStorageManager';
+import { getUserById, removeFriend } from '../tools/APIStorageManager';
 
-export default async function FriendProfil(id: string): Promise<HTMLElement> {
+export default function FriendProfil(id: string): HTMLElement {
 	const container = document.createElement('div');
 	container.className = 'flex items-center justify-center h-screen bg-gray-300 text-black';
 
@@ -91,8 +91,12 @@ export default async function FriendProfil(id: string): Promise<HTMLElement> {
 
 	removeFriendBtn.onclick = async () => {
 		try {
+			removeFriend(id).then((response) =>{
+				if (!response)
+					return;
+				//if (!response?.ok) throw new Error('Impossible de supprimer l’ami');
+			});
 			//const response = await removeFriend(Number(id));
-			//if (!response?.ok) throw new Error('Impossible de supprimer l’ami');
 			alert('Ami supprimé avec succès !');
 			navigate('/select-game'); // Retour au profil principal
 		} catch (err) {
@@ -107,23 +111,28 @@ export default async function FriendProfil(id: string): Promise<HTMLElement> {
 
 	// Récupérer les infos de l'ami
 	try {
-		const data = await getUserById(Number(id));
-		if (!data || !data.user) {
-			alert("Utilisateur non trouvé");
-			navigate('/profil');
-			return container;
-		}
+		let data;
+		getUserById(Number(id)).then((response) =>{
+			data = response;
+			if (!data)
+				return;
+			if (!data || !data.user) {
+				alert("Utilisateur non trouvé");
+				navigate('/profil');
+				return container;
+			}
+			
+			const user = data.user;
+			username.textContent = user.name;
+			if (user.picture) avatar.innerHTML = `<img src="${user.picture}" class="w-[120px] h-[120px] rounded-full object-cover">`;
 
-		const user = data.user;
-		username.textContent = user.name;
-		if (user.picture) avatar.innerHTML = `<img src="${user.picture}" class="w-[120px] h-[120px] rounded-full object-cover">`;
-
-		ratio.querySelector('p:nth-child(2)')!.textContent = (user.win_rate?.toFixed(2)) ?? '0.00';
-		gamesPlayed.querySelector('p:nth-child(2)')!.textContent = user.played_matches ?? '0';
-		wins.querySelector('p:nth-child(2)')!.textContent = user.match_wins ?? '0';
-		bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
-		currentStreak.querySelector('p:nth-child(2)')!.textContent = user.currentStreak ?? '0';
-		wallet.querySelector('p:nth-child(2)')!.textContent = `${user.wallet ?? 0} 🪙`;
+			ratio.querySelector('p:nth-child(2)')!.textContent = (user.win_rate?.toFixed(2)) ?? '0.00';
+			gamesPlayed.querySelector('p:nth-child(2)')!.textContent = user.played_matches ?? '0';
+			wins.querySelector('p:nth-child(2)')!.textContent = user.match_wins ?? '0';
+			bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
+			currentStreak.querySelector('p:nth-child(2)')!.textContent = user.currentStreak ?? '0';
+			wallet.querySelector('p:nth-child(2)')!.textContent = `${user.wallet ?? 0} 🪙`;
+		})
 	} catch (err) {
 		console.error(err);
 		alert('Erreur lors de la récupération du profil de l’ami.');

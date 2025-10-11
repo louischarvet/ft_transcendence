@@ -34,7 +34,7 @@ export async function getUserByToken(){
 	return json;
 }
 
-export async function getUserById(id: number): Promise<{ user: any } | null> {
+export async function getUserById(id: number){
 	const token = getToken();
 	if (!token)
 		return null;
@@ -118,6 +118,29 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 	return data;
 }
 
+export async function removeFriend(friendId: string){
+	const token = getToken();
+	if (!token)
+		return null;
+	const response = await fetch('/api/user/deleteFriend', {
+		method: 'DELETE',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`,
+		},
+		body: JSON.stringify({
+			id: friendId,
+		}),
+	});
+	const json = await response.json();
+
+	console.log("removeFriend resonse -> ", json);
+	if (!json.error) {
+		console.log("deleteFriend here");
+		return true;
+	}
+	return false;
+}
 
 export async function checkConnection() { // TO DO
 	const user = getUser();
@@ -135,9 +158,9 @@ export async function register(name: string, email: string, password: string) {
 		'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({
-		name,
-		email,
-		password,
+			name,
+			email,
+			password,
 		}),
 	});
 	const json = await response.json();

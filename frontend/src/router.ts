@@ -12,9 +12,9 @@ export function defineRoutes(r: Route[]) {
 }
 
 // --- Navigate ---
-export function navigate(path: string) {
+export async function navigate(path: string) {
 	history.pushState({}, '', path);
-	renderRoute();
+	await renderRoute();
 }
 
 // --- Render Route ---

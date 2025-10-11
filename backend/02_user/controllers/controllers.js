@@ -405,7 +405,6 @@ export async function addFriend(request, reply) {
 
 // Route GET pour recuperer les profiles des amis
 export async function getFriendsProfiles(request, reply) {
-	const test = request.user;
 	const user = await getUserById('registered', request.user.id);
 	const { friends } = user;
 	if (friends === undefined || friends === null)
@@ -429,6 +428,40 @@ export async function getFriendsProfiles(request, reply) {
 			message: 'Friends profiles.'
 		});
 	}
+}
+
+export async function deleteFriend(request, reply) {
+	const friendId = request.body.id;
+	if (!friendId)
+		return reply.code(400).send({ error: 'Need friend id to delete' });
+
+	const friend = await getUserById('registered', friendId);
+	if (!friend)
+		return reply.code(404).send({ error: 'Friend user not found' });
+
+	const user = await getUserById('registered', request.user.id);
+	if (!user)
+		return reply.code(401).send({ error: 'User not authenticated' });
+
+	const { friends } = user;
+	if (!friends)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
+
+	const friendList = friends.split(";").filter(f => f);
+	console.log("friendList before delete:", friendList);
+
+	if (!friendList.includes(String(friend.id)))
+		return reply.code(409).send({ error: 'Friend not in the list' });
+
+	// Retirer le friend.id de la liste
+	const newFriendList = friendList.filter(id => id !== String(friend.id));
+
+	await updateValue('registered', "friends", user.name, newFriendList.join(";"));
+
+	return reply.code(200).send({
+		friends: newFriendList,
+		message: `Friend ${friend.name || friend.id} deleted successfully.`,
+	});
 }
 
 // Récupère le statut d'un utilisateur par son nom
