@@ -11,6 +11,8 @@ export default function Login(): HTMLElement {
 	const title = document.createElement('h2');
 	title.textContent = 'Login';
 	title.className = 'text-4xl font-bold text-white';
+	title.onclick = () => navigate('/select-game'); // Retour à la home
+
 	wrapper.appendChild(title);
 
 	const createInput = (placeholder: string, key: string, type?: string): HTMLInputElement => {

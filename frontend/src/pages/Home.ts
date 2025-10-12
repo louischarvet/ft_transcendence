@@ -15,7 +15,8 @@ export default function Home(subPage?: string): HTMLElement {
   // Titre
   const title = document.createElement('h1');
   title.textContent = 'BlackPong';
-  title.className = 'w-screen font-extrabold text-green-400 drop-shadow-[0_0_30px_#535bf2] text-6xl sm:text-8xl md:text-9xl lg:text-[12rem]';
+  title.className = 'inline-block font-extrabold text-green-400 drop-shadow-[0_0_30px_#535bf2] text-6xl sm:text-8xl md:text-9xl lg:text-[12rem] cursor-pointer';
+  title.onclick = () => navigate('/'); // Retour à la home
   container.appendChild(title);
 
   const separator = document.createElement('hr'); // Ligne de séparation

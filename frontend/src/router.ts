@@ -1,61 +1,79 @@
-// --- Type route ---
 export type Route = {
-	path: string; // ex: "/profil" ou "/profil/:id"
-	render: (params?: { [key: string]: string }) => Promise<HTMLElement> | HTMLElement;
+	path: string;
+	//render: () => HTMLElement;
+	render: (params?: Record<string, string>) => HTMLElement;
 };
 
 const routes: Route[] = [];
 
-// --- Définir les routes ---
 export function defineRoutes(r: Route[]) {
 	routes.push(...r);
 }
 
-// --- Navigate ---
-export async function navigate(path: string) {
+export function navigate(path: string) {
 	history.pushState({}, '', path);
-	await renderRoute();
+	renderRoute();
 }
 
-// --- Render Route ---
-export async function renderRoute() {
+export function renderRoute() {
 	const path = window.location.pathname;
-	let matchedRoute: Route | undefined;
-	let params: { [key: string]: string } = {};
-
-	for (const route of routes) {
-		const keys: string[] = [];
-		const pattern = route.path.replace(/:(\w+)/g, (_, key) => {
-			keys.push(key);
-			return '([^/]+)';
-		});
-		const regex = new RegExp(`^${pattern}$`);
-		const match = path.match(regex);
-		if (match) {
-			matchedRoute = route;
-			keys.forEach((k, i) => {
-				params[k] = match[i + 1];
-			});
-			break;
-		}
-	}
-
 	const app = document.getElementById('app');
 	if (!app) throw new Error("Element with id 'app' not found");
 	app.innerHTML = '';
 
-	if (matchedRoute) {
-		const element = await matchedRoute.render(params); // <-- await ici
-		app.appendChild(element);
+	// Trouve une route exacte OU une route dynamique
+	let match = routes.find(r => r.path === path);
+	let params: Record<string, string> = {};
+
+	if (!match) {
+		// Recherche de routes avec paramètres (ex: /profil/:id)
+		for (const route of routes) {
+			const routeParts = route.path.split('/');
+			const pathParts = path.split('/');
+
+			if (routeParts.length !== pathParts.length)
+				continue;
+
+			let ok = true;
+			const tmpParams: Record<string, string> = {};
+
+			for (let i = 0; i < routeParts.length; i++) {
+				if (routeParts[i].startsWith(':'))
+				tmpParams[routeParts[i].slice(1)] = pathParts[i];
+				else if (routeParts[i] !== pathParts[i])
+				ok = false;
+			}
+
+			if (ok) {
+				match = route;
+				params = tmpParams;
+				break;
+			}
+		}
+	}
+
+	if (match) {
+		app.appendChild(match.render(params)); // ✅ params optionnel
 	} else {
 		const notFoundWrapper = document.createElement('div');
-		notFoundWrapper.className = 'flex justify-center items-center h-screen';
-		const notFound = document.createElement('h1');
-		notFound.className = 'text-4xl font-bold text-red-500';
-		notFound.textContent = '404 - Not Found';
-		notFoundWrapper.appendChild(notFound);
+		notFoundWrapper.className = 'flex justify-center items-center h-screen text-white text-3xl';
+		notFoundWrapper.textContent = '404 Not Found';
 		app.appendChild(notFoundWrapper);
 	}
 }
 
-window.addEventListener('popstate', renderRoute);
+
+//export function renderRoute() {
+
+//	const path = window.location.pathname;
+//	const match = routes.find(r => r.path === path);
+//	const app = document.getElementById('app');
+//	if (!app) throw new Error("Element with id 'app' not found");
+//	app.innerHTML = '';
+//	if (match)
+//		app.appendChild(match.render());
+//	else {
+//		const notFoundWrapper = document.createElement('div');
+//		notFoundWrapper.className = 'flex justify-center items-center h-screen';
+//	}
+//}
