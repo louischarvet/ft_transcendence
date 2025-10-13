@@ -13,7 +13,7 @@ export function getUser() {
 	return jsonUser ? JSON.parse(jsonUser) : null;
 }
 
-function getToken() {
+export function getToken() {
 	return localStorage.getItem('token');
 }
 
@@ -80,6 +80,33 @@ export async function Logout(): Promise<Response | null> {
 	return response;
 }
 
+export async function updateInfo(password: string, toUpdate: string, newValue: string){
+	const token = getToken();
+	if (!token) return null;
+	console.log("ooooo", password, toUpdate, newValue);
+
+	const response = await fetch(`/api/user/update`, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+			"Authorization": `Bearer ${token}`,
+		},
+		body: JSON.stringify({
+			password : password,
+			toUpdate : toUpdate,
+			newValue : newValue,
+		}),
+	});
+
+	const data = await response.json();
+	if (!response.ok) {
+		console.error("Erreur updateInfo:", data.error);
+		throw new Error(data.error || "Erreur lors de la mise à jour");
+	}
+
+	return data;
+}
+
 export async function addNewFriend(friendName: string){
 	const token = getToken();
 	if (!token)
@@ -136,7 +163,7 @@ export async function removeFriend(friendId: string){
 
 	console.log("removeFriend resonse -> ", json);
 	if (!json.error) {
-		console.log("deleteFriend here");
+		console.log("deleteFriend error here");
 		return true;
 	}
 	return false;

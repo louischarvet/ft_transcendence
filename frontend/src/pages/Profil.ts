@@ -1,7 +1,7 @@
 import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
-import { getUserByToken } from '../tools/APIStorageManager';
+import { getUserByToken , updateInfo } from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   
@@ -94,25 +94,18 @@ export default function Profile(): HTMLElement {
   changePass.textContent = 'Change the password';
   changePass.className = 'text-sm font-bold text-white bg-purple-400 py-2 rounded-lg  w-[200px] hover:bg-purple-500';
   userSection.appendChild(changePass);
-  changePass.onclick = () => {
-    const popup = createChangePassword(async (oldPassword, newPassword) => {
-      try {
-        const response = await fetch('/api/user/password', {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ oldPassword, newPassword }),
-        });
-
-        if (!response.ok) throw new Error('Failed to change password');
-
-        console.log('Password updated successfully!');
-        navigate('/'); // redirige ou recharge la page
-      } catch (err) {
-        console.error(err);
-        alert('Error changing password.');
-      }
-    });
+	changePass.onclick = () => {
+		const popup = createChangePassword(async (oldPassword, newPassword) => {
+			updateInfo(oldPassword, 'password', newPassword)
+				.then((res) => {
+					alert('Password updated successfully!');
+					console.log('Update response:', res);
+				})
+				.catch(err => {
+					alert('Error changing password.');
+					console.error(err);
+				});
+	});
 
     document.body.appendChild(popup);
   };
@@ -146,8 +139,6 @@ export default function Profile(): HTMLElement {
   // Affiche la popup par-dessus tout :
   document.body.appendChild(popup);
   };
-
-
 
   // Ajout des sections principales
   profileCard.appendChild(statsSection);

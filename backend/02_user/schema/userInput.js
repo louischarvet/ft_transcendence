@@ -62,12 +62,6 @@ export const updateSchema = {
 		type: 'object',
 		required: ['password', 'toUpdate', 'newValue'],
 		properties: {
-			// name: {
-			// 	type: 'string',
-			// 	minLength: 1,
-			// 	maxLength: 64,
-			// 	pattern: '^[^<>{}"\'`]*$'
-			// },
 			password: {
 				type: 'string',
 				minLength: 8,
@@ -85,7 +79,7 @@ export const updateSchema = {
 				pattern: '^[^<>{}"\'`]*$'
 			}
 		},
-		additionalProperties: false
+		additionalProperties: false,
 	}
 }
 

@@ -57,8 +57,10 @@ async function getAvailableUser(name){
 
 // Update Info
 async function updateValue(table, column, name, newValue) {
-	await db.run('UPDATE ' + table + ' SET ' + column + ' = ? WHERE name = ?',
-		[ newValue, name ]);
+	//! pour eviter injection 
+	const query = `UPDATE ${table} SET ${column} = ? WHERE name = ?`;
+	await db.run(query,[ newValue, name ]);
+	return (await getUserByName(table, name));
 }
 
 //export async function updateValue(...) {

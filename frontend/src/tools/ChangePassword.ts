@@ -1,3 +1,5 @@
+import { updateInfo } from "./APIStorageManager";
+
 export function createChangePassword(onConfirm: (oldPassword: string, newPassword: string) => void
 ): HTMLElement {
   const overlay = document.createElement('div');
@@ -24,11 +26,10 @@ export function createChangePassword(onConfirm: (oldPassword: string, newPasswor
   popup.appendChild(warning);
 
   // === Input helper ===
-  const createInput = (type: string, placeholder: string, id: string): HTMLInputElement => {
+  const createInput = (type: string, placeholder: string ): HTMLInputElement => {
 	const input = document.createElement('input');
 	input.type = type;
 	input.placeholder = placeholder;
-	input.id = id;
 	input.className = `
 	  w-full p-2 mb-4 rounded-md text-black
 	  focus:outline-none focus:ring-2 focus:ring-[#535bf2]
@@ -37,9 +38,10 @@ export function createChangePassword(onConfirm: (oldPassword: string, newPasswor
   };
 
   // === Inputs ===
-  const oldpassInput = createInput('oldpass', 'Enter your actual password', 'delete-email');
-  const passInput = createInput('password', 'Enter your new password', 'delete-password');
-  const confirmPassInput = createInput('password', 'Confirm your new password', 'delete-confirm');
+  
+  const oldpassInput = createInput('oldpass', 'Enter your actual password');
+  const passInput = createInput('password', 'Enter your new password');
+  const confirmPassInput = createInput('password', 'Confirm your new password');
   popup.appendChild(oldpassInput);
   popup.appendChild(passInput);
   popup.appendChild(confirmPassInput);
@@ -59,19 +61,20 @@ export function createChangePassword(onConfirm: (oldPassword: string, newPasswor
 	transition-all duration-200
   `;
   confirmBtn.onclick = () => {
-	const email = oldpassInput.value.trim();
-	const password = passInput.value;
+	const oldPassword = oldpassInput.value.trim();
+	const newPassword = passInput.value;
 	const confirm = confirmPassInput.value;
 
-	if (!email || !password || !confirm) {
+	if (!oldPassword || !newPassword || !confirm) {
 	  errorMsg.textContent = 'All fields are required.';
 	  return;
 	}
-	if (password !== confirm) {
+	if (newPassword !== confirm) {
 	  errorMsg.textContent = 'Passwords do not match.';
 	  return;
 	}
-
+	// Appelle le callback depuis Profile.ts
+	onConfirm(oldPassword, newPassword);
 	overlay.remove();
   };
 

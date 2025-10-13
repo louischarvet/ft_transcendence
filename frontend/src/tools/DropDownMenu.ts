@@ -4,12 +4,12 @@ import { checkConnection } from './APIStorageManager';
 import { navigate } from '../router';
 
 export default function DropDownMenu() {
+	const wrapper = document.createElement('div');
 	checkConnection().then((connected) => {
 		console.log("checkConnection : ", connected);
-		if (!connected) return;
-	});
+		if (!connected)
+			return;
 
-	const wrapper = document.createElement('div');
 	wrapper.className = 'absolute top-5 right-0';
 
 	// BUTTON PRINCIPAL
@@ -86,17 +86,23 @@ export default function DropDownMenu() {
 	}
 
 	// Récupération depuis le backend
-	getFriendsList().then((value) => {
-		if (!value) {
-			console.log("Pas d'amis trouvés");
-			return;
-		}
-		console.log("getFriendsList -> ", value);
-		value.friends.forEach((friend) => {
-			friendsList.push(friend);
-			createFriendItem(friend);
+	getFriendsList()
+		.then((value) => {
+			if (!value || !Array.isArray(value.friends)) {
+				console.log("Pas d'amis trouvés ou utilisateur non authentifié");
+				return;
+			}
+
+			console.log("getFriendsList -> ", value);
+
+			value.friends.forEach((friend) => {
+				friendsList.push(friend);
+				createFriendItem(friend);
+			});
+		})
+		.catch((err) => {
+			console.error("Erreur lors de la récupération des amis :", err);
 		});
-	});
 
 	// Ajouter un ami
 	const addFriendInput = document.createElement('input');
@@ -118,37 +124,48 @@ export default function DropDownMenu() {
 		const friendName = addFriendInput.value.trim();
 		if (!friendName) return;
 
-		try {
-			if(friendName.length > 64){
-				alert("Erreur : invalid name");
-				return;
-			}
-
-			const response = await addNewFriend(friendName);
-
-			if (!response) {
-				alert("Erreur : aucune réponse du serveur.");
-				return;
-			}
-
-			const data = await response.json().catch(() => ({}));
-			if (!response.ok) {
-				const errorMessage = data.error || `Erreur inconnue (${response.status})`;
-				alert(errorMessage);
-				console.warn("Erreur backend:", errorMessage);
-				return;
-			}
-
-			alert(data.message || `Friend ${friendName} added!`);
-
-			const newFriend = { name: friendName, status: data.status, picture: data.picture , id: data.id};
-			friendsList.push(newFriend);
-			createFriendItem(newFriend);
-			addFriendInput.value = '';
-		} catch (err) {
-			alert("Erreur de connexion au serveur");
-			console.error("Erreur front: ", err);
+		if (friendName.length > 64) {
+			alert("Erreur : invalid name");
+			return;
 		}
+
+		addNewFriend(friendName)
+			.then((response) => {
+				if (!response) {
+					alert("Erreur : aucune réponse du serveur.");
+					return null; // arrête la chaîne
+				}
+				return response.json()
+					.catch(() => ({}))
+					.then((data) => ({ response, data }));
+			})
+			.then((result) => {
+				if (!result)
+					return;
+
+				const { response, data } = result;
+
+				if (!response.ok) {
+					const errorMessage = data.error || `Erreur inconnue (${response.status})`;
+					alert(errorMessage);
+					console.warn("Erreur backend:", errorMessage);
+					return;
+				}
+
+				alert(data.message || `Friend ${friendName} added!`);
+
+				const newFriend = { name: friendName, status: data.status, picture: data.picture, id: data.id };
+				friendsList.push(newFriend);
+				createFriendItem(newFriend);
+
+				addFriendInput.value = '';
+				navigate('/');
+			})
+			.catch((err) => {
+				alert("Erreur de connexion au serveur");
+				console.error("Erreur front: ", err);
+			}
+		);
 	}
 
 	addFriendInput.onkeydown = (e) => { if (e.key === 'Enter') addFriend(); };
@@ -173,15 +190,31 @@ export default function DropDownMenu() {
 	logoutLink.className = menuClassName + ' hover:drop-shadow-[0_0_30px_#00FF00]';
 	logoutLink.textContent = 'Logout';
 
-	logoutLink.onclick = async (e) => {
+	logoutLink.onclick = (e) => {
 		e.preventDefault();
-		const response = await Logout();
-		if (response?.ok) {
-			localStorage.removeItem("token");
-			localStorage.removeItem("user");
-			navigate("/");
-		} else alert("Erreur lors de la déconnexion");
+
+		Logout()
+			.then((response) => {
+				if (response?.ok) {
+					// Supprimer les infos d'utilisateur
+					localStorage.removeItem("token");
+					localStorage.removeItem("user");
+
+					// Vider liste amis et cacher menu
+					friendsList.length = 0;
+					friendsListContainer.innerHTML = '';
+					dropDownFriendList.classList.add('hidden');
+					console.log("go to logout");
+					navigate("/");
+				} else
+					alert("Erreur lors de la déconnexion");
+			})
+			.catch((err) => {
+				console.error("Erreur de connexion au serveur :", err);
+				alert("Erreur lors de la déconnexion");
+			});
 	};
+
 	menuSection2.appendChild(logoutLink);
 	dropdownMenu.appendChild(menuSection2);
 
@@ -196,5 +229,6 @@ export default function DropDownMenu() {
 		}
 	});
 
-	return wrapper;
+});
+return wrapper;
 }

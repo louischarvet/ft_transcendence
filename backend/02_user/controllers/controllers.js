@@ -186,69 +186,49 @@ export async function deleteUser(request, reply) {
 // Route PUT /update
 export async function updateInfo(request, reply) {
 	console.log("####Function updateInfo called:\n");
-	//! ajout le 17/09/2025	
-	const currentUser = request.user;
-	if (currentUser)
-		reply.code(401).send( { error : 'User not Authentified'});
+
+	const currentUser = await getUserByName('registered', request.user.name);
+	if (!currentUser)
+		return reply.code(401).send( { error : 'User not Authentified'});
 		
 	console.log("currentUser : ", currentUser, "\n");
 
-	const body = request.body;
-	const { password, toUpdate, newValue } = body;
-	if (!body || !password || !toUpdate || !newValue)
-		reply.code(401).send( { error : 'Need all infos in body caca'});
-	console.log();
-	//! modifié le 17/09/2025
-	const user = await getUserByName('registered', currentUser.name);
-	//! ajout le 17/09/2025
-	//TODO VERIFIER name et user
-	if (!user || user.name != name)
-		reply.code(401).send( { error : 'User not found'});
+	const { password, toUpdate, newValue } = request.body;
+	if (!password || !toUpdate || !newValue)
+		return reply.code(401).send( { error : 'Need all infos in body caca'});
 
-	if (!await bcrypt.compare(password, user.hashedPassword))
-		return reply.code(401).send({ error: 'Bad password' });
+	// Verif si schema ok
+	if (!['email', 'password'].includes(toUpdate))
+		return reply.code(400).send({ error: "Only email and password can be updated" });
 	
-	//! ajout le 17/09/2025
-	//! pour modifier le mot de passe
-	const col = toUpdate === 'password' ?
-		'hashedPassword' : toUpdate;
-	const val = toUpdate === 'password' ?
-		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
+	// Verif actuel passwrd
+	const passwordMatch = await bcrypt.compare(password, currentUser.hashedPassword);
+	if (!passwordMatch) 
+		return reply.code(401).send({ error: "Incorrect password" });
 
-	// verifier si le nom existe deja
-	//! pour modifier le name
-	// if (toUpdate === 'name'){
-	// 	if (await getUserByName('registered', newValue))
-	// 		return reply.code(401).send({ error: 'Name is already taken' });
-		
-	// 	if (!await checkNameFormat(newValue))
-	// 		return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
-		
-	// 	await updateValue('registered', col, currentUser.name, val);
-	// }
 
-	//! pour modifier le mail
-	if (toUpdate === 'email'){
+	let columnToUpdate;
+	let valueToUpdate;
+
+	if (toUpdate === 'password') {
+		columnToUpdate = 'hashedPassword';
+		const salt = await bcrypt.genSalt();
+		valueToUpdate = await bcrypt.hash(newValue, salt);
+	} else if (toUpdate === 'email'){
 		if (!await checkEmailFormat(newValue))
-			return reply.code(401).send({ error: 'Email format is incorrect. It must be a valid email address.' });
+			return reply.code(400).send({ error: "Invalid email format"});
+		columnToUpdate = toUpdate;
+		valueToUpdate = newValue;
 	}
 
-	// //! pour modifier le telephone
-	// if (toUpdate === 'telephone'){
-	// 	if (!await checkPhoneFormat(newValue))
-	// 		return reply.code(401).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
-	// }
-
-	//! ajout le 18/09/2025
-	// newValue , name enleve
-	const newUser = await getUserByName('registered', newValue);
-	delete newUser.hashedPassword;
-	delete newUser.email;
-	delete newUser.telephone;
-
+	// Data mis a jour
+	const updatedUser = await updateValue('registered', columnToUpdate, currentUser.name, valueToUpdate);
+	if (updatedUser)
+		delete updatedUser.hashedPassword;
+	
 	console.log("####\n");
 	return reply.code(200).send({
-		user: newUser,
+		user: updatedUser,
 		message: 'User info updated'
 	});
 }
