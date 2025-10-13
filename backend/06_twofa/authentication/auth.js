@@ -20,7 +20,9 @@ export async function authenticateJWT(token, body) {
 			'Authorization': token,
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify(body)
+		body: {
+			from2fa: true // cle API ?
+		}
 	});
 	return authRes;
 }

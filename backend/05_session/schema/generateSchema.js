@@ -4,7 +4,7 @@ export const generateSchema = {
 	$id: 'sessionInput',
 	body: {
 		type: 'object',
-		required: [ 'name', 'type', 'id' ],
+		required: [ 'name', 'type', 'id', 'verified' ],
 		properties: {
 			name: { type: 'string' },
 			id: { type: 'integer' },
@@ -12,7 +12,8 @@ export const generateSchema = {
 				type: 'string',
 				enum: [ 'guest', 'registered' ]
 			},
-			token: { type: 'string' }
+			token: { type: 'string' },
+			verified: { type: 'boolean' }
 		},
 		additionalProperties: false
 	}

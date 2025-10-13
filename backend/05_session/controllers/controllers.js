@@ -8,13 +8,14 @@ const secureCookieOptions = {
     sameSite: 'Strict'
 };
 
-async function generateAccess(sign, name, type, id) {
+async function generateAccess(sign, name, type, id, verified) {
     return await sign({
         name: name,
         type: type,
         id: id,
+        verified: verified
     }, {
-        expiresIn : '1m'
+        expiresIn : '15m'
     });
 }
 
@@ -35,45 +36,57 @@ export async function generate(request, reply) {
     console.log("DB available in controller:", !!request.server.db);
 
     const { server } = request;
-	const { name, type, id } = request.body;
+	const { name, type, id, verified } = request.body;
 
     // Access token
-    const accessToken = await generateAccess(server.jwt.sign, name, type, id);
+    const accessToken = await generateAccess(server.jwt.sign, name, type, id, verified);
     console.log("####################### ACCESS TOKEN\n", accessToken,
                 "\n####################################\n");
 
-    // Refresh token
-    const jwti = crypto.randomUUID();
-    const refreshToken = await generateRefresh(server.jwt.sign, name, type, id, jwti);
-    console.log("###################### REFRESH TOKEN\n", refreshToken,
+    let message, refreshToken;
+    if (verified === true) {
+        // Refresh token
+        const jwti = crypto.randomUUID();
+        refreshToken = await generateRefresh(server.jwt.sign, name, type, id, jwti);
+        console.log("###################### REFRESH TOKEN\n", refreshToken,
                 "\n####################################\n");
 
-    console.log("################# DB\n", server.db,
-                "\n####################\n");
+//    console.log("################# DB\n", server.db,
+//                "\n####################\n");
     // Garder en db le jwtid du refresh token
-    server.db.refresh.insert(jwti, id);
+        server.db.refresh.insert(jwti, id);
+        message = 'Access and refresh tokens generated.';
+    } else
+        message = 'Access token generated. Waiting 2fa.'
 
     return reply
         .code(200)
-        .setCookie('accessToken', accessToken, {
-            ...secureCookieOptions,
-            maxAge: 1800
-        })
-        .setCookie('refreshToken', refreshToken, {
-            ...secureCookieOptions,
-            maxAge: 604800,
+//        .setCookie('accessToken', accessToken, {
+//            ...secureCookieOptions,
+//            maxAge: 1800
+//        })
+//        .setCookie('refreshToken', refreshToken, {
+//            ...secureCookieOptions,
+//            maxAge: 604800,
 //            path: '/api/auth/refresh'
-        })
-        .send({ message: 'Access and refresh tokens generated.' });
+//        })
+        .send({
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            message: message
+        });
 }
 
 // GET /authenticate
 export async function authenticate(request, reply) {
-    console.log("authenticate:\n");
-    const cookies = request.cookies;
-    console.log("######################### COOKIES\n", cookies,
-                "\n#################################\n");
-    const { accessToken } = cookies;
+//    console.log("authenticate:\n");
+//    const cookies = request.cookies;
+//    console.log("######################### COOKIES\n", cookies,
+//                "\n#################################\n");
+    const rawToken = request.headers.authorization;
+    if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
+        return reply.code(400).send({ error: 'Missing Bearer' });
+    const accessToken = rawToken.split(' ')[1];
 
     if (!accessToken) {
 		console.log('Missing token');
@@ -85,6 +98,9 @@ export async function authenticate(request, reply) {
 //                    "\n########################################\n");
         delete decoded.iat;
         delete decoded.exp;
+        if ((request.body.from2fa && decoded.verified === true)
+            || (request.body.from2fa === undefined && decoded.verified === false))
+            return reply.code(403).send({ message: 'Forbidden access.' });
         return reply.code(200).send(decoded); /////////////
     } catch (err) {
         console.log("authenticate ERROR: ", err);
@@ -97,12 +113,13 @@ export async function authenticate(request, reply) {
 
 // POST /refresh
 export async function refresh(db, request, reply) {
-    console.log("refresh:\n");
-    const cookies = request.cookies;
-    console.log("######################### COOKIES\n", cookies,
-                "\n#################################\n");
+    const rawToken = request.headers.authorization;
+    if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
+        return reply.code(400).send({ error: 'Missing Bearer' });
+    const refreshToken = rawToken.split(' ')[1];
+
     const { server } = request;
-    const { refreshToken } = cookies;
+ //   const { refreshToken } = cookies;
 
     if (!refreshToken) {
 		console.log('Missing token');
@@ -119,7 +136,7 @@ export async function refresh(db, request, reply) {
         const { name, type, id, jwti } = decoded;
 
         // New access token
-        const newAccess = generateAccess(server.jwt.sign, name, type, id);
+        const newAccess = generateAccess(server.jwt.sign, name, type, id, true);
 
         // New refresh token
         const newJwti = crypto.randomUUID();

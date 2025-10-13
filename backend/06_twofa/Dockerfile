@@ -8,6 +8,7 @@ RUN npm install fastify fastify-plugin \
 	nodemailer speakeasy dotenv \
 	mailgun.js form-data
 RUN npm install sqlite sqlite3
+RUN npm install @fastify/cookie
 RUN apt-get install sqlite3 -y
 
 

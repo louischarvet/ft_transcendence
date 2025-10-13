@@ -116,8 +116,8 @@ export async function logIn(request, reply) {
 // Route PUT /logout
 // Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
-	console.log("####Function logOut called:\n");
-	const revRes = await revokeJWT(request.headers.authorization);
+//	console.log("####Function logOut called:\n");
+	const revRes = await revokeJWT(request.headers.authorization); ///////
 	if (revRes.status == 200) {
 		//! ajout le 17/09/2025
 		//! nom de la table "guests" au lieu de "guest"

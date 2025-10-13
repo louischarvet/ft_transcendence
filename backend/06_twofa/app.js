@@ -1,11 +1,14 @@
 //app.js
 
 import Fastify from 'fastify';
+import cookie from '@fastify/cookie';
 import twoFARoutes from './routes/routes.js';
 import { initDB } from './database/database.js';
 import shutdown from './shutdown.js';
 
 const fastify = Fastify({ logger: true });
+
+fastify.register(cookie);
 
 fastify.register(initDB);
 fastify.register(twoFARoutes);
