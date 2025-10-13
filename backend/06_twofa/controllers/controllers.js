@@ -44,9 +44,6 @@ async function sendMail(name, email, code) {
 			pass: process.env.APP_PASS
 		}
 	});
-	console.log("####### TRANSPORTER\n", transporter,
-				"\n###################\n"
-	);
 
 //	await transporter.verify((error, success) => {
 //    if (error) {

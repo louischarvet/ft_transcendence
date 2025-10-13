@@ -8,6 +8,12 @@ const secureCookieOptions = {
     sameSite: 'Strict'
 };
 
+async function clearCookies(reply) {
+	reply.clearCookie('accessToken')
+//		.clearCookie('2fa')
+		.clearCookie('refreshToken');
+}
+
 async function generateAccess(sign, name, type, id, verified) {
     return await sign({
         name: name,
@@ -136,11 +142,11 @@ export async function refresh(db, request, reply) {
         const { name, type, id, jwti } = decoded;
 
         // New access token
-        const newAccess = generateAccess(server.jwt.sign, name, type, id, true);
+        const newAccess = await generateAccess(server.jwt.sign, name, type, id, true);
 
         // New refresh token
         const newJwti = crypto.randomUUID();
-        const newRefresh = generateRefresh(server.jwt.sign, name, type, id, newJwti);
+        const newRefresh = await generateRefresh(server.jwt.sign, name, type, id, newJwti);
         // mise a jour db
         db.refresh.erase(jwti, id);
         db.refresh.insert(newJwti, id);
@@ -154,7 +160,7 @@ export async function refresh(db, request, reply) {
             .setCookie('refreshToken', newRefresh, {
                 ...secureCookieOptions,
                 maxAge: 604800,
-                path: '/api/auth/refresh'
+//                path: '/api/auth/refresh'
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {

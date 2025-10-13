@@ -43,6 +43,7 @@ export async function createGuest(request, reply) {
 export async function register(request, reply) {
 	const { name, password, email} = request.body;
 
+	console.log("In user register");
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 
@@ -68,6 +69,7 @@ export async function register(request, reply) {
 	delete user.telephone;
 
 	// 2FA
+	console.log("SendCode:");
 	await sendCode({
 		name: name,
 		email: email,

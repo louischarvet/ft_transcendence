@@ -142,8 +142,9 @@ _ base image en local.
 
 TO DO
 
-- Retaper les DBs (ouverture, globale forbidden !)
+- Retaper les DBs (ouverture, globale forbidden ! try catch)
 - /user : renvoyer l'email dans la reponse
+- login logout avec refreshtokens !!
 
 - Re-generer un JWT au lancement d'un match ou d'un tournoi
 - /!\ Refaire les JWT !! Access token / Refresh token
