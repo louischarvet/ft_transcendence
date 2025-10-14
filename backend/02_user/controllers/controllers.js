@@ -212,7 +212,7 @@ export async function updateInfo(request, reply) {
 		columnToUpdate = 'hashedPassword';
 		const salt = await bcrypt.genSalt();
 		valueToUpdate = await bcrypt.hash(newValue, salt);
-		if (!checkPasswordFormat(newValue))
+		if (!await checkPasswordFormat(newValue))
 			return reply.code(401).send({ error: "Incorrect password format" });
 	} else if (toUpdate === 'email'){
 		if (!await checkEmailFormat(newValue))
