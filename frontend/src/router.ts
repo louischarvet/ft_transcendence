@@ -62,6 +62,9 @@ export function renderRoute() {
 	}
 }
 
+window.addEventListener('popstate', () => {
+	renderRoute();
+});
 
 //export function renderRoute() {
 

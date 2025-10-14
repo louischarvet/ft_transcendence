@@ -4,7 +4,7 @@ import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	updateStatsWinner, updateStatsLoser, deleteUserInTable, getUserTournament} from '../models/models.js'
 import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
-import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
 
@@ -212,6 +212,8 @@ export async function updateInfo(request, reply) {
 		columnToUpdate = 'hashedPassword';
 		const salt = await bcrypt.genSalt();
 		valueToUpdate = await bcrypt.hash(newValue, salt);
+		if (!checkPasswordFormat(newValue))
+			return reply.code(401).send({ error: "Incorrect password format" });
 	} else if (toUpdate === 'email'){
 		if (!await checkEmailFormat(newValue))
 			return reply.code(400).send({ error: "Invalid email format"});
