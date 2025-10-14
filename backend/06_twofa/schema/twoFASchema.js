@@ -18,16 +18,9 @@ export const verifySchema = {
 	$id: 'verifySchema',
 	body: {
 		type: 'object',
-		required: [ 'id', 'name', 'code', 'type' ],
+		required: [ 'code' ],
 		properties: {
-			id: { type: 'integer' },
-			name: { type: 'string', minLength: 1 },
 			code: { type: 'integer' },
-			type: {
-				type: 'string',
-				enum: [ 'guest', 'registered' ],
-		  	},
-			tmp: { type: 'boolean' },
 		},
 		additionalProperties: false
 	}

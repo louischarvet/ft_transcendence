@@ -9,6 +9,7 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install sqlite3 -y
 RUN npm install @fastify/jwt
 RUN npm install fastify-cron
+RUN npm install @fastify/cookie
 # helmet pour proteger contre attaques XSS
 # RUN npm install @fastify/helmet
 RUN npm install bcrypt

@@ -3,6 +3,7 @@
 import Fastify from 'fastify';
 import fastifyCron from 'fastify-cron';
 import jwt from '@fastify/jwt'
+import cookie from '@fastify/cookie'
 // Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
 import fastifyCors from '@fastify/cors';
@@ -14,11 +15,11 @@ import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 //! ajout le 16/09/2025
 import { initDB } from './database/db.js';
-
-
 import { prunePendingRegistered } from './cron/cronFunctions.js';
 
 const fastify = Fastify({ logger: true });
+
+fastify.register(cookie);
 
 // CORS configuration
 fastify.register(fastifyCors, {
@@ -42,7 +43,7 @@ await fastify.register(helmet, {
 fastify.register(fastifyCron, {
 	jobs: [
 		{
-			cronTime: '*/1 * * * *',
+			cronTime: '*/10 * * * *',
 			onTick: prunePendingRegistered,
 			start: true,
 			timeZone: 'Europe/Paris'

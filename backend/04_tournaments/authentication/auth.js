@@ -1,21 +1,21 @@
 // ./authentification.auth.js
 
-export async function generateJWT(user) {
+// export async function generateJWT(user) {
 
-	//! ajout 16/09/2025
-	if (!user)
-		return { status: 400, error: 'Bad Request: User information is incomplete' };
+// 	//! ajout 16/09/2025
+// 	if (!user)
+// 		return { status: 400, error: 'Bad Request: User information is incomplete' };
 	
-	const genRes = await fetch('http://session-service:3000/generate', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(user)
-	});
-	console.log("######## Function GENERATEJWT --> ", genRes, "\n#######\n");
-	return genRes;
-}
+// 	const genRes = await fetch('http://session-service:3000/generate', {
+// 		method: 'POST',
+// 		headers: {
+// 			'Content-Type': 'application/json'
+// 		},
+// 		body: JSON.stringify(user)
+// 	});
+// 	console.log("######## Function GENERATEJWT --> ", genRes, "\n#######\n");
+// 	return genRes;
+// }
 
 export async function authenticateJWT(request, reply) {
     console.log("####authenticateJWT");
@@ -26,7 +26,7 @@ export async function authenticateJWT(request, reply) {
 		return reply.code(401).send({ error: 'Unauthorized: No token provided' });
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
-        method: 'POST',
+        method: 'GET',
         headers: {
             'Authorization': request.headers.authorization
         }
@@ -47,18 +47,18 @@ export async function authenticateJWT(request, reply) {
 }
 
 
-export async function revokeJWT(token) {
+// export async function revokeJWT(token) {
 
-	//! ajout 16/09/2025
-	if (!token)
-		return { status: 401, error: 'Unauthorized: No token provided' };
-	//console.log("//RETOBJ\n", retObj, "//END RETOBJ\n");
-	const revRes = await fetch('http://session-service:3000/revoke', {
-		method: 'POST',
-		headers: {
-			'Authorization': token,
-		},
-	});
-	console.log("######## Function revokeJWT : revRes -->", revRes, "\n#######\n");
-	return (revRes);
-}
+// 	//! ajout 16/09/2025
+// 	if (!token)
+// 		return { status: 401, error: 'Unauthorized: No token provided' };
+// 	//console.log("//RETOBJ\n", retObj, "//END RETOBJ\n");
+// 	const revRes = await fetch('http://session-service:3000/revoke', {
+// 		method: 'POST',
+// 		headers: {
+// 			'Authorization': token,
+// 		},
+// 	});
+// 	console.log("######## Function revokeJWT : revRes -->", revRes, "\n#######\n");
+// 	return (revRes);
+// }

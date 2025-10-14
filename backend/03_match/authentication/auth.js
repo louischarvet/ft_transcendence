@@ -5,7 +5,7 @@ export async function authenticateJWT(request, reply) {
 
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
-        method: 'POST',
+        method: 'GET',
         headers: {
             'Authorization': request.headers.authorization
         }
@@ -17,7 +17,7 @@ export async function authenticateJWT(request, reply) {
 
     let currentuser;
     if (authRes.ok)
-      currentuser = data.user || data.body.user;
+      currentuser = data.user;
 
     // if (!authRes.ok || !currentuser)
     //   return reply.code(401).send({ error: 'Unauthorized' });

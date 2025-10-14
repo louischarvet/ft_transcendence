@@ -10,5 +10,8 @@ export async function sendCode(user) {
 		},
 		body: JSON.stringify(user)
 	});
-	return genRes;
+	const data = await genRes.json();
+	console.log("################## sendCode data\n", data,
+				"\n################################\n");
+	return data;
 }

@@ -19,7 +19,6 @@ export async function generateJWT(user) {
 }
 
 export async function authenticateJWT(request, reply) {
-    console.log("####authenticateJWT");
 
 	//! ajout 16/09/2025
 	//? dans le cas ou la requete n'a pas de token ou un token vide ou invalide
@@ -27,17 +26,19 @@ export async function authenticateJWT(request, reply) {
 		return reply.code(401).send({ error: 'Unauthorized: No token provided' });
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
-        method: 'POST',
+        method: 'GET',
         headers: {
             'Authorization': request.headers.authorization
         }
     });
 
     const data = await authRes.json();
+	console.log("############# DATA\n", data,
+				"\n##################\n");
 	if (data.error)
 		return reply.code(401).send({ error: data.error });
 
-    const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
+    const currentuser = data.user; // fallback si le service renvoie "user"
 
     // if (authRes.ok === false || currentuser === undefined) {
 	// 	return reply.code(401).send({ error: 'Unauthorized' });
@@ -54,12 +55,12 @@ export async function revokeJWT(token) {
 	if (!token)
 		return { status: 401, error: 'Unauthorized: No token provided' };
 	//console.log("//RETOBJ\n", retObj, "//END RETOBJ\n");
-	const revRes = await fetch('http://session-service:3000/revoke', {
-		method: 'POST',
+	const revRes = await fetch('http://session-service:3000/delete', {
+		method: 'DELETE',
 		headers: {
 			'Authorization': token,
 		},
 	});
-	console.log("/// REVRES\n", revRes);
+//	console.log("/// REVRES\n", revRes);
 	return (revRes);
 }

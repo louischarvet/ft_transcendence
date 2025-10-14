@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 import { config } from 'dotenv';
 import speakeasy from 'speakeasy';
 import { insertInTable, getFromTable, deleteInTable } from '../models/models.js';
-import { generateJWT } from '../authentication/auth.js';
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
 
 config();
 
@@ -34,9 +34,9 @@ async function generateCode() {
 
 // Envoyer le mail
 async function sendMail(name, email, code) {
-	console.log("##### USR_ADDR = ", process.env.USR_ADDR,
-				"\n##### APP_PASS = ", process.env.APP_PASS
-	);
+	// console.log("##### USR_ADDR = ", process.env.USR_ADDR,
+	// 			"\n##### APP_PASS = ", process.env.APP_PASS
+	// );
 	const transporter = nodemailer.createTransport({
 		service: 'gmail',
 		auth: {
@@ -73,7 +73,7 @@ export async function sendCode(request, reply) {
 	await insertInTable(id, name, code);
 	console.log("##### sendCode after insertInTable\n");
 
-	const res = generateJWT({
+	const res = await generateJWT({
 		id: id,
 		type: 'registered',
 		name: name,
@@ -81,18 +81,23 @@ export async function sendCode(request, reply) {
 	});
 	const jsonRes = await res.json();
 	const { accessToken } = jsonRes;
+
 	await clearCookies(reply);
+
 	return reply.code(200)
-		.setCookie('accessToken', accessToken, {
-			...secureCookieOptions,
-			maxAge: 1800
-		})
-		.send({ message: 'Pending 2fa verification.' });
+//		.setCookie('accessToken', accessToken, {
+//			...secureCookieOptions,
+//			maxAge: 1800
+//		})
+		.send({
+			message: 'Pending 2fa verification.',
+			accessToken: accessToken
+		});
 }
 
 // Route POST pour verifier le code généré
 export async function verifyCode(request, reply) {
-	const { code, id, name, type, tmp } = request.body;
+	const { code, id, name, type } = request.user;
 	const codeToCompare = await getFromTable(id, name);
 	if (codeToCompare === undefined)
 		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
@@ -102,10 +107,13 @@ export async function verifyCode(request, reply) {
 //		return reply.code(401).send({error : 'bad code. Retry !'});
 ///////////////////////////////////////////////////////////////////
 
+	// revocation de l'ancien accessToken
+	await revokeJWT(request.headers.authorization);
+
 	clearCookies(reply);
 
 	// si user n'est pas le p2 d'un match
-	if (tmp === undefined || !tmp) {
+//	if (tmp === undefined || !tmp) {
 		const response = await generateJWT({ 
 				id: id,
 				type: 'registered',
@@ -137,15 +145,14 @@ export async function verifyCode(request, reply) {
 			maxAge: 604800,
 //			path: '/api/session/refresh'
 		});
-	}
+//	}
 	
 	await deleteInTable(id);
 
 	return reply.code(201)
 		.send({
 			//token: token,
-			message: 'User ' + name + ' verified',
-			tmp: tmp,
+			message: 'User ' + name + ' verified'
 		}
 	);
 }

@@ -25,7 +25,9 @@ export async function sessionRoutes(fastify, options) {
     // si l'access token est expire, renvoie une erreur 401
     // le front doit ensuite renvoyer une requete a /refresh
     // puis relancer la requete initiale (acces a des ressources)
-    fastify.get('/authenticate', authenticate);
+    fastify.get('/authenticate', (request, reply) => {
+        return authenticate(fastify.db, request, reply);
+    });
 
 ////////////////////////////////// Accessibles directement par le frontend
     ///////////////////////////////////// Avec le refresh token uniquement

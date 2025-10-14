@@ -1,17 +1,27 @@
 // app.js
 
 import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
 import fp from 'fastify-plugin';
+import fCron from 'fastify-cron';
 import cookie from '@fastify/cookie';
 import fastifyJWT from '@fastify/jwt';
 import { initDB } from './database/db.js';
 import { sessionRoutes } from './routes/routes.js';
 import { generateSchema } from './schema/generateSchema.js';
+import { pruneRevokedAccess } from './cron/cron.js';
 
 // generer secret-key !!!
 const secretKey = "secret-key"
 
 const fastify = Fastify({ logger: true });
+
+// CORS configuration
+fastify.register(fastifyCors, {
+	origin: true, // Réfléchit le domaine de la requête
+	methods: ['GET', 'POST', 'DELETE'], // Méthodes HTTP autorisées
+	allowedHeaders: ["Content-Type", "Authorization"],
+});
 
 // cookies
 fastify.register(cookie);
@@ -21,6 +31,18 @@ fastify.register(fastifyJWT, { secret: secretKey });
 
 // DB
 fastify.register(fp(initDB));
+
+// cron
+fastify.register(fCron, {
+	jobs: [
+		{
+			cronTime: '*/10 * * * *',
+			onTick: () => pruneRevokedAccess(fastify.db.revokedAccess.erase),
+			start: true,
+			timeZone: 'Europe/Paris'
+		}
+	]
+});
 
 // Routes
 fastify.register(sessionRoutes);

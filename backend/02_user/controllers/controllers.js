@@ -8,6 +8,18 @@ import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_t
 import fs from 'fs';
 import path from 'path';
 
+const secureCookieOptions = {
+	httpOnly: true,
+	secure: true,
+	sameSite: 'Strict' //?
+};
+
+async function clearCookies(reply) {
+	reply.clearCookie('accessToken')
+//		.clearCookie('2fa')
+		.clearCookie('refreshToken');
+}
+
 // rout POST /guest
 export async function createGuest(request, reply) {
 	console.log("####Function createGuest called:\n");
@@ -70,7 +82,7 @@ export async function register(request, reply) {
 
 	// 2FA
 	console.log("SendCode:");
-	await sendCode({
+	const { accessToken } = await sendCode({
 		name: name,
 		email: email,
 		id: user.id
@@ -78,11 +90,18 @@ export async function register(request, reply) {
 	
 	//!ajout le 17/09/2025
 	updateStatus('registered', name, 'pending');
-	console.log("####\n");
-	return reply.code(201).send({
-		user,
-		message: 'User ' + name + ' created'
-	});
+
+	clearCookies(reply);
+
+	return reply.code(201)
+		.setCookie('accessToken', accessToken, {
+			...secureCookieOptions,
+			maxAge: 1800
+		})
+		.send({
+			user,
+			message: 'User ' + name + ' created'
+		});
 }
 
 // route PUT /login
@@ -129,7 +148,8 @@ export async function logOut(request, reply) {
 		else
 			updateStatus(request.user.type, request.user.name, 'logged_out');
 
-		console.log("####\n");
+		clearCookies(reply);
+
 		return reply.code(201).send({
 			message: "Successfully logged out."
 		});
@@ -148,13 +168,13 @@ export async function deleteUser(request, reply) {
 		console.log("###request.user.type : ", request.user.type, "\n###");
 		deleteUserInTable(request.user.type, request.user.name);
 
-		console.log("####\n");
+		clearCookies(reply);
+
 		return reply.code(200).send({
 			message: "User successfully deleted."
 		});
 	}
 	else{
-		console.log("####\n");
 		return revRes;
 	}
 }

@@ -30,8 +30,8 @@ async function userRoutes(fastify, options) {
 
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
-	fastify.put('/logout', {preHandler: authenticateJWT },  logOut);
-	fastify.delete('/delete', {schema: updateSchema },  deleteUser);
+	fastify.put('/logout', { preHandler: authenticateJWT },  logOut);
+	fastify.delete('/delete', { preHandler: authenticateJWT, schema: updateSchema },  deleteUser);
 
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
