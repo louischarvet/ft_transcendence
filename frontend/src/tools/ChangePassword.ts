@@ -1,5 +1,3 @@
-import { updateInfo } from "./APIStorageManager";
-
 export function createChangePassword(onConfirm: (oldPassword: string, newPassword: string) => void
 ): HTMLElement {
   const overlay = document.createElement('div');
