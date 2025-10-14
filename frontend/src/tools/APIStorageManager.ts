@@ -169,13 +169,23 @@ export async function removeFriend(friendId: string){
 	return false;
 }
 
-export async function checkConnection() { // TO DO
+export async function checkConnection() {
 	const user = getUser();
 	const token = getToken();
 
 	if (!user || !token)
-		return false;	
+		return false;
+
 	return true;
+}
+
+export async function checkConnectionGuest() {
+	const user = getUser();
+	const token = getToken();
+
+	if (user.type === 'guest' && token)
+		return true;
+	return false;	
 }
 
 export async function register(name: string, email: string, password: string) {
@@ -205,18 +215,23 @@ export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 		'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({
-		tmp: asPlayer2,
+			tmp: asPlayer2,
 		}),
-		// body: JSON.stringify({}),
 	});
-	const json = await response.json();
-	console.log("#### Response asGuest -> ", json, "####");
-	if (json.user) {
-		setUser(json.user);
-		setToken(json.token);
-		return true;
-	}
-	return false;
+    if (!response.ok) {
+        console.error("Erreur HTTP :", response.status);
+        return false;
+    }
+
+    const json = await response.json();
+    console.log("#### Response asGuest -> ", json, "####");
+
+    if (json.user) {
+        setUser(json.user);
+        setToken(json.token); // possiblement undefinded du coup si player2
+        return true;
+    }
+    return false;
 }
 
 export async function login(name: string, password: string) {

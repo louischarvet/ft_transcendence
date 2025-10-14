@@ -26,8 +26,7 @@ export async function createGuest(request, reply) {
 	let token;
 	if (!tmp) {
 		const response = await generateJWT(user);
-		const jsonRes = await response.json();
-		token = jsonRes.token;
+		token = response;
 	} else
 		token = undefined;
 
@@ -103,7 +102,6 @@ export async function logIn(request, reply) {
 	// Nettoyage des infos sensibles
 	delete user.hashedPassword;
 	delete user.email;
-	delete user.telephone;
 
 	let token;
 	if (!tmp) {
@@ -195,7 +193,7 @@ export async function updateInfo(request, reply) {
 
 	const { password, toUpdate, newValue } = request.body;
 	if (!password || !toUpdate || !newValue)
-		return reply.code(401).send( { error : 'Need all infos in body caca'});
+		return reply.code(401).send( { error : 'Need all infos in body'});
 
 	// Verif si schema ok
 	if (!['email', 'password'].includes(toUpdate))
@@ -289,8 +287,6 @@ export	async function fetchUserByIdToken(request, reply){
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 	delete userInfos.hashedPassword;
-	delete userInfos.friends;
-	delete userInfos.type;
 
 	return reply.code(200).send({
 		user: userInfos

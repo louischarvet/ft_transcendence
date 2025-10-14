@@ -1,6 +1,6 @@
 import { getFriendsList, addNewFriend } from "./APIStorageManager";
 import { Logout } from "./APIStorageManager";
-import { checkConnection } from './APIStorageManager';
+import { checkConnection, getUser } from './APIStorageManager';
 import { navigate } from '../router';
 
 export default function DropDownMenu() {
@@ -8,6 +8,8 @@ export default function DropDownMenu() {
 	checkConnection().then((connected) => {
 		console.log("checkConnection : ", connected);
 		if (!connected)
+			return;
+		if (getUser().type !== 'registered')
 			return;
 
 	wrapper.className = 'absolute top-5 right-0';
@@ -35,6 +37,8 @@ export default function DropDownMenu() {
 	profileLink.textContent = 'Profil';
 	menuSection1.appendChild(profileLink);
 
+	//checkConnectionGuest()
+	//	.then((connected) => {
 	const friendButton = document.createElement('a');
 	friendButton.className = menuClassName;
 	friendButton.textContent = 'Friends';
@@ -229,6 +233,7 @@ export default function DropDownMenu() {
 		}
 	});
 
-});
-return wrapper;
+	});
+
+ return wrapper;
 }

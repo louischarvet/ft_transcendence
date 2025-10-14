@@ -1,4 +1,5 @@
 import { navigate } from '../router';
+import { asGuest } from "./APIStorageManager";
 
 export default function ContinueAs() {
     const wrapper = document.createElement('div');
@@ -18,7 +19,15 @@ export default function ContinueAs() {
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all';
     guestButton.onclick = () => {
         console.log('Continue as Guest');
-        navigate('/select-game');
+		asGuest(false)
+			.then( res => {
+				alert('Connecting guest successfully!');
+				navigate('/select-game');
+			})
+			.catch( (err) => {
+				alert('Error connecting guest.');
+				console.log('Guest connection:', err);
+			})
     };
     wrapper.appendChild(guestButton);
 
