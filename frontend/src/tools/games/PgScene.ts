@@ -8,12 +8,14 @@ import PgGui from "./PgGui";
 import PgGame from "./PgGame";
 
 export default class PgScene {
+  hostPlayer: string;
   canvas: HTMLCanvasElement;
   engine: Engine;
   scene: Scene;
   gui: PgGui;
   game: PgGame;
   gameStarted: boolean = false;
+  gameMode: string | null = null;
   gameStartTime: number = 2000; // ms
   camera: FreeCamera;
   
@@ -42,9 +44,10 @@ export default class PgScene {
 
   particles: { [particle: string]: ParticleSystem } = {};
 
-  constructor(canvas: HTMLCanvasElement, keys: { [key: string]: boolean }) {
+  constructor(canvas: HTMLCanvasElement, keys: { [key: string]: boolean }, hostPlayer: string) {
     this.canvas = canvas;
     this.keys = keys;
+    this.hostPlayer = hostPlayer;
     this.engine = new Engine(canvas, true);
     // remove selection thikness on engine
     this.engine.getRenderingCanvas()?.style.setProperty("outline", "none");
@@ -75,7 +78,7 @@ export default class PgScene {
     this.initObjects();
     this.initParticles();
 
-    this.gui = new PgGui();
+    this.gui = new PgGui(this.hostPlayer);
 
     this.game = new PgGame(
       this.keys,
@@ -107,7 +110,6 @@ export default class PgScene {
         "boundDown": { position: this.objects["boundDown"].position,
           width: this.objects["boundDown"].width!, height: this.objects["boundDown"].height! },
       }, // frontAddedObjects
-      true // againstAI
     );
 
     this.render();
@@ -279,7 +281,8 @@ export default class PgScene {
       const deltaTime = this.engine.getDeltaTime(); // en millisecondes
 
       // Cinematic
-      if (!this.gui.started())
+      this.gameMode = this.gui.started();
+      if (!this.gameMode)
         return;
 
       if (!cinematicEndUp) {
@@ -300,9 +303,31 @@ export default class PgScene {
         this.gameStartTime -= deltaTime;
         if (this.gameStartTime <= 0) {
           this.gameStarted = true;
-          this.game.start();
+          if (this.gameMode === "restart") {
+            this.gameMode = this.game.restart();
+            this.gui.startedType = this.gameMode;
+          } else {
+            this.game.start(this.gameMode);
+          }
         }
         return;
+      }
+
+      // Escape or Space to pause
+      if (this.keys["Escape"] || this.keys["Space"]) {
+        if (!this.gui.isPaused()) {
+          this.gui.pauseVisibility(true);
+          this.game.pause();
+        } else {
+          this.gui.pauseVisibility(false);
+          this.game.resume();
+        }
+        this.keys["Escape"] = false;
+        this.keys["Space"] = false;
+      }
+
+      if (!this.gui.isPaused()) {
+        this.game.resume();
       }
     });
   }

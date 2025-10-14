@@ -6,18 +6,21 @@ export default class PgGame {
   width = 30;
   height = 20;
 
+  gameMode: string | null = null;
+
   fps = 1000/60;
 
   keys: { [key: string]: boolean };
 
   sceneFunctions: any;
-  againstAI: boolean;
-  aiLevel = 1;
+  aiMode: "restless" | "normal" | "smart" = "normal";
 
   leftScore = 0;
   rightScore = 0;
 
   started: boolean = false;
+
+  paused: boolean = false;
 
   speed = 0.2;
   speedInertiaTransfert = this.speed / 40;
@@ -51,11 +54,10 @@ export default class PgGame {
     height: number
   }} = {};
 
-  constructor(keys: { [key: string]: boolean }, sceneFunctions: any, frontAddedObjects: any = {}, againstAI: boolean = false) {
+  constructor(keys: { [key: string]: boolean }, sceneFunctions: any, frontAddedObjects: any = {}) {
     this.keys = keys;
     this.sceneFunctions = sceneFunctions;
     this.frontAddedObjects = frontAddedObjects; // tqt
-    this.againstAI = againstAI;
 
     this.initBallDirection();
   }
@@ -66,16 +68,19 @@ export default class PgGame {
 
     this.ball.direction.y = 0;
     this.ball.direction.x = signX;
-    this.ball.direction.rotateDeg((Math.random() * 40 + 10) * signAngle);
+    this.ball.direction.rotateDeg((Math.random() * 40 + 10) * signAngle).normalize();
   }
 
   private delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-  async start() {
+  async start(gameMode: string) {
     let timer = 0;
+    this.reset();
+    this.gameMode = gameMode;
     this.started = true;
 
     while (this.started) {
+      while (this.paused) await this.delay(this.fps);
       this.sceneFunctions.update({
         ball: this.ball.position.clone(),
         paddleLeft: this.paddleLeft.position.clone(),
@@ -92,11 +97,34 @@ export default class PgGame {
     this.reset();
   }
 
+  pause() {
+    this.paused = true;
+  }
+
+  restart() {
+    this.reset();
+    if (this.gameMode) {
+      this.start(this.gameMode);
+      return this.gameMode;
+    }
+    return "";
+  }
+
+  resume() {
+    this.paused = false;
+  }
+
   private async gameLoop(timer: number) {
 
     // Move IA every 1000ms
-    if (this.againstAI && timer % 1000 < this.fps)
-      this.aiMovement(this.currentSpeed, this.ball, this.paddleRight, this.aiLevel);
+    if (timer % 1000 < this.fps) {
+      if (this.gameMode === "vsAI" || this.gameMode === "watchAI") {
+        this.aiMovement("Right", this.currentSpeed, this.ball, new Victor(this.paddleRight.position.x + (this.paddleRight.width / 2), this.paddleRight.position.y + (this.paddleRight.height / 2)), this.aiMode);
+      }
+      if (this.gameMode === "watchAI") {
+        this.aiMovement("Left", this.currentSpeed, this.ball, new Victor(this.paddleLeft.position.x + (this.paddleLeft.width / 2), this.paddleLeft.position.y + (this.paddleLeft.height / 2)), "restless");
+      }
+    }
 
     // Move paddles
     this.paddlesMovement();
@@ -105,29 +133,12 @@ export default class PgGame {
     this.ball.position.add(this.ball.direction.clone().multiplyScalar(this.currentSpeed));
 
     this.collidedDirection = undefined;
-    // increase speed if collision with paddle, decrease if with frontAddedObjects
-    if (this.handleCollision(this.paddleLeft)) {
-      const oldSpeed = this.currentSpeed;
-      this.currentSpeed = Math.abs(this.paddleLeft.speedInertia) * this.speedInertiaTransfert;
-      if (this.currentSpeed < oldSpeed)
-        this.currentSpeed = oldSpeed - this.speedInertiaTransfert;
-    } else if (this.handleCollision(this.paddleRight)) {
-      const oldSpeed = this.currentSpeed;
-      this.currentSpeed = Math.abs(this.paddleRight.speedInertia) * this.speedInertiaTransfert;
-      if (this.currentSpeed < oldSpeed)
-        this.currentSpeed = oldSpeed - this.speedInertiaTransfert;
-    } else {
-      for (const objKey in this.frontAddedObjects) {
-        if (this.handleCollision(this.frontAddedObjects[objKey])) {
-          this.currentSpeed -= this.speedInertiaTransfert * 2;
-          break;
-        }
-      }
+    this.handleCollision(this.paddleLeft, this.paddleLeft.speedInertia);
+    this.handleCollision(this.paddleRight, this.paddleRight.speedInertia);
+    for (const objKey in this.frontAddedObjects) {
+      if (this.handleCollision(this.frontAddedObjects[objKey]))
+        break;
     }
-    if (this.currentSpeed < this.speed)
-      this.currentSpeed = this.speed;
-    // if (this.currentSpeed > this.speed * 3)
-    //   this.currentSpeed = this.speed * 3;
 
     // reset this.ball (at winner's paddle) if out of bounds
     if (this.ball.position.x < -this.width / 2 || this.ball.position.x > this.width * 1.5) {
@@ -142,47 +153,57 @@ export default class PgGame {
       }
       if (this.leftScore == 10 || this.rightScore == 10)
         this.started = false;
-      else if (this.againstAI && (this.leftScore - this.rightScore) >= 5)
-        this.aiLevel++;
+      // else if (this.againstAI && (this.leftScore - this.rightScore) >= 5)
+      //   this.aiMode++;
       this.initBallDirection();
       this.currentSpeed = this.speed;
     }
   }
 
-  private async aiMovement(speed: number, ball: { position: Victor, direction: Victor }, paddleRight: { position: Victor, width: number, height: number }, lvl: number) {
-    if (ball.direction.x > 0 && ball.position.x < paddleRight.position.x) {
-      let steps = 0;
-      while (ball.position.x + ball.direction.x * speed * steps < paddleRight.position.x) {
-        steps++;
-      }
-      const predictedY = ball.position.y + ball.direction.y * speed * steps;
-      let distYBySpeed = (predictedY - (paddleRight.position.y + paddleRight.height / 2)) / speed;
+  private async aiMovement(side: "Left" | "Right", speed: number, ball: { position: Victor, direction: Victor }, paddlePos: Victor, mode: "restless" | "normal" | "smart") {
+    if ((side == "Right" && ball.direction.x > 0 && ball.position.x < paddlePos.x) ||
+      (side == "Left" && ball.direction.x < 0 && ball.position.x > paddlePos.x)) {
+      let predictedY = ball.position.y + (paddlePos.x - ball.position.x) / ball.direction.x * ball.direction.y;
 
+      if (mode === "smart") { // preshot the collision with edges
+        if (predictedY < 0) {
+          predictedY = -predictedY;
+        } else if (predictedY > this.height) {
+          predictedY = this.height - (predictedY - this.height);
+        }
+      }
+
+      if (mode !== "restless" && Math.abs(predictedY - paddlePos.y) < 1.5) // don't move if close enough
+        return;
+
+      const distYBySpeed = (predictedY - paddlePos.y) / speed;
       for (let i = 0; i < Math.abs(distYBySpeed) && i < 60; i++) {
         if (distYBySpeed > 0) {
-          console.log('AI down');
-          this.keys["AIUp"] = true;
-          this.keys["AIDown"] = false;
+          this.keys[side + "AIUp"] = true;
+          this.keys[side + "AIDown"] = false;
         } else {
-          console.log('AI up');
-          this.keys["AIDown"] = true;
-          this.keys["AIUp"] = false;
+          this.keys[side + "AIDown"] = true;
+          this.keys[side + "AIUp"] = false;
         }
+        while (this.paused) await this.delay(this.fps);
         await this.delay(this.fps);
       }
-    } else if (lvl > 1) { // return to center
-      this.aiMovement(speed, { position: new Victor(this.width / 2, this.height / 2), direction: new Victor(1, 0) }, paddleRight, 1);
+    } else if (mode === "restless") { // return to center
+      this.aiMovement(side, speed, { position: new Victor(this.width / 2, this.height / 2), direction: new Victor(side === "Right" ? 1 : -1, 0) }, paddlePos, mode);
     }
-    this.keys["AIUp"] = false;
-    this.keys["AIDown"] = false;
+    this.keys[side + "AIUp"] = false;
+    this.keys[side + "AIDown"] = false;
   }
 
   private paddlesMovement() {
-    this.handlePaddle("KeyW", "KeyS", this.paddleLeft);
-    if (this.againstAI) {
-      this.handlePaddle("AIUp", "AIDown", this.paddleRight);
+    if (this.gameMode === "watchAI") {
+      this.handlePaddle("LeftAIUp", "LeftAIDown", this.paddleLeft);
     } else {
+      this.handlePaddle("KeyW", "KeyS", this.paddleLeft);
+    } if (this.gameMode !== "vsAI" && this.gameMode !== "watchAI") {
       this.handlePaddle("ArrowUp", "ArrowDown", this.paddleRight);
+    } else {
+      this.handlePaddle("RightAIUp", "RightAIDown", this.paddleRight);
     }
   }
 
@@ -206,7 +227,7 @@ export default class PgGame {
     }
   }
 
-  private handleCollision(obj: { position: Victor, width: number, height: number }): boolean {
+  private handleCollision(obj: { position: Victor, width: number, height: number }, speedInertia: number = 0): boolean {
     const ballPreviousPos = this.ball.position.clone().subtract(this.ball.direction.clone().multiplyScalar(this.currentSpeed));
     const stepRatio = this.currentSpeed / (this.speed * 0.1);
     const ballVerticesTotal = 16; // 2^4
@@ -214,6 +235,7 @@ export default class PgGame {
 
     for (let step = 1; step <= stepRatio; step++) {
       const stepPos = ballPreviousPos.clone().add(this.ball.direction.clone().multiplyScalar(step * this.speed * 0.1));
+
       // check 16 vertices of the ball's bounding box
       let ballCollisionOffset = new Victor(0, 0);
       for (let i = 0; i < ballVerticesTotal; i++) {
@@ -227,20 +249,35 @@ export default class PgGame {
       if (ballCollisionOffset.x == 0 && ballCollisionOffset.y == 0)
         continue;
 
+      // collision position found, return to previous position
       this.ball.position = stepPos.subtract(this.ball.direction.clone().multiplyScalar(this.speed * 0.1));
       step--;
 
+      // reflect ball direction
       if (Math.abs(ballCollisionOffset.x) > Math.abs(ballCollisionOffset.y) &&
         (ballCollisionOffset.x > 0 && this.ball.direction.x > 0 ||
           ballCollisionOffset.x < 0 && this.ball.direction.x < 0)) {
         this.collidedDirection = this.ball.direction.clone();
         this.ball.direction.x *= -1;
+        this.ball.direction.y += speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
+        this.ball.direction.normalize();
       } else if (Math.abs(ballCollisionOffset.y) > Math.abs(ballCollisionOffset.x) &&
         (ballCollisionOffset.y > 0 && this.ball.direction.y > 0 ||
           ballCollisionOffset.y < 0 && this.ball.direction.y < 0)) {
         this.collidedDirection = this.ball.direction.clone();
         this.ball.direction.y *= -1;
+        this.ball.direction.x += speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
+        this.ball.direction.normalize();
       }
+
+      // increase ball speed depending on speedInertia
+      const speed = Math.abs(speedInertia) * this.speedInertiaTransfert;
+      if (this.currentSpeed < speed)
+        this.currentSpeed = speed;
+      else if (this.currentSpeed - this.speedInertiaTransfert >= this.speed)
+        this.currentSpeed -= this.speedInertiaTransfert;
+
+      // move ball the remaining distance of the step
       this.ball.position.add(this.ball.direction.clone().multiplyScalar((stepRatio - step) * this.speed * 0.1));
 
       return true;
@@ -249,7 +286,7 @@ export default class PgGame {
   }
 
   private reset() {
-    this.aiLevel = 1;
+    // this.aiMode = 1;
     this.leftScore = 0;
     this.rightScore = 0;
     this.paddleLeft.position.y = 8.5;

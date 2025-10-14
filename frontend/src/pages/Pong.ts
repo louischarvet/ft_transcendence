@@ -1,7 +1,14 @@
 import PgScene from "../tools/games/PgScene";
 import DropDownMenu from "../tools/DropDownMenu";
+import { getUser, checkConnection } from "../tools/APIStorageManager";
+import { navigate } from "../router";
 
 export default function Pong(): HTMLElement {
+  checkConnection().then((connected) => {
+    if (!connected) {
+      navigate('/');
+    }
+  });
   const container = document.createElement('div');
   container.className = 'flex justify-center items-center h-screen bg-black';
   
@@ -42,7 +49,7 @@ export default function Pong(): HTMLElement {
   };
   
   function game() {
-    const pgScene = new PgScene(canvas, keys);
+    const pgScene = new PgScene(canvas, keys, getUser().name);
     
     resizeCanvas();
     pgScene.engine.resize();
