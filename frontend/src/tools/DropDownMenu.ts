@@ -9,8 +9,6 @@ export default function DropDownMenu() {
 		console.log("checkConnection : ", connected);
 		if (!connected)
 			return;
-		if (getUser().type !== 'registered')
-			return;
 
 	wrapper.className = 'absolute top-5 right-0';
 
@@ -39,6 +37,8 @@ export default function DropDownMenu() {
 
 	//checkConnectionGuest()
 	//	.then((connected) => {
+	if (getUser().type !== 'guest'){
+
 	const friendButton = document.createElement('a');
 	friendButton.className = menuClassName;
 	friendButton.textContent = 'Friends';
@@ -183,7 +183,7 @@ export default function DropDownMenu() {
 	dropDownFriendList.onmouseenter = showFriendList;
 	friendButton.onmouseleave = hideFriendList;
 	dropDownFriendList.onmouseleave = hideFriendList;
-
+	}
 	dropdownMenu.appendChild(menuSection1);
 
 	// LOGOUT
@@ -205,9 +205,11 @@ export default function DropDownMenu() {
 					localStorage.removeItem("user");
 
 					// Vider liste amis et cacher menu
-					friendsList.length = 0;
-					friendsListContainer.innerHTML = '';
-					dropDownFriendList.classList.add('hidden');
+					if (getUser().type !== 'guest'){
+						friendsList.length = 0;
+						friendsListContainer.innerHTML = '';
+						dropDownFriendList.classList.add('hidden');
+					}
 					console.log("go to logout");
 					navigate("/");
 				} else
@@ -229,7 +231,8 @@ export default function DropDownMenu() {
 	document.addEventListener('click', (event) => {
 		if (!wrapper.contains(event.target as Node)) {
 			dropdownMenu.classList.add('hidden');
-			dropDownFriendList.classList.add('hidden');
+			if (getUser().type !== 'guest')
+				dropDownFriendList.classList.add('hidden');
 		}
 	});
 

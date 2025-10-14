@@ -2,7 +2,7 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { getUserByToken , updateInfo } from '../tools/APIStorageManager';
+import { getUserByToken, updateInfo, getUser, getToken, Logout} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   
@@ -88,45 +88,47 @@ export default function Profile(): HTMLElement {
   email.textContent = 'email@example.com';
   email.className = 'text-sm font-bold bg-green-500 rounded-lg w-[200px] hover:bg-green-600 py-2';
   userSection.appendChild(username);
-  userSection.appendChild(email);
-  
-  // Modifier l'email de l'utilisateur
-  email.onclick = () => {
-    const popup = createChangeEmail(async (password, newEmail) => {
-      updateInfo(password, 'email', newEmail)
-        .then((res) => {
-          alert('Email updated successfully!');
-          console.log('Update response:', res);
-          navigate('/profil');
-        })
-        .catch(err => {
-          alert('Error changing email.');
-          console.error(err);
-        });
-  });
-    document.body.appendChild(popup);
-  };
+  if (getUser().type !== 'guest'){
+    userSection.appendChild(email);
+    
+    // Modifier l'email de l'utilisateur
+    email.onclick = () => {
+      const popup = createChangeEmail(async (password, newEmail) => {
+        updateInfo(password, 'email', newEmail)
+          .then((res) => {
+            alert('Email updated successfully!');
+            console.log('Update response:', res);
+            navigate('/profil');
+          })
+          .catch(err => {
+            alert('Error changing email.');
+            console.error(err);
+          });
+    });
+      document.body.appendChild(popup);
+    };
 
-  // Modifier mot de passe
-  const changePass = document.createElement('button');
-  changePass.textContent = 'Change the password';
-  changePass.className = 'text-sm font-bold text-white bg-purple-400 py-2 rounded-lg  w-[200px] hover:bg-purple-500';
-  userSection.appendChild(changePass);
-	changePass.onclick = () => {
-		const popup = createChangePassword(async (oldPassword, newPassword) => {
-			updateInfo(oldPassword, 'password', newPassword)
-				.then((res) => {
-					alert('Password updated successfully!');
-					console.log('Update response:', res);
-				})
-				.catch(err => {
-					alert('Error changing password.');
-					console.error(err);
-				});
-	});
+    // Modifier mot de passe
+    const changePass = document.createElement('button');
+    changePass.textContent = 'Change the password';
+    changePass.className = 'text-sm font-bold text-white bg-purple-400 py-2 rounded-lg  w-[200px] hover:bg-purple-500';
+    userSection.appendChild(changePass);
+    changePass.onclick = () => {
+      const popup = createChangePassword(async (oldPassword, newPassword) => {
+        updateInfo(oldPassword, 'password', newPassword)
+          .then((res) => {
+            alert('Password updated successfully!');
+            console.log('Update response:', res);
+          })
+          .catch(err => {
+            alert('Error changing password.');
+            console.error(err);
+          });
+    });
 
-    document.body.appendChild(popup);
-  };
+      document.body.appendChild(popup);
+    };
+  }
   // Supprimer le compte
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = 'Delete account';
@@ -136,26 +138,50 @@ export default function Profile(): HTMLElement {
   userSection.appendChild(deleteBtn);
 
   deleteBtn.onclick = () => {
-  const popup = createDeleteAccount(async () => {
-    try {
-      // 👉 Exemple de requête DELETE vers ton backend :
-      const response = await fetch('/api/user/delete', {
-        method: 'DELETE',
-        credentials: 'include',
-      });
+   if (getUser().type !== 'guest'){
+    const popup = createDeleteAccount(async () => {
+      try {
+        // 👉 Exemple de requête DELETE vers ton backend :
+        const response = await fetch('/api/user/delete', {
+          method: 'DELETE',
+          credentials: 'include',
+        });
 
-      if (!response.ok) throw new Error('Failed to delete account');
+        if (!response.ok) throw new Error('Failed to delete account');
 
-      console.log('Account deleted successfully!');
-      navigate('/'); // Retour à la home
+          
+        console.log('Account deleted successfully!');
+        navigate('/'); // Retour à la home
+      } catch (err) {
+        console.error(err);
+        alert('Error deleting account.');
+      }
+    });
+    // Affiche la popup par-dessus tout :
+    document.body.appendChild(popup);
+  }
+  else{
+    try{
+     Logout()
+			.then((response) => {
+				if (response?.ok) {
+					// Supprimer les infos d'utilisateur
+					localStorage.removeItem("token");
+					localStorage.removeItem("user");
+					console.log("go to logout");
+					navigate("/");
+				} else
+					alert("Erreur lors de la déconnexion");
+			})
+			.catch((err) => {
+				console.error("Erreur de connexion au serveur :", err);
+				alert("Erreur lors de la déconnexion");
+			});
     } catch (err) {
-      console.error(err);
-      alert('Error deleting account.');
-    }
-  });
-
-  // Affiche la popup par-dessus tout :
-  document.body.appendChild(popup);
+        console.error(err);
+        alert('Error deleting account.');
+      }
+  }
   };
 
   // Ajout des sections principales
