@@ -100,11 +100,11 @@ export async function verifyCode(request, reply) {
 	const { code, id, name, type } = request.user;
 	const codeToCompare = await getFromTable(id, name);
 	if (codeToCompare === undefined)
-		return reply.code(401).send({ error: 'Unauthorized (verifyCode)' });
+		return reply.code(400).send({ error: 'Unauthorized (verifyCode)' });
 
 //////////////////////////// DECOMMENTER POUR ACTIVER LE 2FA !!!!!!
 //	if (code !== codeToCompare.code)
-//		return reply.code(401).send({error : 'bad code. Retry !'});
+//		return reply.code(400).send({error : 'bad code. Retry !'});
 ///////////////////////////////////////////////////////////////////
 
 	// revocation de l'ancien accessToken

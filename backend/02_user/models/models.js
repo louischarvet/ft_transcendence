@@ -99,7 +99,6 @@ async function deleteUserInTable(table, userName) {
 
 // Supprimer les registered pending depuis plus de 15 minutes
 export async function deletePendingRegistered(time) {
-	console.log("############# deletePendingRegistered\n");
 	await db.run(`DELETE FROM registered WHERE status = ? AND created_at <= ?`,
 		[ 'pending', time ]
 	);

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
 	updateStatsWinner, updateStatsLoser, deleteUserInTable, getUserTournament} from '../models/models.js'
-import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
 import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
@@ -11,12 +11,11 @@ import path from 'path';
 const secureCookieOptions = {
 	httpOnly: true,
 	secure: true,
-	sameSite: 'Strict' //?
+	sameSite: 'Strict'
 };
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken')
-//		.clearCookie('2fa')
 		.clearCookie('refreshToken');
 }
 
@@ -35,15 +34,25 @@ export async function createGuest(request, reply) {
 
 	// possiblement foireux si creation en tant que P1 avec tmp==true -> pas de token
 	const user = await getUserByName('guest', name);
+	user.verified = true;
+
+	clearCookies(reply);
+
 	let token;
 	if (!tmp) {
-		const response = await generateJWT(user);
-		const jsonRes = await response.json();
-		token = jsonRes.token;
+		const { accessToken, refreshToken } = await generateJWT(user);
+		reply.setCookie('accessToken', accessToken, {
+			...secureCookieOptions,
+			maxAge: 1800
+		})
+		.setCookie('refreshToken', refreshToken, {
+			...secureCookieOptions,
+			maxAge: 604800,
+//			path: '/api/session/refresh'
+		})
 	} else
 		token = undefined;
 
-	console.log("####GUEST\n", user, "####\n");
 	return reply.code(201).send({
 		user,
 		token,
@@ -110,6 +119,8 @@ export async function logIn(request, reply) {
 
 	const exists = await getUserByName('registered', name);
 
+	clearCookies(reply);
+	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
 	else if (exists.status !== 'logged_out')
@@ -122,16 +133,27 @@ export async function logIn(request, reply) {
 		delete user.hashedPassword;
 		delete user.email;
 		delete user.telephone;
+		
+		user.verified = true;
 
-		const token = tmp == true ? undefined : await generateJWT(user);
+		const { accessToken, refreshToken } = await generateJWT(user);
 		const body = {
 			user: user,
-			token: token,
 			message: 'User ' + name + ' available.',
 		};
-		return reply.code(201).send(body);
+		return reply.code(201)
+			.setCookie('accessToken', accessToken, {
+				...secureCookieOptions,
+				maxAge: 1800
+			})
+			.setCookie('refreshToken', refreshToken, {
+				...secureCookieOptions,
+				maxAge: 604800,
+//				path: '/api/auth/refresh'
+			})
+			.send(body);
 	} else
-		return reply.code(401).send({ error: 'Bad password' });
+		return reply.code(400).send({ error: 'Bad password' });
 }
 
 // Route PUT /logout
@@ -140,9 +162,6 @@ export async function logOut(request, reply) {
 //	console.log("####Function logOut called:\n");
 	const revRes = await revokeJWT(request.headers.authorization); ///////
 	if (revRes.status == 200) {
-		//! ajout le 17/09/2025
-		//! nom de la table "guests" au lieu de "guest"
-//		console.log("chek type : ", request.user.type, "\n");
 		if (request.user.type == "guest")
 			deleteUserInTable(request.user.type, request.user.name);
 		else
@@ -181,28 +200,21 @@ export async function deleteUser(request, reply) {
 
 // Route PUT /update
 export async function updateInfo(request, reply) {
-	console.log("####Function updateInfo called:\n");
-	//! ajout le 17/09/2025	
 	const currentUser = request.user;
-	if (currentUser)
-		reply.code(401).send( { error : 'User not Authentified'});
-		
-	console.log("currentUser : ", currentUser, "\n");
-
 	const body = request.body;
-	const { name, password, toUpdate, newValue } = body;
+	const { name, password, toUpdate, newValue } = body; // inutile ! schema !
 	if (!body || !name || !password || !toUpdate || !newValue)
-		reply.code(401).send( { error : 'Need all infos in body caca'});
+		reply.code(400).send( { error : 'Need all infos in body caca'});
 	console.log();
 	//! modifié le 17/09/2025
 	const user = await getUserByName('registered', currentUser.name);
 	//! ajout le 17/09/2025
 	//TODO VERIFIER name et user
 	if (!user || user.name != name)
-		reply.code(401).send( { error : 'User not found'});
+		reply.code(400).send( { error : 'User not found'});
 
 	if (!await bcrypt.compare(password, user.hashedPassword))
-		return reply.code(401).send({ error: 'Bad password' });
+		return reply.code(400).send({ error: 'Bad password' });
 	
 	//! ajout le 17/09/2025
 	//! pour modifier le mot de passe
@@ -211,28 +223,16 @@ export async function updateInfo(request, reply) {
 	const val = toUpdate === 'password' ?
 		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
 
-	// verifier si le nom existe deja
-	//! pour modifier le name
-	// if (toUpdate === 'name'){
-	// 	if (await getUserByName('registered', newValue))
-	// 		return reply.code(401).send({ error: 'Name is already taken' });
-		
-	// 	if (!await checkNameFormat(newValue))
-	// 		return reply.code(401).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
-		
-	// 	await updateValue('registered', col, currentUser.name, val);
-	// }
-
 	//! pour modifier le mail
 	if (toUpdate === 'email'){
-		if (!await checkEmailFormat(newValue))
-			return reply.code(401).send({ error: 'Email format is incorrect. It must be a valid email address.' });
+		if (!await checkEmailFormat(newValue)) // inutile ! schema !
+			return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 	}
 
 	//! pour modifier le telephone
 	if (toUpdate === 'telephone'){
-		if (!await checkPhoneFormat(newValue))
-			return reply.code(401).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
+		if (!await checkPhoneFormat(newValue)) // inutile ! schema !
+			return reply.code(400).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
 	}
 
 	//! ajout le 18/09/2025
@@ -255,7 +255,7 @@ export async function updateAvatar(request, reply) {
 	const user = await getUserByName('registered', request.user.name);
 
 	if (!user)
-		return reply.code(401).send({ error: 'Unauthorized' });
+		return reply.code(400).send({ error: 'Unauthorized' });
 
 	const data = await request.file();
 	if (!data)
@@ -291,15 +291,15 @@ export	async function fetchUserByIdToken(request, reply){
 
 	const user = request.user;
 	if (!user)
-		return reply.code(401).send({ error : 'Bad Token'});
+		return reply.code(400).send({ error : 'Bad Token'}); // inutile
 
 	const userId = user.id;
 	if (!userId)
-		return reply.code(401).send({ error : 'Id of user required'});
+		return reply.code(400).send({ error : 'Id of user required'}); // inutile
 
 	const type = user.type;
 	if (!type)
-		return reply.code(401).send({ error : 'Type of user required'});
+		return reply.code(400).send({ error : 'Type of user required'}); // inutile
 
 	const userInfos = await getUserById(type, userId);
 	if (!userInfos)
@@ -319,11 +319,11 @@ export	async function fetchUserByIdToken(request, reply){
 export	async function fetchUserById(request, reply){
 	const user = request.params;
 	if (!user)
-		return reply.code(401).send({ error : 'Need param'});
+		return reply.code(400).send({ error : 'Need param'});
 	//! ajout le 17/09/2025
 	const userId = request.params.id;
 	if (!userId)
-		return reply.code(401).send({ error : 'Id of user required'});
+		return reply.code(400).send({ error : 'Id of user required'});
 
 	const userInfos = await getUserById('registered', userId);
 	if (!userInfos)
@@ -343,7 +343,7 @@ export	async function fetchUserById(request, reply){
 export async function getGuestById(request, reply) {
 	const userId = request.params.id;
 	if (!userId)
-		return reply.code(401).send({ error : 'Id of user required'});
+		return reply.code(400).send({ error : 'Id of user required'});
 
 	const userInfos = await getUserById('guest', userId);
 	if (!userInfos)
@@ -360,18 +360,16 @@ export async function addFriend(request, reply) {
 
 	//! ajout le 09/06/2025
 	const currentUser = request.user;
-	// if (!currentUser)
-	// 	return reply.code(401).send({ error : 'Bad Token'});
 	if (currentUser.type !== 'registered')
-		return reply.code(401).send({ error: 'Only registered users can add friends' });
+		return reply.code(400).send({ error: 'Only registered users can add friends' });
 	
 	const user = await getUserByName('registered', currentUser.name);
 	if (!user) 
-		return reply.code(401).send({ error: 'User not found' });
+		return reply.code(400).send({ error: 'User not found' });
 
 	const { friendName } = request.params;
 	if (friendName === undefined)
-		return reply.code(401).send({ error: 'friendName is missing' });
+		return reply.code(400).send({ error: 'friendName is missing' });
 
 	const friend = await getUserByName('registered', friendName);
 	if (!friend) 

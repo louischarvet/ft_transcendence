@@ -48,19 +48,13 @@ export async function generate(request, reply) {
 
     // Access token
     const accessToken = await generateAccess(server.jwt.sign, name, type, id, jwti, verified);
-    console.log("####################### ACCESS TOKEN\n", accessToken,
-                "\n####################################\n");
 
     let message, refreshToken;
     if (verified === true) {
         // Refresh token
         refreshToken = await generateRefresh(server.jwt.sign, name, type, id, jwti);
-        console.log("###################### REFRESH TOKEN\n", refreshToken,
-                "\n####################################\n");
 
-//    console.log("################# DB\n", server.db,
-//                "\n####################\n");
-    // Garder en db le jwtid du refresh token
+        // Garder en db le jwtid du refresh token
         server.db.refresh.insert(jwti, id);
         message = 'Access and refresh tokens generated.';
     } else
@@ -68,15 +62,6 @@ export async function generate(request, reply) {
 
     return reply
         .code(200)
-//        .setCookie('accessToken', accessToken, {
-//            ...secureCookieOptions,
-//            maxAge: 1800
-//        })
-//        .setCookie('refreshToken', refreshToken, {
-//            ...secureCookieOptions,
-//            maxAge: 604800,
-//            path: '/api/auth/refresh'
-//        })
         .send({
             accessToken: accessToken,
             refreshToken: refreshToken,
@@ -97,25 +82,21 @@ export async function authenticate(db, request, reply) {
 	}
     try {
         const decoded = await request.jwtVerify(accessToken);
-        //        console.log("################################ DECODED\n", decoded,
-        //                    "\n########################################\n");
+
         const revoked = await db.revokedAccess.get(decoded.jwti);
-//        console.log("######### REVOKED: ", revoked);
         if (revoked !== undefined)
-            return reply.code(403).send({ error: 'Access token is revoked.' });
+            return reply.code(400).send({ error: 'Access token is revoked.' }); // 403 ?
 
         delete decoded.iat;
         delete decoded.exp;
-//        if ((request.body.from2fa && decoded.verified === true)
-//            || (request.body.from2fa === undefined && decoded.verified === false))
-//            return reply.code(403).send({ message: 'Forbidden access.' });
+
         return reply.code(200).send(decoded); /////////////
     } catch (err) {
         console.log("authenticate ERROR: ", err);
         if (err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED')
             return reply.code(401).send({ error: 'Expired access token.' });
         else
-            return reply.code(403).send({ error: 'Invalid access token.' });
+            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
     }
 }
 
@@ -168,9 +149,9 @@ export async function refresh(db, request, reply) {
     } catch (err) {
         console.log("refresh ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED') // bad code !!!
-            return reply.code(401).send({ error: 'Expired refresh token.' });
+            return reply.code(403).send({ error: 'Expired refresh token.' });
         else // must relog
-            return reply.code(403).send({ error: 'Invalid refresh token.' });
+            return reply.code(403).send({ error: 'Invalid refresh token.' }); // 403 ?
     }
 }
 
@@ -188,10 +169,12 @@ export async function deleteToken(db, request, reply) {
 
         const { id, jwti, exp } = decodedAccess;
         const refreshRef = await db.refresh.get(jwti, id);
-        console.log("############### TMP\n", tmp,
-                    "\n###################\n");
+
         if (refreshRef === undefined)
-            return reply.code(403).send({ error: 'Obsolete refresh token.' });
+            return reply.code(403).send({
+                ...decoded,
+                error: 'deleteToken: Obsolete refresh token.'
+            });
 
         await db.refresh.erase(jwti, id);
         // revoke access !
@@ -201,8 +184,8 @@ export async function deleteToken(db, request, reply) {
     } catch (err) {
         console.log("delete ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED') // must relog
-            return reply.code(401).send({ error: 'Expired refresh token.' });
+            return reply.code(403).send({ error: 'Expired refresh token.' });
         else // must relog
-            return reply.code(403).send({ error: 'Invalid refresh token.' });
+            return reply.code(403).send({ error: 'Invalid refresh token.' }); // 403 ?
     }
 }

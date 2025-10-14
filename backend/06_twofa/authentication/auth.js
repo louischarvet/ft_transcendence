@@ -17,7 +17,7 @@ export async function authenticateJWT(request, reply) {
 //	console.log("//// body\n", body);
 	const token = request.headers.authorization;
 	if (!token)
-		return reply.code(401).send({ error: 'Unauthorized: No token provided' });
+		return reply.code(400).send({ error: 'Unauthorized: No token provided' }); // 401 ?
 	console.log("#################### TWOFA auth\n", token,
 				"\n###############################\n");
 	const authRes = await fetch('http://session-service:3000/authenticate', {
@@ -30,14 +30,16 @@ export async function authenticateJWT(request, reply) {
 	const data = await authRes.json();
 	console.log("############################ TWOFA auth DATA:\n", data,
 				"\n#############################################\n");
+	if (data.verified === true)
+		return reply.code(403).send({ error: 'User already verified.' });
 	if (data.error)
-		return reply.code(401).send({ error: data.error });
+		return reply.code(authRes.status).send({ error: data.error });
 	request.user = data;
 }
 
 export async function revokeJWT(token) {
 	if (!token)
-		return { status: 401, error: 'Unauthorized: No token provided' };
+		return { status: 400, error: 'Unauthorized: No token provided' }; // 401 ?
 	const revRes = await fetch('http://session-service:3000/revoke', {
 		method: 'DELETE',
 		headers: {

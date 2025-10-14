@@ -10,18 +10,12 @@ export async function authenticateJWT(request, reply) {
             'Authorization': request.headers.authorization
         }
     });
-
     const data = await authRes.json();
-    	if (data.error)
-    		return reply.code(401).send({ error: data.error });
+	if (data.verified === false)
+		return reply.code(400).send({ error: 'User not verified.' });
+    if (data.error)
+        return reply.code(authRes.status).send({ error: data.error });
 
-    let currentuser;
-    if (authRes.ok)
-      currentuser = data.user;
-
-    // if (!authRes.ok || !currentuser)
-    //   return reply.code(401).send({ error: 'Unauthorized' });
-
-    request.user = currentuser;
+    request.user = data;
 //    console.log("Utilisateur attaché à la request :", request.user);
 }

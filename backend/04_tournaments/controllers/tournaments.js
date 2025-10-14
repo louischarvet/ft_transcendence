@@ -217,7 +217,7 @@ async function addNewPlayerToTournament(tournamentId, playerId, playerType) {
 export async function launchTournament(request, reply) {
 	const user = request.user;
 	if (!user)
-		return reply.code(403).send({ error: 'Only logged-in users can create a tournament' });
+		return reply.code(400).send({ error: 'Only logged-in users can create a tournament' });
 
 	const body = request.body;
 	if (!body)
@@ -255,7 +255,7 @@ export async function joinTournamentSession(request, reply){
 	
 	const user = request.user;
 	if (!user)
-		return reply.code(403).send({ error: 'Only logged-in users can join a tournament' });
+		return reply.code(400).send({ error: 'Only logged-in users can join a tournament' });
 	
 	const tournament = await getTournament(tournamentId);
 	if (!tournament)

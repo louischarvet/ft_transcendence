@@ -31,15 +31,19 @@ export async function getMatchByUserID(userID) {
 // Fonction pour inserer un match dans la table history
 export async function insertInHistory(match) {
 	const { id, p1_id, p1_type, scoreP1, p2_id, p2_type,
-		scoreP2, winner_id, created_at, tournament_id } = match;
+		scoreP2, winner_id, loser_id, created_at } = match;
+	let { tournament_id } = match;
+	tournament_id = tournament_id === undefined ? 0 : tournament_id;
 //	const time = await Math.floor( await Date.now() / 1000 );
 	const date = Date().toLocaleString('fr-FR');
 	const shortDate = date.split(" GMT")[0];
 	console.log("############## SHORTDATE:", shortDate);
 	await db.run(
 		`INSERT INTO history(id, p1_id, p1_type, scoreP1, p2_id, p2_type,
-		scoreP2, winner_id, created_at, ended_at, tournament_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		[ id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2, winner_id, created_at, shortDate, tournament_id ]
+		scoreP2, winner_id, loser_id, created_at, ended_at, tournament_id)
+		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		[ id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2, winner_id,
+			loser_id, created_at, shortDate, tournament_id ]
 	);
 
 	return (await db.get(`SELECT * FROM history WHERE p1_id = ? AND p1_type = ? AND p2_id = ?

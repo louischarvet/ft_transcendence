@@ -100,7 +100,7 @@ export async function getHistory(request, reply) {
 	if (userID === undefined)
 		return reply.code(400).send({ error: 'No ID in params.' });
 	else if (!(/^[0-9]+$/.test(userID)))
-		return reply.code(403).send({ error: 'Invalid ID format.' });
+		return reply.code(400).send({ error: 'Invalid ID format.' });
 
 	const history = await getHistoryByUserID(userID);
 	return reply.code(200).send(history);
