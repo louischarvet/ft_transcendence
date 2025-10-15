@@ -333,7 +333,7 @@ export async function joinTournamentRegistered(request, reply){
 	//if (updatedTournament.remainingPlaces  === 0)
 	//	updatedTournament = await startTournamentInternal(updatedTournament.id);
 
-	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
+	return reply.code(200).send({ user: player2, message: 'Joined tournament' });
 	
 }
 
@@ -375,7 +375,7 @@ export async function joinTournamentGuest(request, reply){
 	//if (updatedTournament.remainingPlaces  === 0)
 	//	updatedTournament = await startTournamentInternal(updatedTournament.id);
 
-	return reply.code(200).send({ tournament: updatedTournament, message: 'Joined tournament' });
+	return reply.code(200).send({ user: player2, message: 'Joined tournament' });
 	
 }
 
@@ -482,7 +482,7 @@ export async function startTournament(request, reply) {
 	for (let i = 0; i < tournament.nbPlayersTotal; i++){
 		if (rankedUsers[i])
 			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
-		if (countIa >= 0 ){
+		if (countIa > 0 ){
 			const { id, type } = { id: 0, type: 'ia' };
 			finalPlayers.push(id.toString() + ':' + type.toString());
 			countIa--;

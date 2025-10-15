@@ -756,7 +756,7 @@ export default class PgGui {
         playerText.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
         playerText.width = "100%";
         playerText.height = "50px";
-        playerText.top = `${this.tournament.playersScrollViewer.players.length * 50 + 80}px`;
+        playerText.top = `${this.tournament.playersScrollViewer.players.length * 50}px`;
         playerText.left = "10px";
         playerText.fontSize = 28 + "px";
         playerText.color = "white";
@@ -764,7 +764,7 @@ export default class PgGui {
       this.tournament.playersScrollViewer.players.push(playerText);
       this.tournament.playersScrollViewer.playersBlock.height = `${this.tournament.playersScrollViewer.players.length * 55}px`;
       this.tournament.playersScrollViewer.playersBlock.addControl(playerText);
-      this.tournament.numberOfAI.text = `Number of AI: ${this.currentTournament.max_players - this.tournament.playersScrollViewer.players.length}`;
+      this.tournament.numberOfAI.text = `Number of AI: ${this.currentTournament.nbPlayersTotal - this.tournament.playersScrollViewer.players.length - 1}`;
     };
 
     const resetplayersButton = Button.CreateSimpleButton("resetplayersButton", "Reset Players"); {
@@ -1178,7 +1178,7 @@ export default class PgGui {
       });
       nextMatchButton.onPointerClickObservable.add(() => {
         if (this.currentTournament == null) return;
-        this.currentMatch = this.currentTournament.matches[0];
+        this.currentMatch = this.currentTournament.matchs[0];
 
         this.result.visibility(false);
         this.startedType = "tournament";

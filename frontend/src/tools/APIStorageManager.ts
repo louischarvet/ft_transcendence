@@ -297,7 +297,8 @@ export async function verifyTwoFactorCode(code: string) {
 	});
 	const json = await response.json();
 	console.log("verify2fa -> ", json);
-	if (json.token) {
+	if (json.user && json.token) {
+		setUser(json.user);
 		setToken(json.token);
 		return true;
 	}
@@ -387,9 +388,9 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 
 export type Tournament = {
 	id: number,
-	matches: Match[],
+	matchs: Match[],
 	nb_players: number,
-	max_players: number,
+	nbPlayersTotal: number,
 	created_at: string
 }
 
