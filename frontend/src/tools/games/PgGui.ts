@@ -629,6 +629,7 @@ export default class PgGui {
 
     const switchToPlayersSetting = (nbOfPlayers: number) => {
       launchTournament(nbOfPlayers).then((tournament) => {
+        console.log(tournament);
         if (tournament == null) return;
         this.currentTournament = tournament;
       });
@@ -694,6 +695,7 @@ export default class PgGui {
       });
       addGuestButton.onPointerClickObservable.add(() => {
         // Add Guest player
+        console.log("Add Guest");
         if (this.currentTournament == null) return;
         joinTournamentAsGuest(this.currentTournament.id).then((player) => {
           if (player == null) return;

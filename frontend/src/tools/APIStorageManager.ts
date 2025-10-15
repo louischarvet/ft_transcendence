@@ -353,7 +353,8 @@ export async function launchTournament(nbPlayers: number) {
 	});
 	const data = await res.json();
 	if (data.error) return null;
-	return data.tournament as Tournament;
+	console.log("launchTournament data -> ", data);
+	return data.Tournament as Tournament;
 }
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
@@ -376,10 +377,11 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 
 	const res = await fetch(`/api/tournament/jointournamentguest/${tournamentId}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json', 'Authorization': token }
+		headers: { 'Authorization': token }
 	});
 	const data = await res.json();
 	if (data.error) return null;
+	console.log("joinTournamentAsGuest data -> ", data);
 	return { id: data.user.id, name: data.user.name };
 }
 
@@ -397,7 +399,7 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 
 	const res = await fetch(`/api/tournament/starttournament/${tournamentId}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json', 'Authorization': token }
+		headers: { 'Authorization': token }
 	});
 	const data = await res.json();
 	if (data.error) return null;

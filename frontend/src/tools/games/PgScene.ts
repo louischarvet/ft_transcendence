@@ -88,10 +88,10 @@ export default class PgScene {
           this.updateBallPosition(positions.ball);
           this.updatePaddlePosition("left", positions.paddleLeft);
           this.updatePaddlePosition("right", positions.paddleRight);
-          this.gui.updateSpeed(speed);
+          this.gui.panel.speed.update(speed);
           if (scores) {
-            this.gui.updateScore("left", scores.left);
-            this.gui.updateScore("right", scores.right);
+            this.gui.score.update("left", scores.left);
+            this.gui.score.update("right", scores.right);
           }
           if (ballDirection)
             this.triggerCollisionEffect(new Vector3(ballDirection.x, 0, ballDirection.y));
@@ -99,9 +99,9 @@ export default class PgScene {
         showResult: (leftScore: number, rightScore: number) => {
           this.gameStarted = false;
           this.gameStartTime = 2000;
-          this.gui.updateScore("left", leftScore);
-          this.gui.updateScore("right", rightScore);
-          this.gui.showResult();
+          this.gui.score.update("left", leftScore);
+          this.gui.score.update("right", rightScore);
+          this.gui.result.show();
         }
       },
       {
@@ -294,8 +294,8 @@ export default class PgScene {
         this.particles.font.maxSize = initFontParticlesMaxSize + t * 0.1;
         if (cinematicElapsedTime >= cinematicDuration) {
           cinematicEndUp = true;
-          this.gui.scoreVisibility(true);
-          this.gui.panelVisibility(true);
+          this.gui.score.visibility(true);
+          this.gui.panel.visibility(true);
         }
         return;
       }
@@ -315,18 +315,18 @@ export default class PgScene {
 
       // Escape or Space to pause
       if (this.keys["Escape"] || this.keys["Space"]) {
-        if (!this.gui.isPaused()) {
-          this.gui.pauseVisibility(true);
+        if (!this.gui.pause.isPaused()) {
+          this.gui.pause.visibility(true);
           this.game.pause();
         } else {
-          this.gui.pauseVisibility(false);
+          this.gui.pause.visibility(false);
           this.game.resume();
         }
         this.keys["Escape"] = false;
         this.keys["Space"] = false;
       }
 
-      if (!this.gui.isPaused()) {
+      if (!this.gui.pause.isPaused()) {
         this.game.resume();
       }
     });

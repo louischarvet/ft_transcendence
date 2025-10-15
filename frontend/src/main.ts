@@ -3,7 +3,6 @@ import './style.css';
 import Home from './pages/Home';
 // import SelectGame from './pages/SelectGame';
 import Pong from './pages/Pong';
-import Pong3D from './pages/Pong3D';
 import Blackjack from './pages/Blackjack';
 import Tournament from './pages/Tournament';
 import Profil from './pages/Profil';
@@ -17,7 +16,6 @@ defineRoutes([
 	{ path: '/2fa-verification', render: () => Home("2fa-verification") },
 	{ path: '/select-game', render: () => Home("select-game") },
 	{ path: '/pong', render: () => Pong() },
-	{ path: '/pong3d', render: () => Pong3D() },
 	{ path: '/blackjack', render: () => Blackjack() },
 	{ path: '/tournament', render: () => Tournament() },
 	{ path: '/profil', render: () => Profil() },
