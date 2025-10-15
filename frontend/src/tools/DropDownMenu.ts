@@ -10,6 +10,7 @@ export default function DropDownMenu() {
 		if (!connected)
 			return;
 
+	let UserCurrent = getUser();
 	wrapper.className = 'absolute top-5 right-0';
 
 	// BUTTON PRINCIPAL
@@ -37,20 +38,22 @@ export default function DropDownMenu() {
 
 	//checkConnectionGuest()
 	//	.then((connected) => {
-	if (getUser().type !== 'guest'){
-
+		
 	const friendButton = document.createElement('a');
 	friendButton.className = menuClassName;
 	friendButton.textContent = 'Friends';
-	menuSection1.appendChild(friendButton);
-
+	
 	const dropDownFriendList = document.createElement('div');
+	const friendsList: { name: string; status: string; picture?: string }[] = [];
+	const friendsListContainer = document.createElement('div');
+	if (getUser().type !== 'guest'){
+		menuSection1.appendChild(friendButton);
 	dropDownFriendList.className = 'hidden absolute top-0 right-40 mt-0.3 w-[220px] max-h-60 overflow-y-auto divide-y divide-white/10 rounded-xl bg-[#646cff8f] outline-1 -outline-offset-1 outline-white/10 transition transition-discrete';
 	friendButton.appendChild(dropDownFriendList);
 
-	const friendsList: { name: string; status: string; picture?: string }[] = [];
+	// const friendsList: { name: string; status: string; picture?: string }[] = [];
 
-	const friendsListContainer = document.createElement('div');
+	// const friendsListContainer = document.createElement('div');
 	friendsListContainer.className = 'py-1 flex flex-col';
 	dropDownFriendList.appendChild(friendsListContainer);
 
@@ -179,10 +182,10 @@ export default function DropDownMenu() {
 	const showFriendList = () => dropDownFriendList.classList.remove('hidden');
 	const hideFriendList = () => dropDownFriendList.classList.add('hidden');
 
-	friendButton.onmouseenter = showFriendList;
-	dropDownFriendList.onmouseenter = showFriendList;
-	friendButton.onmouseleave = hideFriendList;
-	dropDownFriendList.onmouseleave = hideFriendList;
+		friendButton.onmouseenter = showFriendList;
+		dropDownFriendList.onmouseenter = showFriendList;
+		friendButton.onmouseleave = hideFriendList;
+		dropDownFriendList.onmouseleave = hideFriendList;
 	}
 	dropdownMenu.appendChild(menuSection1);
 
@@ -205,7 +208,7 @@ export default function DropDownMenu() {
 					localStorage.removeItem("user");
 
 					// Vider liste amis et cacher menu
-					if (getUser().type !== 'guest'){
+					if (UserCurrent.type !== 'guest'){
 						friendsList.length = 0;
 						friendsListContainer.innerHTML = '';
 						dropDownFriendList.classList.add('hidden');
@@ -231,7 +234,7 @@ export default function DropDownMenu() {
 	document.addEventListener('click', (event) => {
 		if (!wrapper.contains(event.target as Node)) {
 			dropdownMenu.classList.add('hidden');
-			if (getUser().type !== 'guest')
+			if (UserCurrent.type !== 'guest')
 				dropDownFriendList.classList.add('hidden');
 		}
 	});
