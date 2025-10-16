@@ -22,7 +22,7 @@ export async function authenticateJWT(request, reply) {
 	const authRes = await fetch('http://session-service:3000/authenticate', {
 		method: 'GET',
 		headers: {
-			'Authorization': accessToken,
+			'Authorization': 'Bearer ' + accessToken,
 //			'Accept': 'application/json'
 		},
 	});

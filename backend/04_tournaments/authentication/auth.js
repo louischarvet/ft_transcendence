@@ -23,13 +23,11 @@ export async function authenticateJWT(request, reply) {
 		return reply.code(400).send({
 			error: 'Access token missing.'
 		});
-    if (!request.headers.authorization)
-		return reply.code(400).send({ error: 'Unauthorized: No token provided' }); // 401 ?
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
-            'Authorization': accessToken
+            'Authorization': 'Bearer ' + accessToken
         }
     });
     const data = await authRes.json();
