@@ -1,14 +1,18 @@
 import { navigate } from "../router";
-import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
+import { checkConnection, verifyTwoFactorCode, getUser, getTokenAcces} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
   checkConnection().then((connected) => {
-    if (connected)
+    if (connected){
+      console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
       navigate('/select-game');
+    }
   });
 
-  if (!getUser())
-      navigate('/');
+  if (!getUser() || !getTokenAcces()){
+    console.log("sort ici car par d'user en localstorage || pas de token access");
+    navigate('/');
+  }
 
   let code: string = '';
   

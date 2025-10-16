@@ -41,12 +41,13 @@ export async function createGuest(request, reply) {
 		const { accessToken, refreshToken } = await generateJWT(user);
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
+			path :'/',
 			maxAge: 1800
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
 			maxAge: 604800,
-//			path: '/api/session/refresh'
+			path: '/api/session/refresh'
 		})
 	}
 

@@ -10,7 +10,7 @@ export async function generateJWT(user) {
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(user)
 	});
-	const data = await genRes.json();
+	const data = await res.json();
 //	console.log("######## genRes\n", genRes, "#######\n");
 	return data;
 }

@@ -31,7 +31,7 @@ async function checkTokenStart(){
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         // Redirige vers la page de login si user pas trouver
-        navigate('/login');
+        navigate('/');
         return;
     }
   } catch (error) {
@@ -39,7 +39,7 @@ async function checkTokenStart(){
     // En cas d’erreur réseau suppression token et redirection
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    navigate('/');
   }
 }
 

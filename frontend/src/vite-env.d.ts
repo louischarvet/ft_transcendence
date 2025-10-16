@@ -13,7 +13,6 @@ declare module '*.webp';
 
 // autoriser les moedles 3D Babylon.js
 declare module '*.glb';
-declare module '*.gltf';
 
 // autoriser les sons ou autres formats si on veux ajouter du son :)
 declare module '*.mp3';

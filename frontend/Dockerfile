@@ -10,5 +10,8 @@ COPY . .
 # Expose Vite port
 EXPOSE 5173
 
+# vider le cach
+RUN rm -rf node_modules/.vite dist
 # CMD en forme exec JSON correcte pour Alpine et Vite
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
