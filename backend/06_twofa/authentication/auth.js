@@ -14,22 +14,19 @@ export async function generateJWT(user) {
 }
 
 export async function authenticateJWT(request, reply) {
-//	console.log("//// body\n", body);
-	const token = request.headers.authorization;
-	if (!token)
-		return reply.code(400).send({ error: 'Unauthorized: No token provided' }); // 401 ?
-	console.log("#################### TWOFA auth\n", token,
-				"\n###############################\n");
+	const { accessToken } = request.cookies;
+	if (accessToken === undefined)
+		return reply.code(400).send({
+			error: 'Access token missing.'
+		});
 	const authRes = await fetch('http://session-service:3000/authenticate', {
 		method: 'GET',
 		headers: {
-			'Authorization': token,
+			'Authorization': accessToken,
 //			'Accept': 'application/json'
 		},
 	});
 	const data = await authRes.json();
-	console.log("############################ TWOFA auth DATA:\n", data,
-				"\n#############################################\n");
 	if (data.verified === true)
 		return reply.code(403).send({ error: 'User already verified.' });
 	if (data.error)

@@ -1,13 +1,16 @@
 // ./authentication/auth.js
 
 export async function authenticateJWT(request, reply) {
-    console.log("authenticateJWT");
-
+	const { accessToken } = request.cookies;
+	if (accessToken === undefined)
+		return reply.code(400).send({
+			error: 'Access token missing.'
+		});
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
-            'Authorization': request.headers.authorization
+            'Authorization': accessToken
         }
     });
     const data = await authRes.json();

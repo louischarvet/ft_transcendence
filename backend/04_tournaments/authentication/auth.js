@@ -18,17 +18,18 @@
 // }
 
 export async function authenticateJWT(request, reply) {
-    console.log("####authenticateJWT");
-
-	//! ajout 16/09/2025
-	//? dans le cas ou la requete n'a pas de token ou un token vide ou invalide
-	if (!request.headers.authorization)
+	const { accessToken } = request.cookies;
+	if (accessToken === undefined)
+		return reply.code(400).send({
+			error: 'Access token missing.'
+		});
+    if (!request.headers.authorization)
 		return reply.code(400).send({ error: 'Unauthorized: No token provided' }); // 401 ?
     // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
-            'Authorization': request.headers.authorization
+            'Authorization': accessToken
         }
     });
     const data = await authRes.json();
