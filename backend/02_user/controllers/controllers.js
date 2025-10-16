@@ -21,7 +21,6 @@ async function clearCookies(reply) {
 
 // rout POST /guest
 export async function createGuest(request, reply) {
-	console.log("####Function createGuest called:\n");
 	const guests = await getColumnFromTable('id', 'guest');
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
@@ -38,7 +37,6 @@ export async function createGuest(request, reply) {
 
 	clearCookies(reply);
 
-	let token;
 	if (!tmp) {
 		const { accessToken, refreshToken } = await generateJWT(user);
 		reply.setCookie('accessToken', accessToken, {
@@ -50,12 +48,10 @@ export async function createGuest(request, reply) {
 			maxAge: 604800,
 //			path: '/api/session/refresh'
 		})
-	} else
-		token = undefined;
+	}
 
 	return reply.code(201).send({
 		user,
-		token,
 		message: 'Guest created'
 	});
 }
@@ -64,11 +60,9 @@ export async function createGuest(request, reply) {
 export async function register(request, reply) {
 	const { name, password, email} = request.body;
 
-	console.log("In user register");
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
 
-	//! ajout le 17/09/2025
 	if (!await checkEmailFormat(email))
 		return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 
@@ -90,14 +84,13 @@ export async function register(request, reply) {
 	delete user.telephone;
 
 	// 2FA
-	console.log("SendCode:");
+	// temporary accessToken with verified == false
 	const { accessToken } = await sendCode({
 		name: name,
 		email: email,
 		id: user.id
 	});
 	
-	//!ajout le 17/09/2025
 	updateStatus('registered', name, 'pending');
 
 	clearCookies(reply);

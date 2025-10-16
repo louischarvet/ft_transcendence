@@ -39,9 +39,6 @@ async function generateRefresh(sign, name, type, id, jwti) {
 
 // POST /generate
 export async function generate(request, reply) {
-    console.log("############### generate:\n");
-    console.log("DB available in controller:", !!request.server.db);
-
     const { server } = request;
 	const { name, type, id, verified } = request.body;
     const jwti = crypto.randomUUID();
@@ -108,16 +105,14 @@ export async function refresh(db, request, reply) {
     const refreshToken = rawToken.split(' ')[1];
 
     const { server } = request;
- //   const { refreshToken } = cookies;
 
     if (!refreshToken) {
 		console.log('Missing token');
 		return reply.code(400).send({ error: 'Missing token' });
 	}
+    clearCookies(reply);
     try {
         const decoded = await request.jwtVerify(refreshToken);
-//        console.log("################################ DECODED\n", ...decoded,
-//                    "\n########################################\n");
 
         if (!await db.refresh.get(decoded.jwti, decoded.id)) // must delog
             return reply.code(403).send({ error: 'Obsolete refresh token.' });
@@ -147,7 +142,6 @@ export async function refresh(db, request, reply) {
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {
-        console.log("refresh ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED') // bad code !!!
             return reply.code(403).send({ error: 'Expired refresh token.' });
         else // must relog
