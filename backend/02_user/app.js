@@ -17,6 +17,9 @@ import { userSchema } from './schema/userSchema.js';
 import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
 
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
@@ -26,6 +29,11 @@ fastify.register(fastifyCors, {
     origin: true, // Réfléchit le domaine de la requête
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
 	allowedHeaders: ["Content-Type", "Authorization"],
+});
+
+fastify.register(fastifyStatic, {
+	root: path.join(process.cwd(), 'pictures'),
+	prefix: '/pictures/', // toutes les images seront accessibles via /pictures/nom_fichier
 });
 
 // Authentification par token

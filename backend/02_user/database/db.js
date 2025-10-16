@@ -20,7 +20,7 @@ export async function initDB(){
 			win_rate INTEGER NOT NULL DEFAULT 0,
 			tournament_wins INTEGER NOT NULL DEFAULT 0,
 			friends	TEXT,
-			wallet INTEGER NOT NULL DEFAULT 100,
+			wallet INTEGER NOT NULL DEFAULT 500,
 
 			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
 
@@ -44,7 +44,7 @@ export async function initDB(){
 			win_rate INTEGER NOT NULL DEFAULT 0,
 			tournament_wins INTEGER NOT NULL DEFAULT 0,
 			friends	TEXT,
-			wallet INTEGER NOT NULL DEFAULT 100,
+			wallet INTEGER NOT NULL DEFAULT 500,
 
 			picture TEXT NOT NULL DEFAULT "./pictures/BG.webp",
 
@@ -52,6 +52,7 @@ export async function initDB(){
 		);
 	`);
 
+	//! a delete
 	await db.exec(`UPDATE registered SET win_rate = 10 WHERE id = 3;`);
 
 	console.log('Database user initialized');

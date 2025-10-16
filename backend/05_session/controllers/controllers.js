@@ -158,8 +158,6 @@ export async function deleteToken(db, request, reply) {
 
     try {
         const decodedAccess = await request.jwtVerify(accessToken);
-        console.log("################################ DECODEDAccess\n", decodedAccess,
-                    "\n########################################\n");
 
         const { id, jwti, exp } = decodedAccess;
         const refreshRef = await db.refresh.get(jwti, id);

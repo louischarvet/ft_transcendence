@@ -36,7 +36,8 @@ export async function initDB() {
 			tournament_id	INTEGER NOT NULL,
 			round INTEGER DEFAULT 1,
 			matchs TEXT DEFAULT '',
-			players	TEXT DEFAULT ''
+			players	TEXT DEFAULT '',
+			statut TEXT DEFAULT 'started'
 		);
 	`);
 	return db;

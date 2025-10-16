@@ -3,11 +3,6 @@ import { generateSchema } from "../schema/generateSchema.js";
 import { generate, authenticate, refresh, deleteToken } from '../controllers/controllers.js'
 
 export async function sessionRoutes(fastify, options) {
-//    console.log("################### routes");
-//    console.log("######################## DB\n", fastify.db,
-//                "\n###########################\n");
-//    console.log("######################## JWT\n", fastify.jwt,
-//                "\n###########################\n");
 /////////////////////////////////////// Accessible depuis le service twofa
 
     // generer access + refresh tokens

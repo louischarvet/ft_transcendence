@@ -4,7 +4,7 @@ import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	updateStatsWinner, updateStatsLoser, deleteUserInTable, getUserTournament} from '../models/models.js'
 import { generateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';
-import { checkNameFormat, checkEmailFormat, checkPhoneFormat } from '../common_tools/checkFormat.js';	
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
 
@@ -116,7 +116,7 @@ export async function logIn(request, reply) {
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	else if (exists.status !== 'logged_out')
+	if (exists.status !== 'logged_out')
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
@@ -125,7 +125,6 @@ export async function logIn(request, reply) {
 		const user = await getUserByName('registered', name);
 		delete user.hashedPassword;
 		delete user.email;
-		delete user.telephone;
 		
 		user.verified = true;
 
@@ -173,8 +172,20 @@ export async function logOut(request, reply) {
 export async function deleteUser(request, reply) {
 	console.log("####Function deleteUser called:\n");
 
+	const user = request.user;
+	console.log("user", user);
 	//! ajout le 02/10/2025
 	//! verifier le token de l'user ?
+	const { password} = request.body;
+
+	const exists = await getUserByName('registered', user.name);
+	if (!exists)
+		return reply.code(400).send({ error: 'User is not in the database' });
+
+	const passwordMatch = await bcrypt.compare(password, exists.hashedPassword);
+	if (!passwordMatch)
+		return reply.code(401).send({ error: 'Bad password' });
+	
 	const revRes = await revokeJWT(request.headers.authorization);
 	if (revRes.status == 200) {
 		console.log("###request.user.type : ", request.user.type, "\n###");
@@ -193,51 +204,51 @@ export async function deleteUser(request, reply) {
 
 // Route PUT /update
 export async function updateInfo(request, reply) {
-	const currentUser = request.user;
-	const body = request.body;
-	const { name, password, toUpdate, newValue } = body; // inutile ! schema !
-	if (!body || !name || !password || !toUpdate || !newValue)
-		reply.code(400).send( { error : 'Need all infos in body caca'});
-	console.log();
-	//! modifié le 17/09/2025
-	const user = await getUserByName('registered', currentUser.name);
-	//! ajout le 17/09/2025
-	//TODO VERIFIER name et user
-	if (!user || user.name != name)
-		reply.code(400).send( { error : 'User not found'});
+	console.log("####Function updateInfo called:\n");
 
-	if (!await bcrypt.compare(password, user.hashedPassword))
-		return reply.code(400).send({ error: 'Bad password' });
+	const currentUser = await getUserByName('registered', request.user.name);
+	if (!currentUser)
+		return reply.code(401).send( { error : 'User not Authentified'});
+		
+	console.log("currentUser : ", currentUser, "\n");
+
+	const { password, toUpdate, newValue } = request.body;
+	if (!password || !toUpdate || !newValue)
+		return reply.code(401).send( { error : 'Need all infos in body'});
+
+	// Verif si schema ok
+	if (!['email', 'password'].includes(toUpdate))
+		return reply.code(400).send({ error: "Only email and password can be updated" });
 	
-	//! ajout le 17/09/2025
-	//! pour modifier le mot de passe
-	const col = toUpdate === 'password' ?
-		'hashedPassword' : toUpdate;
-	const val = toUpdate === 'password' ?
-		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
+	// Verif actuel passwrd
+	const passwordMatch = await bcrypt.compare(password, currentUser.hashedPassword);
+	if (!passwordMatch) 
+		return reply.code(401).send({ error: "Incorrect password" });
 
-	//! pour modifier le mail
-	if (toUpdate === 'email'){
-		if (!await checkEmailFormat(newValue)) // inutile ! schema !
-			return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
+
+	let columnToUpdate;
+	let valueToUpdate;
+
+	if (toUpdate === 'password') {
+		columnToUpdate = 'hashedPassword';
+		const salt = await bcrypt.genSalt();
+		valueToUpdate = await bcrypt.hash(newValue, salt);
+		if (!await checkPasswordFormat(newValue))
+			return reply.code(401).send({ error: "Incorrect password format" });
+	} else if (toUpdate === 'email'){
+		if (!await checkEmailFormat(newValue))
+			return reply.code(400).send({ error: "Invalid email format"});
+		columnToUpdate = toUpdate;
+		valueToUpdate = newValue;
 	}
 
-	//! pour modifier le telephone
-	if (toUpdate === 'telephone'){
-		if (!await checkPhoneFormat(newValue)) // inutile ! schema !
-			return reply.code(400).send({ error: 'Phone format is incorrect. It must be a valid phone number.' });
-	}
+	// Data mis a jour
+	const updatedUser = await updateValue('registered', columnToUpdate, currentUser.name, valueToUpdate);
+	if (updatedUser)
+		delete updatedUser.hashedPassword;
 
-	//! ajout le 18/09/2025
-	// newValue , name enleve
-	const newUser = await getUserByName('registered', newValue);
-	delete newUser.hashedPassword;
-	delete newUser.email;
-	delete newUser.telephone;
-
-	console.log("####\n");
 	return reply.code(200).send({
-		user: newUser,
+		user: updatedUser,
 		message: 'User info updated'
 	});
 }
@@ -269,7 +280,7 @@ export async function updateAvatar(request, reply) {
 	const buffer = await data.toBuffer();
 	fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `./pictures/${fileName}`;
+	const relativePath = `/pictures/${fileName}`;
 	await updateValue('registered', 'picture', user.name, relativePath);
 	
 	console.log("####\n");
@@ -298,10 +309,6 @@ export	async function fetchUserByIdToken(request, reply){
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 	delete userInfos.hashedPassword;
-	delete userInfos.email;
-	delete userInfos.telephone;
-	delete userInfos.friends;
-	delete userInfos.type;
 
 	return reply.code(200).send({
 		user: userInfos
@@ -324,7 +331,6 @@ export	async function fetchUserById(request, reply){
 
 	delete userInfos.hashedPassword;
 	delete userInfos.email;
-	delete userInfos.telephone;
 	delete userInfos.friends;
 
 	return reply.code(200).send({
@@ -349,10 +355,10 @@ export async function getGuestById(request, reply) {
 
 // Route POST /addfriend/(name)
 export async function addFriend(request, reply) {
-	console.log("####Function addFriend called:\n");
-
-	//! ajout le 09/06/2025
 	const currentUser = request.user;
+	if(request.params.friendName.length > 64)
+		return reply.code(401).send({ error: 'Invalid name' });
+
 	if (currentUser.type !== 'registered')
 		return reply.code(400).send({ error: 'Only registered users can add friends' });
 	
@@ -365,8 +371,8 @@ export async function addFriend(request, reply) {
 		return reply.code(400).send({ error: 'friendName is missing' });
 
 	const friend = await getUserByName('registered', friendName);
-	if (!friend) 
-		return reply.code(404).send({ error: 'User friend not found' });
+	if (!friend)
+		return reply.code(404).send({ error: 'Username not found' });
 
 	
 	let friendListString = user.friends || "";
@@ -378,33 +384,36 @@ export async function addFriend(request, reply) {
 	if (friendList.includes(String(friend.id)))
 		return reply.code(409).send({ error: 'Friend already in the list' });
 
-	const col = 'friends';
 	const val = friendListString + friend.id + ";";
 
 	//ajouter via la methode updateValue
-	await updateValue('registered', col, user.name, val);
+	await updateValue('registered', "friends", user.name, val);
 	console.log("####\n");
 
+	delete friend.hashedPassword;
+	delete friend.type;
+	delete friend.friends;
+
 	// renvoyer le profil user mis a jour!
-    return reply.code(200).send({ message: `Friend ${friendName} added.` });
+    return reply.code(200).send({newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
 // Route GET pour recuperer les profiles des amis
 export async function getFriendsProfiles(request, reply) {
 	const user = await getUserById('registered', request.user.id);
 	const { friends } = user;
-	
-	if (friends === undefined)
-		return reply.code(204).send({ message: "User has no friends :'(" });
+	if (friends === undefined || friends === null)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
 	else {
-//		console.log("friends : ", friends);
+		// console.log("friends : ", friends);
 		const friendsIDs = await friends.split(';').filter(p => p);
 		let friendsProfiles = new Array();
 		for (let i = 0, n = friendsIDs.length; i < n; i++) {
 			friendsProfiles[i] = await getUserById('registered', friendsIDs[i]);
+			if(!friendsProfiles[i])
+				continue;
 			delete friendsProfiles[i].hashedPassword;
 			delete friendsProfiles[i].email;
-			delete friendsProfiles[i].telephone;
 			
 			if (friendsProfiles[i] === undefined)
 				return reply.code(400).send({ error: 'Bad friend ID.' });
@@ -414,6 +423,40 @@ export async function getFriendsProfiles(request, reply) {
 			message: 'Friends profiles.'
 		});
 	}
+}
+
+export async function deleteFriend(request, reply) {
+	const friendId = request.body.id;
+	if (!friendId)
+		return reply.code(400).send({ error: 'Need friend id to delete' });
+
+	const friend = await getUserById('registered', friendId);
+	if (!friend)
+		return reply.code(404).send({ error: 'Friend user not found' });
+
+	const user = await getUserById('registered', request.user.id);
+	if (!user)
+		return reply.code(401).send({ error: 'User not authenticated' });
+
+	const { friends } = user;
+	if (!friends)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
+
+	const friendList = friends.split(";").filter(f => f);
+	console.log("friendList before delete:", friendList);
+
+	if (!friendList.includes(String(friend.id)))
+		return reply.code(409).send({ error: 'Friend not in the list' });
+
+	// Retirer le friend.id de la liste
+	const newFriendList = friendList.filter(id => id !== String(friend.id));
+
+	await updateValue('registered', "friends", user.name, newFriendList.join(";"));
+
+	return reply.code(200).send({
+		friends: newFriendList,
+		message: `Friend ${friend.name || friend.id} deleted successfully.`,
+	});
 }
 
 // Récupère le statut d'un utilisateur par son nom
@@ -466,16 +509,9 @@ export async function updateStats(request, reply) {
 		loser_type = p1_type;
 	}
 
-	// gagnant:
-	// 	match_wins++
-	//	wins_streak++
-	//	played_matches++
 	if (winner_id > 0)
 		await updateStatsWinner(winner_type, winner_id);
 
-	// perdant:
-	//	wins_streak = 0
-	//	played_matches++
 	if (loser_id > 0)
 		await updateStatsLoser(loser_type, loser_id);
 
@@ -503,8 +539,6 @@ export async function updateStats(request, reply) {
 
 // Route Get / tournaments
 export async function fetchUserTournament(request, reply) {
-	
-	console.log("####Function fetchUserTournament called:\n");
 	const listUsers = request.body.ArrayIdAndType;
 	if (!listUsers || listUsers.length === 0)
 		return reply.code(400).send({ error: 'List of users is required' });
@@ -526,7 +560,6 @@ export async function fetchUserTournament(request, reply) {
 	delete usersInfos.hashedPassword;
 	delete usersInfos.email;
 	delete usersInfos.friend_ship;
-	//console.log("\nIn service user function fetchUserTournament\n\t usersInfos : ", usersInfos, "\n");
 	return reply.code(200).send({
 		users: JSON.stringify(usersInfos),
 		message: 'Users found'

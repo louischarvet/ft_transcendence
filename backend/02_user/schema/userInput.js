@@ -60,14 +60,8 @@ export const updateSchema = {
 	$id: 'updateSchema',
 	body: {
 		type: 'object',
-		required: ['name', 'password', 'toUpdate', 'newValue'],
+		required: ['password', 'toUpdate', 'newValue'],
 		properties: {
-			name: {
-				type: 'string',
-				minLength: 1,
-				maxLength: 64,
-				pattern: '^[^<>{}"\'`]*$'
-			},
 			password: {
 				type: 'string',
 				minLength: 8,
@@ -76,7 +70,7 @@ export const updateSchema = {
 			},
 			toUpdate: {
 				type: 'string',
-				enum: ['picture', 'password', 'email', 'telephone']
+				enum: ['password', 'email']
 			},
 			newValue: {
 				type: 'string',
@@ -85,7 +79,7 @@ export const updateSchema = {
 				pattern: '^[^<>{}"\'`]*$'
 			}
 		},
-		additionalProperties: false
+		additionalProperties: false,
 	}
 }
 
@@ -99,6 +93,42 @@ export const guestTmp = {
 		additionalProperties: false
 	}
 }
+
+// modifier le 18/09/2025
+export const deleteSchema = {
+	$id: 'deleteSchema',
+	body: {
+		type: 'object',
+		required: ['password'],
+		properties: {
+			password: {
+				type: 'string',
+				minLength: 8,
+				maxLength: 128,
+				pattern: '^[^<>{}"\'`]*$'
+			},
+		},
+		additionalProperties: false
+	}
+}
+
+export const deleteFriendSchema = {
+	$id: 'deleteFriendSchema',
+	body: {
+		type: 'object',
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'string',
+				pattern: '^[0-9]+$',
+				minLength: 1,
+				maxLength: 10
+			},
+		},
+		additionalProperties: false
+	}
+}
+
 
 // export const userInput = {
 // 	$id: 'userInput',

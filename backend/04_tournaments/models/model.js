@@ -3,6 +3,11 @@ import { getDB } from '../common_tools/getDB.js';
 
 const db = await getDB();
 
+
+/******************/
+/*TABLE tournament*/
+/******************/
+
 //! ajout le 20/09/2025
 export async function createTournamentRow(nbPlayersTotal, creatorId) {
 
@@ -31,14 +36,6 @@ export async function startTournamentInternal(tournamentId) {
 	return await getTournament(tournamentId);
 }
 
-//ajoute un joueur a la db et enleve un joueur au nb places restantes
-export async function addPlayerToTournament(tournamentId, addPlayer) {
-	
-	const tmpStr = (await db.get(`SELECT players FROM tournament WHERE id = ?`, [tournamentId])).players + addPlayer;
-	await db.run(`UPDATE tournament SET players = ?, remainingPlaces = (remainingPlaces - 1) WHERE id = ?`, [tmpStr, tournamentId]);
-	return await getTournament(tournamentId);
-}
-
 // Récupère tous les tournois gagnés par un user
 export async function getTournamentsWonByUser(userId) {
     if (!Number.isInteger(userId) || userId <= 0)
@@ -46,6 +43,14 @@ export async function getTournamentsWonByUser(userId) {
 	// console.log(db.)
 	return await db.all( 'SELECT * FROM tournament WHERE winnerId = ?', [userId] );
 };
+
+//ajoute un joueur a la db et enleve un joueur au nb places restantes
+export async function addPlayerToTournament(tournamentId, addPlayer) {
+	
+	const tmpStr = (await db.get(`SELECT players FROM tournament WHERE id = ?`, [tournamentId])).players + addPlayer;
+	await db.run(`UPDATE tournament SET players = ?, remainingPlaces = (remainingPlaces - 1) WHERE id = ?`, [tmpStr, tournamentId]);
+	return await getTournament(tournamentId);
+}
 
 //! ajout le 22/09/2025
 //pour matchsevice ?!!
@@ -73,7 +78,16 @@ export async function addMatchesStringToTournament(tournamentId, matchesString){
 	return await getTournament(tournamentId);
 }
 
+/***************/
+/*TABLE history*/
+/***************/
+
 //!ajout le 29/09/2025
+
+export async function getHistoryTournament(tournamentId) {
+	return await db.get(`SELECT * FROM history WHERE id = ?`, [tournamentId]);
+}
+
 export async function addMatchesAndPlayersToHistory(tournamentId, matchesString, playersString){
 	const time = Math.floor(Date.now() / 1000);
 	await db.run(
@@ -81,8 +95,12 @@ export async function addMatchesAndPlayersToHistory(tournamentId, matchesString,
 		VALUES (?, ?, ?, ?)`,
 		[tournamentId, matchesString, playersString, time]
 	);
-	return await db.get(`SELECT * FROM history WHERE id = ?`, [tournamentId]);
+	return await getHistoryTournament(tournamentId);
 }
+
+/*************/
+/*TABLE round*/
+/*************/
 
 //!ajout le 01/10/2021
 export async function getRoundTable(tournamentId, roundNumber) {
@@ -98,8 +116,16 @@ export async function addDataRoundTable(tournamentId, roundNumber, matchsString,
 		`INSERT INTO round (tournament_id, round, matchs, players) VALUES (?, ?, ?, ?)`,
 		[tournamentId, roundNumber, matchsString, playersString]
 	);
-	return await db.get(
-		`SELECT * FROM round WHERE tournament_id = ? AND round = ?`,
-		[tournamentId, roundNumber]
+	return await getRoundTable(tournamentId, roundNumber);
+}
+
+export async function finishRound(tournamentId, roundNumber) {
+	const newRound = roundNumber + 1;
+	await db.run(`
+		UPDATE round 
+		SET "statut" = 'finish', "round" = ?
+		WHERE "tournament_id" = ?`,
+		[newRound, tournamentId]
 	);
+	return await getRoundTable(tournamentId, newRound);
 }
