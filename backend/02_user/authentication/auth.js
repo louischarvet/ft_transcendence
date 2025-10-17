@@ -16,13 +16,18 @@ export async function generateJWT(user) {
 }
 
 export async function authenticateJWT(request, reply) {
-	if (!request.headers.authorization)
-		return reply.code(400).send({ error: 'Unauthorized: No token provided' });
-    // Appel vers le session-service
+//	console.log("################# AUTH COOKIES\n", request.cookies,
+//				"\n##############################\n");
+	const { accessToken } = request.cookies;
+	if (accessToken === undefined)
+		return reply.code(400).send({
+			error: 'Access token missing.'
+		});
+
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
-            'Authorization': request.headers.authorization
+            'Authorization': 'Bearer ' + accessToken
         }
     });
 	if (!authRes.ok) {
@@ -44,7 +49,7 @@ export async function revokeJWT(token) {
 	const revRes = await fetch('http://session-service:3000/delete', {
 		method: 'DELETE',
 		headers: {
-			'Authorization': formattedToken,
+			'Authorization': token,
 		},
 	});
 	return (revRes);

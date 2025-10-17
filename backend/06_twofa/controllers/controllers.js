@@ -45,14 +45,6 @@ async function sendMail(name, email, code) {
 		}
 	});
 
-//	await transporter.verify((error, success) => {
-//    if (error) {
-//        console.log("Erreur de connexion au serveur SMTP :", error);
-//    } else {
-//        console.log("Serveur SMTP prêt à envoyer des e-mails");
-//    }
-//	});
-	console.log("email: ", email);
 	await transporter.sendMail({
 		from: `"2FA Service" <` + process.env.USR_ADDR + `>`,
 		to: email,
@@ -85,10 +77,6 @@ export async function sendCode(request, reply) {
 	await clearCookies(reply);
 
 	return reply.code(200)
-//		.setCookie('accessToken', accessToken, {
-//			...secureCookieOptions,
-//			maxAge: 1800
-//		})
 		.send({
 			message: 'Pending 2fa verification.',
 			accessToken: accessToken
@@ -138,20 +126,20 @@ export async function verifyCode(request, reply) {
 		});
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
-			maxAge: 1800
+			maxAge: 1800,
+			path: '/'
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
 			maxAge: 604800,
-//			path: '/api/session/refresh'
-		});
+			path: '/session/refresh'
+		})
 //	}
 	
 	await deleteInTable(id);
 
 	return reply.code(201)
 		.send({
-			//token: token,
 			message: 'User ' + name + ' verified'
 		}
 	);

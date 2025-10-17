@@ -99,7 +99,8 @@ export async function register(request, reply) {
 	return reply.code(201)
 		.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
-			maxAge: 1800
+			maxAge: 1800,
+			path: '/twofa/verify'
 		})
 		.send({
 			user,
@@ -137,12 +138,13 @@ export async function logIn(request, reply) {
 		return reply.code(201)
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
-				maxAge: 1800
+				maxAge: 1800,
+				path: '/'
 			})
 			.setCookie('refreshToken', refreshToken, {
 				...secureCookieOptions,
 				maxAge: 604800,
-//				path: '/api/auth/refresh'
+				path: '/session/refresh'
 			})
 			.send(body);
 	} else
@@ -474,10 +476,6 @@ export async function fetchUserStatus(request, reply) {
 
 // Route PUT /changestatus
 export async function changeStatus(request, reply) {
-//	console.log("#### IM chagestatus in Docker user\n########");
-	// check si player2 existe
-	// s'il n'existe pas -> player1 VS IA
-//	console.log("####### \n", reqBody, "#####\n");
 	const { name, status, type } = request.body;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
@@ -489,8 +487,6 @@ export async function changeStatus(request, reply) {
 	delete user.hashedPassword;
 	delete user.telephone;
 	delete user.email;
-	// verifier si l'etat n'a pas change entre temps ?
-	// et si les deux jouerus concernes cherchent a /random en meme temps?
 	return reply.code(201).send({
 		user: user,
 		message : 'Status updated!',

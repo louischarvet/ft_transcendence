@@ -99,17 +99,12 @@ export async function authenticate(db, request, reply) {
 
 // POST /refresh
 export async function refresh(db, request, reply) {
-    const rawToken = request.headers.authorization;
-    if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
-        return reply.code(400).send({ error: 'Missing Bearer' });
-    const refreshToken = rawToken.split(' ')[1];
+    const { refreshToken } = request.cookies;
+    if (refreshToken === undefined)
+        return reply.code(400).send({ error: 'Missing token' });
 
     const { server } = request;
 
-    if (!refreshToken) {
-		console.log('Missing token');
-		return reply.code(400).send({ error: 'Missing token' });
-	}
     clearCookies(reply);
     try {
         const decoded = await request.jwtVerify(refreshToken);
@@ -133,12 +128,13 @@ export async function refresh(db, request, reply) {
             .code(200)
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
-                maxAge: 1800
+                maxAge: 1800,
+                path: '/'
             })
             .setCookie('refreshToken', newRefresh, {
                 ...secureCookieOptions,
                 maxAge: 604800,
-//                path: '/api/auth/refresh'
+                path: '/session/refresh'
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {
@@ -164,7 +160,7 @@ export async function deleteToken(db, request, reply) {
 
         if (refreshRef === undefined)
             return reply.code(403).send({
-                ...decoded,
+    //            ...decoded,
                 error: 'deleteToken: Obsolete refresh token.'
             });
 
@@ -176,8 +172,8 @@ export async function deleteToken(db, request, reply) {
     } catch (err) {
         console.log("delete ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED') // must relog
-            return reply.code(403).send({ error: 'Expired refresh token.' });
+            return reply.code(401).send({ error: 'Expired access token.' });
         else // must relog
-            return reply.code(403).send({ error: 'Invalid refresh token.' }); // 403 ?
+            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
     }
 }

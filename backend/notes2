@@ -157,7 +157,7 @@ TO DO
 - /user & /match : login par email OU par name
 - verifier l'existence des ENV 
 - liste d'amis: si un ami delete son compte, mettre a jour la liste d'amis ?
-
+- /session : 2 cles secretes (access, refresh)
 
 - service stats ? db : wins, losses, win streak, ... ?
 
