@@ -22,6 +22,7 @@ export default class PgGui {
   currentMatch: Match | null = null;
   currentTournament: Tournament | null = null;
 
+  started: boolean = false;
   startedType: string = "";
 
   menu: {
@@ -72,7 +73,7 @@ export default class PgGui {
     player2: TextBlock,
     constVS: TextBlock,
     play: Button,
-    visibility(visible: boolean): void
+    visibility(visible: boolean, player1?: string, player2?: string): void
   };
 
   pause: {
@@ -96,16 +97,9 @@ export default class PgGui {
     visibility(visible: boolean): void
   };
 
-  login: {
-    title: TextBlock,
-    username: InputText,
-    password: InputText,
-    login: Button,
-    visibility(visible: boolean, prevUI?: any): void
-  };
-
   vsAI: {
     title: TextBlock,
+    selectedAIMode: string,
     restless: Button,
     normal: Button,
     smart: Button,
@@ -117,18 +111,30 @@ export default class PgGui {
     title: TextBlock,
     left: {
       title: TextBlock,
+      selectedAIMode: string,
       restless: Button,
       normal: Button,
       smart: Button
     },
     right: {
       title: TextBlock,
+      selectedAIMode: string,
       restless: Button,
       normal: Button,
       smart: Button
     },
     start: Button,
     visibility(visible: boolean): void
+  };
+
+  login: {
+    block: Rectangle,
+    close: Button,
+    title: TextBlock,
+    username: InputText,
+    password: InputText,
+    login: Button,
+    visibility(visible: boolean, prevUI?: any): void
   };
 
   score: {
@@ -211,6 +217,8 @@ export default class PgGui {
     this.match = this.initMatch();
     this.pause = this.initPause();
     this.result = this.initResult();
+    this.vsAI = this.initVsAI();
+    this.watchAI = this.initWatchAI();
 
     const font2 = new Rectangle("font2"); {
       font2.background = "black";
@@ -220,8 +228,6 @@ export default class PgGui {
     this.font2 = font2;
 
     this.login = this.initLogin();
-    this.vsAI = this.initVsAI();
-    this.watchAI = this.initWatchAI();
 
     // this.menu.visibility(false);
     this.tournament.visibility(false);
@@ -229,14 +235,14 @@ export default class PgGui {
     this.vsFriend.visibility(false);
     this.pause.visibility(false);
     this.result.visibility(false);
-
-    this.login.visibility(false);
     this.vsAI.visibility(false);
     this.watchAI.visibility(false);
+
+    this.login.visibility(false);
   }
 
-  started() {
-    if (this.startedType !== "")
+  isStarted() {
+    if (this.started)
       return this.startedType;
     return null;
   }
@@ -247,6 +253,8 @@ export default class PgGui {
     this.tournament.visibility(false);
     this.pause.visibility(false);
     this.result.visibility(false);
+    this.vsAI.visibility(false);
+    this.watchAI.visibility(false);
 
     if (this.goBackUI == "menu") {
       this.goBackButton.isVisible = false;
@@ -298,7 +306,6 @@ export default class PgGui {
           this.currentTournament = null;
         }
         this.goBackUI = "menu";
-        this.goBackButton.isVisible = true;
         // As Guest or Login temporarily
         this.vsFriend.visibility(true);
       });
@@ -329,13 +336,9 @@ export default class PgGui {
           this.currentMatch = null;
           this.currentTournament = null;
         }
-        // this.goBackUI = "menu";
-        // this.goBackButton.isVisible = true;
-        // AI level selection
-        createMatch("ai").then((match) => {
-          this.currentMatch = match;
-          this.startedType = "vsAI";
-        });
+        this.goBackUI = "menu";
+        this.goBackButton.isVisible = true;
+        this.vsAI.visibility(true);
       });
       this.ui.addControl(playVSAIButton);
     }
@@ -397,10 +400,9 @@ export default class PgGui {
           this.currentMatch = null;
           this.currentTournament = null;
         }
-        // this.goBackUI = "menu";
-        // this.goBackButton.isVisible = true;
-        // Select AI level (restless, normal, smart) for each side
-        this.startedType = "watchAI";
+        this.goBackUI = "menu";
+        this.goBackButton.isVisible = true;
+        this.watchAI.visibility(true);
       });
       this.ui.addControl(watchAIButton);
     }
@@ -503,8 +505,11 @@ export default class PgGui {
       });
       guestButton.onPointerClickObservable.add(() => {
         createMatch("guest").then((match) => {
+          if (match == null) return;
           this.currentMatch = match;
+          this.vsFriend.visibility(false);
           this.startedType = "local";
+          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
         });
       });
       this.ui.addControl(guestButton);
@@ -517,6 +522,7 @@ export default class PgGui {
         }
       });
       this.font.isVisible = visible;
+      this.goBackButton.isVisible = visible;
     };
 
     return {
@@ -643,7 +649,7 @@ export default class PgGui {
       // Show players setting and Start button
 
       this.tournament.playersScrollViewer.players = [];
-      // this.tournament.playersScrollViewer.playersBlock.height = "0px";
+      this.tournament.playersScrollViewer.playersBlock.height = "0px";
       this.tournament.playersScrollViewer.scrollViewer.isVisible = true;
       this.tournament.addLogin.isVisible = true;
       this.tournament.addGuest.isVisible = true;
@@ -695,7 +701,6 @@ export default class PgGui {
       });
       addGuestButton.onPointerClickObservable.add(() => {
         // Add Guest player
-        console.log("Add Guest");
         if (this.currentTournament == null) return;
         joinTournamentAsGuest(this.currentTournament.id).then((player) => {
           if (player == null) return;
@@ -815,9 +820,16 @@ export default class PgGui {
         startTournament(this.currentTournament.id).then((tournament) => {
           if (tournament == null) return;
           this.currentTournament = tournament;
-          this.goBackButton.isVisible = false;
+          this.currentMatch = this.currentTournament.matchs[0];
           this.tournament.visibility(false);
-          this.startedType = "tournament";
+          this.goBackButton.isVisible = false;
+          if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
+            this.startedType = "watchAI";
+          else if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
+            this.startedType = "vsAI";
+          else
+            this.startedType = "local";
+          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
         });
       });
       this.ui.addControl(startButton);
@@ -934,7 +946,8 @@ export default class PgGui {
       playButton.onPointerClickObservable.add(() => {
         // Start match
         if (this.currentMatch == null) return;
-        this.startedType = "local";
+        this.match.visibility(false);
+        this.started = true;
       });
       matchBlock.addControl(playButton);
     }
@@ -1146,13 +1159,13 @@ export default class PgGui {
       });
       playAgainButton.onPointerClickObservable.add(() => {
         if (this.currentMatch == null) return;
-        this.result.visibility(false);
-
+        
         createMatch(this.currentMatch?.player2.type, this.panel.players.player2.text).then((match) => {
           if (match == null) return;
-          this.currentMatch = match;
           this.result.visibility(false);
+          this.currentMatch = match;
           this.startedType = "restart";
+          this.match.visibility(true, this.panel.players.player1.text, this.panel.players.player2.text);
         });
       });
       this.ui.addControl(playAgainButton);
@@ -1177,11 +1190,20 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
-        if (this.currentTournament == null) return;
-        this.currentMatch = this.currentTournament.matchs[0];
+        if (this.currentTournament == null || this.currentMatch == null) return;
 
-        this.result.visibility(false);
-        this.startedType = "tournament";
+        nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((tournament) => {
+          if (tournament == null) return;
+          this.result.visibility(false);
+          this.currentTournament = tournament;
+          this.currentMatch = this.currentTournament.matchs[0];
+          if (this.currentMatch == null) return;
+          if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
+            this.startedType = "vsAI";
+          else
+            this.startedType = "local";
+          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
+        });
       });
       this.ui.addControl(nextMatchButton);
     }
@@ -1278,45 +1300,312 @@ export default class PgGui {
     };
   }
 
+  private initAIMode(offsetX?: number, side?: string) {
+    const AIModeTitle = new TextBlock("AIModeTitle", (side ? side : "") + "AI Mode:"); {
+      AIModeTitle.width = 400 + "px";
+      AIModeTitle.height = 100 + "px";
+      AIModeTitle.top = "-150px";
+      AIModeTitle.left = offsetX ? `${offsetX}px` : "0px";
+      AIModeTitle.fontSize = 48 + "px";
+      AIModeTitle.color = "white";
+      this.ui.addControl(AIModeTitle);
+    }
+
+    let selectedAIMode = "";
+
+    const normalButton = Button.CreateSimpleButton("normalButton", "Normal"); {
+      normalButton.width = 200 + "px";
+      normalButton.height = 60 + "px";
+      normalButton.top = "-50px";
+      normalButton.left = offsetX ? `${offsetX}px` : "0px";
+      normalButton.fontSize = 32 + "px";
+      normalButton.color = "white";
+      normalButton.thickness = 0;
+      normalButton.background = "transparent";
+      normalButton.alpha = 0.5;
+      normalButton.onPointerEnterObservable.add(() => {
+        normalButton.alpha = 1;
+      });
+      normalButton.onPointerOutObservable.add(() => {
+        if (selectedAIMode !== "normal")
+          normalButton.alpha = 0.5;
+      });
+      normalButton.onPointerClickObservable.add(() => {
+        if (selectedAIMode !== "normal") {
+          restlessButton.alpha = 0.5;
+          smartButton.alpha = 0.5;
+          selectedAIMode = "normal";
+        }
+      });
+      this.ui.addControl(normalButton);
+    }
+
+    const restlessButton = Button.CreateSimpleButton("restlessButton", "Restless"); {
+      restlessButton.width = 200 + "px";
+      restlessButton.height = 60 + "px";
+      restlessButton.top = "25px";
+      restlessButton.left = offsetX ? `${offsetX}px` : "0px";
+      restlessButton.fontSize = 32 + "px";
+      restlessButton.color = "white";
+      restlessButton.thickness = 0;
+      restlessButton.background = "transparent";
+      restlessButton.alpha = 0.5;
+      restlessButton.onPointerEnterObservable.add(() => {
+        restlessButton.alpha = 1;
+      });
+      restlessButton.onPointerOutObservable.add(() => {
+        if (selectedAIMode !== "restless")
+          restlessButton.alpha = 0.5;
+      });
+      restlessButton.onPointerClickObservable.add(() => {
+        if (selectedAIMode !== "restless") {
+          normalButton.alpha = 0.5;
+          smartButton.alpha = 0.5;
+          selectedAIMode = "restless";
+        }
+      });
+      this.ui.addControl(restlessButton);
+    }
+
+    const smartButton = Button.CreateSimpleButton("smartButton", "Smart"); {
+      smartButton.width = 200 + "px";
+      smartButton.height = 60 + "px";
+      smartButton.top = "100px";
+      smartButton.left = offsetX ? `${offsetX}px` : "0px";
+      smartButton.fontSize = 32 + "px";
+      smartButton.color = "white";
+      smartButton.thickness = 0;
+      smartButton.background = "transparent";
+      smartButton.alpha = 0.5;
+      smartButton.onPointerEnterObservable.add(() => {
+        smartButton.alpha = 1;
+      });
+      smartButton.onPointerOutObservable.add(() => {
+        if (selectedAIMode !== "smart")
+          smartButton.alpha = 0.5;
+      });
+      smartButton.onPointerClickObservable.add(() => {
+        if (selectedAIMode !== "smart") {
+          restlessButton.alpha = 0.5;
+          normalButton.alpha = 0.5;
+          selectedAIMode = "smart";
+        }
+      });
+      this.ui.addControl(smartButton);
+    }
+
+    return {
+      title: AIModeTitle,
+      selectedAIMode,
+      restless: restlessButton,
+      normal: normalButton,
+      smart: smartButton
+    };
+  }
+
+  private initVsAI() {
+    const AIMode = this.initAIMode();
+
+    const startButton = Button.CreateSimpleButton("startButton", "Start"); {
+      startButton.width = 200 + "px";
+      startButton.height = 60 + "px";
+      startButton.top = "200px";
+      startButton.fontSize = 38 + "px";
+      startButton.color = "white";
+      startButton.thickness = 0;
+      startButton.background = "transparent";
+      startButton.alpha = 0.7;
+      startButton.onPointerEnterObservable.add(() => {
+        startButton.alpha = 1;
+      });
+      startButton.onPointerOutObservable.add(() => {
+        startButton.alpha = 0.7;
+      });
+      startButton.onPointerClickObservable.add(() => {
+        // Start match vs AI
+        createMatch("ai").then((match) => {
+          if (match == null) return;
+          this.currentMatch = match;
+          this.vsAI.visibility(false);
+          this.startedType = "vsAI";
+          this.started = true;
+        });
+      });
+      this.ui.addControl(startButton);
+    }
+
+    const visibility = (visible: boolean) => {
+      Object.values(this.vsAI).forEach((obj) => {
+        if (obj && "isVisible" in obj) {
+          obj.isVisible = visible;
+        }
+      });
+      this.font.isVisible = visible;
+      if (visible) {
+        // Reset AI mode selection
+        AIMode.restless.alpha = 0.5;
+        AIMode.normal.alpha = 0.5;
+        AIMode.smart.alpha = 0.5;
+      } else
+        this.goBackButton.isVisible = false;
+    };
+
+    return {
+      ...AIMode,
+      start: startButton,
+      visibility
+    };
+  }
+
+  private initWatchAI() {
+    const watchAITitle = new TextBlock("watchAITitle", "Watch AI"); {
+      watchAITitle.width = 400 + "px";
+      watchAITitle.height = 130 + "px";
+      watchAITitle.top = "-250px";
+      watchAITitle.fontSize = 72 + "px";
+      watchAITitle.color = "white";
+      this.ui.addControl(watchAITitle);
+    }
+
+    const leftAIMode = this.initAIMode(-220, "L");
+    const rightAIMode = this.initAIMode(220, "R");
+
+    const startButton = Button.CreateSimpleButton("startButton", "Start"); {
+      startButton.width = 200 + "px";
+      startButton.height = 60 + "px";
+      startButton.top = "200px";
+      startButton.fontSize = 38 + "px";
+      startButton.color = "white";
+      startButton.thickness = 0;
+      startButton.background = "transparent";
+      startButton.alpha = 0.7;
+      startButton.onPointerEnterObservable.add(() => {
+        startButton.alpha = 1;
+      });
+      startButton.onPointerOutObservable.add(() => {
+        startButton.alpha = 0.7;
+      });
+      startButton.onPointerClickObservable.add(() => {
+        // Start match vs AI // Without Backend
+        this.watchAI.visibility(false);
+        this.startedType = "watchAI";
+        this.started = true;
+      });
+      this.ui.addControl(startButton);
+    }
+
+    const visibility = (visible: boolean) => {
+      Object.values(this.watchAI).forEach((obj) => {
+        if ("isVisible" in obj) {
+          obj.isVisible = visible;
+        }
+      });
+      Object.values(this.watchAI.left).forEach((obj) => {
+        if (obj && "isVisible" in obj) {
+          obj.isVisible = visible;
+        }
+      });
+      Object.values(this.watchAI.right).forEach((obj) => {
+        if (obj && "isVisible" in obj) {
+          obj.isVisible = visible;
+        }
+      });
+      this.font.isVisible = visible;
+      if (visible) {
+        // Reset AI mode selection
+        leftAIMode.restless.alpha = 0.5;
+        leftAIMode.normal.alpha = 0.5;
+        leftAIMode.smart.alpha = 0.5;
+        rightAIMode.restless.alpha = 0.5;
+        rightAIMode.normal.alpha = 0.5;
+        rightAIMode.smart.alpha = 0.5;
+      } else
+        this.goBackButton.isVisible = false;
+    };
+
+    return {
+      title: watchAITitle,
+      left: leftAIMode,
+      right: rightAIMode,
+      start: startButton,
+      visibility
+    };
+  }
+
   private initLogin() {
+    const loginBlock = new Rectangle("loginBlock"); {
+      loginBlock.width = 400 + "px";
+      loginBlock.height = 600 + "px";
+      loginBlock.background = "rgba(0, 0, 0, 0.7)";
+      loginBlock.thickness = 0.5;
+      loginBlock.cornerRadius = 10;
+      this.ui.addControl(loginBlock);
+    }
+
+    const closeLoginButton = Button.CreateSimpleButton("closeLoginButton", "X"); {
+      closeLoginButton.parent = loginBlock;
+      closeLoginButton.width = 40 + "px";
+      closeLoginButton.height = 40 + "px";
+      closeLoginButton.top = "-270px";
+      closeLoginButton.left = "170px";
+      closeLoginButton.fontSize = 24 + "px";
+      closeLoginButton.color = "white";
+      closeLoginButton.thickness = 0;
+      closeLoginButton.background = "transparent";
+      closeLoginButton.onPointerEnterObservable.add(() => {
+        closeLoginButton.color = "red";
+      });
+      closeLoginButton.onPointerOutObservable.add(() => {
+        closeLoginButton.color = "white";
+      });
+      closeLoginButton.onPointerClickObservable.add(() => {
+        this.login.visibility(false);
+      });
+      loginBlock.addControl(closeLoginButton);
+    }
+
     const loginTitle = new TextBlock("loginTitle", "LOGIN"); {
+      loginTitle.parent = loginBlock;
       loginTitle.width = 400 + "px";
-      loginTitle.height = 130 + "px";
-      loginTitle.top = "-250px";
+      loginTitle.height = 100 + "px";
+      loginTitle.top = "-150px";
       loginTitle.fontSize = 72 + "px";
       loginTitle.color = "white";
-      this.ui.addControl(loginTitle);
+      loginBlock.addControl(loginTitle);
     }
 
     const usernameInput = new InputText("usernameInput"); {
+      usernameInput.parent = loginBlock;
       usernameInput.width = 300 + "px";
       usernameInput.height = 60 + "px";
-      usernameInput.top = "-50px";
+      usernameInput.top = "-30px";
       usernameInput.fontSize = 32 + "px";
       usernameInput.color = "white";
-      usernameInput.background = "black";
+      usernameInput.background = "transparent";
+      usernameInput.thickness = 0.1;
       usernameInput.placeholderText = "Username";
-      usernameInput.thickness = 0;
-      this.ui.addControl(usernameInput);
+      loginBlock.addControl(usernameInput);
     }
 
     const passwordInput = new InputText("passwordInput"); {
+      passwordInput.parent = loginBlock;
       passwordInput.width = 300 + "px";
       passwordInput.height = 60 + "px";
-      passwordInput.top = "50px";
+      passwordInput.top = "70px";
       passwordInput.fontSize = 32 + "px";
       passwordInput.color = "white";
-      passwordInput.background = "black";
+      passwordInput.background = "transparent";
+      passwordInput.thickness = 0.1;
       passwordInput.placeholderText = "Password";
-      passwordInput.thickness = 0;
-      // passwordInput.type = "password";
-      this.ui.addControl(passwordInput);
+      passwordInput.password = true;
+      loginBlock.addControl(passwordInput);
     }
 
     const loginButton = Button.CreateSimpleButton("loginButton", "Login"); {
+      loginButton.parent = loginBlock;
       loginButton.width = 200 + "px";
       loginButton.height = 60 + "px";
-      loginButton.top = "150px";
+      loginButton.top = "170px";
       loginButton.fontSize = 32 + "px";
       loginButton.color = "white";
       loginButton.thickness = 0;
@@ -1343,6 +1632,9 @@ export default class PgGui {
             if (match == null) return;
             this.currentMatch = match;
             this.login.visibility(false);
+            this.vsFriend.visibility(false);
+            this.startedType = "local";
+            this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
           });
         } else {
           joinTournamentAsLogged(this.currentTournament.id, username, password).then((player) => {
@@ -1374,238 +1666,12 @@ export default class PgGui {
     };
 
     return {
+      block: loginBlock,
+      close: closeLoginButton,
       title: loginTitle,
       username: usernameInput,
       password: passwordInput,
       login: loginButton,
-      visibility
-    };
-  }
-
-  private initAIMode(offsetX?: number) {
-    const AIModeTitle = new TextBlock("AIModeTitle", "AI Mode:"); {
-      AIModeTitle.width = 400 + "px";
-      AIModeTitle.height = 100 + "px";
-      AIModeTitle.top = "-100px";
-      AIModeTitle.left = offsetX ? `${offsetX}px` : "0px";
-      AIModeTitle.fontSize = 42 + "px";
-      AIModeTitle.color = "white";
-      this.ui.addControl(AIModeTitle);
-    }
-
-    const restlessButton = Button.CreateSimpleButton("restlessButton", "Restless"); {
-      restlessButton.width = 200 + "px";
-      restlessButton.height = 60 + "px";
-      restlessButton.top = "0px";
-      restlessButton.left = offsetX ? `${offsetX - 220}px` : "-220px";
-      restlessButton.fontSize = 32 + "px";
-      restlessButton.color = "white";
-      restlessButton.thickness = 0;
-      restlessButton.background = "transparent";
-      restlessButton.alpha = 0.5;
-      restlessButton.onPointerEnterObservable.add(() => {
-        restlessButton.alpha = 1;
-      });
-      restlessButton.onPointerOutObservable.add(() => {
-        restlessButton.alpha = 0.5;
-      });
-      restlessButton.onPointerClickObservable.add(() => {
-        // this.vsAI.AIModeTitle.text = "AI Mode: Restless";
-        if (this.currentMatch) {
-          this.currentMatch.player2.mode = "restless";
-        }
-        restlessButton.alpha = 1;
-        normalButton.alpha = 0.5;
-        smartButton.alpha = 0.5;
-      });
-      this.ui.addControl(restlessButton);
-    }
-
-    const normalButton = Button.CreateSimpleButton("normalButton", "Normal"); {
-      normalButton.width = 200 + "px";
-      normalButton.height = 60 + "px";
-      normalButton.top = "0px";
-      normalButton.left = offsetX ? `${offsetX}px` : "0px";
-      normalButton.fontSize = 32 + "px";
-      normalButton.color = "white";
-      normalButton.thickness = 0;
-      normalButton.background = "transparent";
-      normalButton.alpha = 0.5;
-      normalButton.onPointerEnterObservable.add(() => {
-        normalButton.alpha = 1;
-      });
-      normalButton.onPointerOutObservable.add(() => {
-        normalButton.alpha = 0.5;
-      });
-      normalButton.onPointerClickObservable.add(() => {
-        // this.vsAI.AIModeTitle.text = "AI Mode: Normal";
-        if (this.currentMatch) {
-          this.currentMatch.player2.mode = "normal";
-        }
-        restlessButton.alpha = 0.5;
-        normalButton.alpha = 1;
-        smartButton.alpha = 0.5;
-      });
-      this.ui.addControl(normalButton);
-    }
-
-    const smartButton = Button.CreateSimpleButton("smartButton", "Smart"); {
-      smartButton.width = 200 + "px";
-      smartButton.height = 60 + "px";
-      smartButton.top = "0px";
-      smartButton.left = offsetX ? `${offsetX + 220}px` : "220px";
-      smartButton.fontSize = 32 + "px";
-      smartButton.color = "white";
-      smartButton.thickness = 0;
-      smartButton.background = "transparent";
-      smartButton.alpha = 0.5;
-      smartButton.onPointerEnterObservable.add(() => {
-        smartButton.alpha = 1;
-      });
-      smartButton.onPointerOutObservable.add(() => {
-        smartButton.alpha = 0.5;
-      });
-      smartButton.onPointerClickObservable.add(() => {
-        // this.vsAI.AIModeTitle.text = "AI Mode: Smart";
-        if (this.currentMatch) {
-          this.currentMatch.player2.mode = "smart";
-        }
-        restlessButton.alpha = 0.5;
-        normalButton.alpha = 0.5;
-        smartButton.alpha = 1;
-      });
-      this.ui.addControl(smartButton);
-    }
-
-    return {
-      title: AIModeTitle,
-      restless: restlessButton,
-      normal: normalButton,
-      smart: smartButton
-    };
-  }
-
-  private initVsAI() {
-    const AIMode = this.initAIMode();
-
-    const startButton = Button.CreateSimpleButton("startButton", "Start"); {
-      startButton.width = 200 + "px";
-      startButton.height = 60 + "px";
-      startButton.top = "150px";
-      startButton.fontSize = 32 + "px";
-      startButton.color = "white";
-      startButton.thickness = 0;
-      startButton.background = "transparent";
-      startButton.alpha = 0.5;
-      startButton.onPointerEnterObservable.add(() => {
-        startButton.alpha = 1;
-      });
-      startButton.onPointerOutObservable.add(() => {
-        startButton.alpha = 0.5;
-      });
-      startButton.onPointerClickObservable.add(() => {
-        // Start match vs AI
-        createMatch("ai").then((match) => {
-          if (match == null) return;
-          this.currentMatch = match;
-          this.vsAI.visibility(false);
-          this.startedType = "vsAI";
-        });
-      });
-      this.ui.addControl(startButton);
-    }
-
-    const visibility = (visible: boolean) => {
-      Object.values(this.vsAI).forEach((obj) => {
-        if ("isVisible" in obj) {
-          obj.isVisible = visible;
-        }
-      });
-      this.font2.isVisible = visible;
-      if (visible) {
-        // Reset AI mode selection
-        AIMode.restless.alpha = 0.5;
-        AIMode.normal.alpha = 0.5;
-        AIMode.smart.alpha = 0.5;
-      }
-    };
-
-    return {
-      ...AIMode,
-      start: startButton,
-      visibility
-    };
-  }
-
-  private initWatchAI() {
-    const watchAITitle = new TextBlock("watchAITitle", "Watch AI"); {
-      watchAITitle.width = 400 + "px";
-      watchAITitle.height = 130 + "px";
-      watchAITitle.top = "-250px";
-      watchAITitle.fontSize = 72 + "px";
-      watchAITitle.color = "white";
-      this.ui.addControl(watchAITitle);
-    }
-
-    const leftAIMode = this.initAIMode(-220);
-    const rightAIMode = this.initAIMode(220);
-
-    const startButton = Button.CreateSimpleButton("startButton", "Start"); {
-      startButton.width = 200 + "px";
-      startButton.height = 60 + "px";
-      startButton.top = "150px";
-      startButton.fontSize = 32 + "px";
-      startButton.color = "white";
-      startButton.thickness = 0;
-      startButton.background = "transparent";
-      startButton.alpha = 0.5;
-      startButton.onPointerEnterObservable.add(() => {
-        startButton.alpha = 1;
-      });
-      startButton.onPointerOutObservable.add(() => {
-        startButton.alpha = 0.5;
-      });
-      startButton.onPointerClickObservable.add(() => {
-        // Start match vs AI // Without Backend
-        this.watchAI.visibility(false);
-        this.startedType = "watchAI";
-      });
-      this.ui.addControl(startButton);
-    }
-
-    const visibility = (visible: boolean) => {
-      Object.values(this.watchAI).forEach((obj) => {
-        if ("isVisible" in obj) {
-          obj.isVisible = visible;
-        }
-      });
-      Object.values(this.watchAI.left).forEach((obj) => {
-        if ("isVisible" in obj) {
-          obj.isVisible = visible;
-        }
-      });
-      Object.values(this.watchAI.right).forEach((obj) => {
-        if ("isVisible" in obj) {
-          obj.isVisible = visible;
-        }
-      });
-      this.font2.isVisible = visible;
-      if (visible) {
-        // Reset AI mode selection
-        leftAIMode.restless.alpha = 0.5;
-        leftAIMode.normal.alpha = 0.5;
-        leftAIMode.smart.alpha = 0.5;
-        rightAIMode.restless.alpha = 0.5;
-        rightAIMode.normal.alpha = 0.5;
-        rightAIMode.smart.alpha = 0.5;
-      }
-    };
-
-    return {
-      title: watchAITitle,
-      left: leftAIMode,
-      right: rightAIMode,
-      start: startButton,
       visibility
     };
   }
