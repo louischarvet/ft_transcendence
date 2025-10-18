@@ -4,13 +4,12 @@ WORKDIR /app
 
 COPY ./package.json ./package-lock.json* ./
 RUN npm install
-RUN npm install express
 
 COPY . .
 
-# Build frontend
-RUN npm run build
+# Expose Vite port
+EXPOSE 5173
 
-EXPOSE 3000
+# CMD en forme exec JSON correcte pour Alpine et Vite
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-CMD ["node", "server.js"]
