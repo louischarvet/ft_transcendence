@@ -281,7 +281,7 @@ export default class PgScene {
       const deltaTime = this.engine.getDeltaTime(); // en millisecondes
 
       // Cinematic
-      this.gameMode = this.gui.started();
+      this.gameMode = this.gui.isStarted();
       if (!this.gameMode)
         return;
 
