@@ -15,9 +15,14 @@ const secureCookieOptions = {
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken')
-		.clearCookie('refreshToken');
+	reply.clearCookie('accessToken', secureCookieOptions)
+		.clearCookie('refreshToken', secureCookieOptions);
 }
+
+//async function clearCookies(reply) {
+//	reply.clearCookie('accessToken')
+//		.clearCookie('refreshToken');
+//}
 
 // rout POST /guest
 export async function createGuest(request, reply) {
@@ -35,7 +40,7 @@ export async function createGuest(request, reply) {
 	const user = await getUserByName('guest', name);
 	user.verified = true;
 
-	clearCookies(reply);
+	await clearCookies(reply);
 
 	if (!tmp) {
 		const { accessToken, refreshToken } = await generateJWT(user);
@@ -94,7 +99,7 @@ export async function register(request, reply) {
 	
 	updateStatus('registered', name, 'pending');
 
-	clearCookies(reply);
+	await clearCookies(reply);
 
 	return reply.code(201)
 		.setCookie('accessToken', accessToken, {
@@ -114,7 +119,7 @@ export async function logIn(request, reply) {
 
 	const exists = await getUserByName('registered', name);
 
-	clearCookies(reply);
+	await clearCookies(reply);
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
@@ -154,7 +159,6 @@ export async function logIn(request, reply) {
 // Route PUT /logout
 // Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
-//	console.log("####Function logOut called:\n");
 	const revRes = await revokeJWT(request.headers.authorization); ///////
 	if (revRes.status == 200) {
 		if (request.user.type == "guest")
@@ -162,11 +166,9 @@ export async function logOut(request, reply) {
 		else
 			updateStatus(request.user.type, request.user.name, 'logged_out');
 
-		clearCookies(reply);
+		await clearCookies(reply);
 
-		return reply.code(201).send({
-			message: "Successfully logged out."
-		});
+		return reply.code(201).send({ message: "Successfully logged out."});
 	} else
 		return revRes;
 }
@@ -194,7 +196,7 @@ export async function deleteUser(request, reply) {
 		console.log("###request.user.type : ", request.user.type, "\n###");
 		deleteUserInTable(request.user.type, request.user.name);
 
-		clearCookies(reply);
+		await clearCookies(reply);
 
 		return reply.code(200).send({
 			message: "User successfully deleted."

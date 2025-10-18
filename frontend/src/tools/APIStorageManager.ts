@@ -1,12 +1,6 @@
-import { navigate } from "../router";
-
 function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
 }
-
-// function setToken(token: string) {
-// 	localStorage.setItem('token', token);
-// }
 
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
@@ -15,7 +9,7 @@ export function getUser() {
 
 export async function getRefreshToken() {
 	const cookie = await cookieStore.get("refreshToken");
-	console.log("cookie => ", cookie);
+	console.log("cookie getRefreshToken => ", cookie);
 	return 	cookie?.value;
 }
 
@@ -25,13 +19,8 @@ export async function getTokenAcces() {
 }
 
 export async function getUserByToken(){
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
-
 	const response = await fetch('/api/user/id', {
 		method: 'GET',
-		// headers: { 'Authorization': `Bearer ${token}`},
 		credentials: 'include',
 	});
 	const json = await response.json();
@@ -43,16 +32,10 @@ export async function getUserByToken(){
 }
 
 export async function getUserById(id: number){
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
 
 	const response = await fetch(`/api/user/${id}`, {
 		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			// 'Authorization': `Bearer ${token}`,
-		},
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 	});
 
@@ -65,44 +48,24 @@ export async function getUserById(id: number){
 	return data;
 }
 
-//export async function getFriendProfil(id) {
-//	const token = getToken();
-//	if (!token)
-//		return null;
-	
-//	const response = await fetch('/api/user/id', {
-//		method: 'GET',
-//		headers: { 'Authorization': `Bearer ${token}`},
-//	});
-//}
-
 export async function Logout(): Promise<Response | null> {
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
 
 	const response = await fetch('/api/user/logout', {
 		method: 'PUT',
 		credentials: 'include',
-
-		// headers: { 'Authorization': `Bearer ${token}`},
 	});
 
 	return response;
 }
 
 export async function updateInfo(password: string, toUpdate: string, newValue: string){
-	// const token = getToken();
-	// if (!token) return null;
+
 	console.log("ooooo", password, toUpdate, newValue);
 
 	const response = await fetch(`/api/user/update`, {
 		method: "PUT",
-		headers: {
-			"Content-Type": "application/json",
-			credentials: 'include',
-			// "Authorization": `Bearer ${token}`,
-		},
+		headers: {'Content-Type': 'application/json'},
+		credentials: 'include',
 		body: JSON.stringify({
 			password : password,
 			toUpdate : toUpdate,
@@ -120,34 +83,22 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 }
 
 export async function addNewFriend(friendName: string){
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
-	//a mettre dans .env
 	const response = await fetch(`/api/user/addfriend/${encodeURIComponent(friendName)}`, {
 		method: "POST",
-		headers: {
-			// 'Content-Type': 'application/json',
-			credentials: 'include',
-			// // "Authorization": `Bearer ${token}`,
-		},
+		headers: {'Content-Type': 'application/json'},
+		credentials: 'include',
 	});
 
 	return response;
 }
 
 export async function getFriendsList(): Promise<{ friends: { name: string; status: string , id: number }[] } | null> {
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
+
 
 	const response = await fetch('/api/user/getfriendsprofiles', {
 		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			credentials: 'include',
-			// 'Authorization': `Bearer ${token}`,
-		},
+		headers: {'Content-Type': 'application/json'},
+		credentials: 'include',
 	});
 
 	//Si le backend renvoie 204 No Content, on retourne null
@@ -161,15 +112,10 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 }
 
 export async function removeFriend(friendId: string){
-	// const token = getToken();
-	// if (!token)
-	// 	return null;
+
 	const response = await fetch('/api/user/deleteFriend', {
 		method: 'DELETE',
-		headers: {
-			'Content-Type': 'application/json',
-			// 'Authorization': `Bearer ${token}`,
-		},
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 		body: JSON.stringify({
 			id: friendId,
@@ -187,15 +133,31 @@ export async function removeFriend(friendId: string){
 
 export async function checkConnection() {
 	const user = getUser();
-	const token = await getRefreshToken();
-
-	console.log("user et token \n", user, token);
-
-	if (!user || !token)
+	if (!user)
 		return false;
 
-	return true;
+	try {
+		const response = await fetch('/api/user/id', {
+			method: 'GET',
+			credentials: 'include',
+		});
+		if (!response.ok) return false;
+
+		const data = await response.json();
+		if (data.user) {
+			if (user.type === 'guest' && user.status !== 'available')
+				return false;
+			setUser(data.user);
+			return true;
+		}
+		return false;
+	}
+	catch (err) {
+		console.error(err);
+		return false;
+	}
 }
+
 
 export async function checkConnectionGuest() {
 	const user = getUser();

@@ -36,7 +36,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "3000:3000"
     networks:
       - transcendence-net
     restart: on-failure
@@ -47,7 +47,7 @@ services:
     depends_on:
       - proxy-service
     stdin_open: true   # permet de garder le conteneur actif
-    tty: true           # garde Vite en mode watch
+    #tty: true           # garde Vite en mode watch
 networks:
   transcendence-net:
     driver: bridge

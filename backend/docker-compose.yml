@@ -1,17 +1,27 @@
 services:
+  #proxy-service:
+
+  #  container_name: proxy-service
+
+  #  build:
+  #    context: ./01_reverse_proxy
+  #    dockerfile: Dockerfile
+  #  ports:
+  #    - "3000:3000"
+  #  networks:
+  #    - transcendence-net  
+  #  restart: on-failure
+
   proxy-service:
-
     container_name: proxy-service
-
     build:
       context: ./01_reverse_proxy
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "443:443" # HTTPS
     networks:
       - transcendence-net  
     restart: on-failure
-
 
   user-service:
   

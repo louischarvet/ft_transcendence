@@ -1,5 +1,5 @@
 import { navigate } from '../router';
-import { checkConnection , getUser} from '../tools/APIStorageManager';
+import { checkConnection } from '../tools/APIStorageManager';
 import ContinueAs from '../tools/ContinueAs';
 import Login from '../tools/Login';
 import Register from '../tools/Register';
@@ -22,7 +22,11 @@ export default function Home(subPage?: string): HTMLElement {
 	const separator = document.createElement('hr'); // Ligne de séparation
 	separator.className = 'w-3/4 border-t border-white/20 my-5';
 	container.appendChild(separator);
-
+	
+	checkConnection().then((connected) => {
+		if (connected)
+			container.appendChild(DropDownMenu());
+	});
 	if (subPage === 'login') {
 		container.appendChild(Login());
 	} else if (subPage === 'register') {
@@ -38,10 +42,7 @@ export default function Home(subPage?: string): HTMLElement {
 		});
 		container.appendChild(ContinueAs());
 	}
-	checkConnection().then((connected) => {
-		if (connected)
-			container.appendChild(DropDownMenu());
-	});
+
 
   return container;
 }

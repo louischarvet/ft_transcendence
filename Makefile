@@ -5,7 +5,8 @@ backend:
 
 backend-clean:
 	@echo "Stopping running containers..."
-	@docker compose -f $(backend_file) down -v 
+	@docker compose -f $(backend_file) down -v
+
 up:
 	@docker compose up --build
 
