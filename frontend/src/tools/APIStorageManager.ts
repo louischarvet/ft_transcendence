@@ -132,40 +132,24 @@ export async function removeFriend(friendId: string){
 }
 
 export async function checkConnection() {
-	const user = getUser();
-	if (!user)
+	const tmp = await getRefreshToken();
+	if (tmp === undefined)
 		return false;
 
-	try {
-		const response = await fetch('/api/user/id', {
-			method: 'GET',
-			credentials: 'include',
-		});
-		if (!response.ok) return false;
-
-		const data = await response.json();
-		if (data.user) {
-			if (user.type === 'guest' && user.status !== 'available')
-				return false;
-			setUser(data.user);
-			return true;
-		}
+	const response = await fetch('/api/user/id', {
+		method: 'GET',
+		credentials: 'include',
+	});
+	if (!response.ok)
 		return false;
-	}
-	catch (err) {
-		console.error(err);
-		return false;
-	}
-}
-
-
-export async function checkConnectionGuest() {
-	const user = getUser();
-	// const token = getToken();
-
-	if (user.type === 'guest'/* && token*/)
+	const data = await response.json();
+	if (data.user) {
+		if (data.user.type === 'guest' && data.user.status !== 'available')
+			return false;
+		setUser(data.user);
 		return true;
-	return false;	
+	}
+	return false;
 }
 
 export async function register(name: string, email: string, password: string) {
@@ -174,6 +158,7 @@ export async function register(name: string, email: string, password: string) {
 		headers: {
 		'Content-Type': 'application/json',
 		},
+		credentials: 'include',
 		body: JSON.stringify({
 			name,
 			email,
@@ -194,6 +179,7 @@ export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 		headers: {
 		'Content-Type': 'application/json',
 		},
+		credentials: 'include',
 		body: JSON.stringify({
 			tmp: asPlayer2,
 		}),
@@ -218,6 +204,7 @@ export async function login(name: string, password: string) {
 	const response = await fetch('/api/user/login', {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json'},
+		credentials: 'include',
 		body: JSON.stringify({ name: name, password: password, tmp: false })
 	});
 	
@@ -239,22 +226,16 @@ export async function deleteUser(password : string) {
 
 	const response = await fetch('/api/user/delete', {
 		method: 'DELETE',
-		headers: {
-		'Content-Type': 'application/json',
-		// 'Authorization': `Bearer ${token}`,
-		},
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
-		body: JSON.stringify({
-		password
-		}),
+		body: JSON.stringify({ password }),
 	});
 	const json = await response.json();
 
-	console.log("fetch deleteUser here"); ////////////////////////
+	console.log("fetch deleteUser here");
 	if (!json.error) {
 		console.log("deleteUser removeItem here");
 		localStorage.removeItem('user');
-		localStorage.removeItem('token');
 		return true;
 	}
 	return false;
@@ -268,6 +249,7 @@ export async function verifyTwoFactorCode(code: string) {
 		headers: {
 		'Content-Type': 'application/json',
 		},
+		credentials: 'include',
 		body: JSON.stringify({
 			id: user?.id,
 			name: user?.name,
@@ -338,8 +320,8 @@ export async function launchTournament(nbPlayers: number) {
 		body: JSON.stringify({ nbPlayers })
 	});
 	const data = await res.json();
-	if (data.error) return null;
 	console.log("launchTournament data -> ", data);
+	if (data.error) return null;
 	return data.Tournament as Tournament;
 }
 

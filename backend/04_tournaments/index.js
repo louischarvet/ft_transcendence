@@ -4,16 +4,25 @@ import routesPlugin from './routes/routes.js';
 import Fastify from 'fastify';
 import { initDB } from './database/db.js';
 import { tournamentSchema } from './schema/tournamentSchema.js';
+import cookie from '@fastify/cookie'
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(routesPlugin);
+
+fastify.register(cookie);
 
 // On instencie les Schemas de JSONs
 fastify.addSchema(tournamentSchema);
 
 //! ajout le 16/09/2025
 await initDB();
+
+////!ajout le 18/09/2025
+////permet de gerer les attaques XSS
+//await fastify.register(helmet, {
+//	global: true
+////});
 
 async function start() {
 	try {

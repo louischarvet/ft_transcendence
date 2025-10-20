@@ -18,27 +18,55 @@
 // }
 
 export async function authenticateJWT(request, reply) {
+//	console.log("################# AUTH COOKIES\n", request.cookies,
+//				"\n##############################\n");
 	const { accessToken } = request.cookies;
 	if (accessToken === undefined)
 		return reply.code(400).send({
 			error: 'Access token missing.'
 		});
-    // Appel vers le session-service
+
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + accessToken
         }
     });
+	if (!authRes.ok) {
+		return reply.code(authRes.status).send({ error: 'Unauthorized: Invalid token' });
+	}
     const data = await authRes.json();
-    if (data.verified === false)
+	if (data.verified === false)
 		return reply.code(400).send({ error: 'User not verified.' });
 	if (data.error)
 		return reply.code(authRes.status).send({ error: data.error });
 
-	//! modifier le 17/09/2025 
-    const currentuser = data ; // fallback si le service renvoie "user"
-    //const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
-
     request.user = data;
 }
+
+//export async function authenticateJWT(request, reply) {
+	//const { accessToken } = request.cookies;
+	//if (accessToken === undefined)
+		//return reply.code(400).send({
+			//error: 'Access token missing.'
+		//});
+    //// Appel vers le session-service
+    //const authRes = await fetch('http://session-service:3000/authenticate', {
+        //method: 'GET',
+        //headers: {
+            //'Authorization': 'Bearer ' + accessToken
+        //}
+    //});
+    //const data = await authRes.json();
+    //if (data.verified === false)
+		//return reply.code(400).send({ error: 'User not verified.' });
+	//if (data.error)
+		//return reply.code(authRes.status).send({ error: data.error });
+
+	////! modifier le 17/09/2025 
+    //const currentuser = data ; // fallback si le service renvoie "user"
+    ////const currentuser = data.user || data.body.user; // fallback si le service renvoie "user"
+
+    //request.user = data;
+//}
+

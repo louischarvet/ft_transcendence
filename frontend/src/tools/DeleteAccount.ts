@@ -153,11 +153,8 @@ function FinalConfirmation(email: string, password: string) {
         history.back();
         return;
       }
-      else{
-        // localStorage.removeItem('user');
-        // localStorage.removeItem('token');
+      else
         navigate('/');
-      }
     });
   };
 

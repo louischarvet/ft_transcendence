@@ -5,11 +5,6 @@ import { navigate } from '../router';
 
 export default function DropDownMenu() {
 	const wrapper = document.createElement('div');
-	checkConnection().then((connected) => {
-		console.log("checkConnection : ", connected);
-		if (!connected)
-			return;
-
 	let UserCurrent = getUser();
 	wrapper.className = 'absolute top-5 right-0';
 
@@ -36,9 +31,6 @@ export default function DropDownMenu() {
 	profileLink.textContent = 'Profil';
 	menuSection1.appendChild(profileLink);
 
-	//checkConnectionGuest()
-	//	.then((connected) => {
-		
 	const friendButton = document.createElement('a');
 	friendButton.className = menuClassName;
 	friendButton.textContent = 'Friends';
@@ -48,139 +40,139 @@ export default function DropDownMenu() {
 	const friendsListContainer = document.createElement('div');
 	if (getUser().type !== 'guest'){
 		menuSection1.appendChild(friendButton);
-	dropDownFriendList.className = 'hidden absolute top-0 right-40 mt-0.3 w-[220px] max-h-60 overflow-y-auto divide-y divide-white/10 rounded-xl bg-[#646cff8f] outline-1 -outline-offset-1 outline-white/10 transition transition-discrete';
-	friendButton.appendChild(dropDownFriendList);
+		dropDownFriendList.className = 'hidden absolute top-0 right-40 mt-0.3 w-[220px] max-h-60 overflow-y-auto divide-y divide-white/10 rounded-xl bg-[#646cff8f] outline-1 -outline-offset-1 outline-white/10 transition transition-discrete';
+		friendButton.appendChild(dropDownFriendList);
 
-	// const friendsList: { name: string; status: string; picture?: string }[] = [];
+		// const friendsList: { name: string; status: string; picture?: string }[] = [];
 
-	// const friendsListContainer = document.createElement('div');
-	friendsListContainer.className = 'py-1 flex flex-col';
-	dropDownFriendList.appendChild(friendsListContainer);
+		// const friendsListContainer = document.createElement('div');
+		friendsListContainer.className = 'py-1 flex flex-col';
+		dropDownFriendList.appendChild(friendsListContainer);
 
-	// FONCTION CRÉATION D'UN AMI
-	function createFriendItem(friend: { name: string; status: string; picture?: string ; id: number}) {
-		if (!friend)
-			return;
+		// FONCTION CRÉATION D'UN AMI
+		function createFriendItem(friend: { name: string; status: string; picture?: string ; id: number}) {
+			if (!friend)
+				return;
 
-		const friendItem = document.createElement('div');
-		friendItem.className = 'flex items-center gap-2 px-2 py-1';
-		friendItem.style.cursor = 'pointer';
-		
-		// Photo
-		const friendPic = document.createElement('img');
-		friendPic.src = friend.picture || './pictures/avatar_1.jpg';
-		friendPic.className = 'w-8 h-8 rounded-full object-cover';
-		friendItem.appendChild(friendPic);
+			const friendItem = document.createElement('div');
+			friendItem.className = 'flex items-center gap-2 px-2 py-1';
+			friendItem.style.cursor = 'pointer';
+			
+			// Photo
+			const friendPic = document.createElement('img');
+			friendPic.src = friend.picture || './pictures/avatar_1.jpg';
+			friendPic.className = 'w-8 h-8 rounded-full object-cover';
+			friendItem.appendChild(friendPic);
 
-		// Nom
-		const friendName = document.createElement('span');
-		friendName.className = 'text-lg text-gray-200';
-		friendName.textContent = friend.name;
-		friendItem.appendChild(friendName);
+			// Nom
+			const friendName = document.createElement('span');
+			friendName.className = 'text-lg text-gray-200';
+			friendName.textContent = friend.name;
+			friendItem.appendChild(friendName);
 
-		// Statut
-		const statusDot = document.createElement('span');
-		statusDot.className = friend.status === 'available' ? 'text-green-500' : 'text-red-500';
-		statusDot.textContent = '●';
-		friendItem.appendChild(statusDot);
-		//const statusDot = document.createElement('span');
-		//statusDot.className = `w-3 h-3 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-red-500'}`;
-		//friendItem.appendChild(statusDot);
-		friendItem.onclick = () => {
-			navigate(`/profil/${friend.id}`);
-		};
-		friendsListContainer.appendChild(friendItem);
-	}
+			// Statut
+			const statusDot = document.createElement('span');
+			statusDot.className = friend.status === 'available' ? 'text-green-500' : 'text-red-500';
+			statusDot.textContent = '●';
+			friendItem.appendChild(statusDot);
+			//const statusDot = document.createElement('span');
+			//statusDot.className = `w-3 h-3 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-red-500'}`;
+			//friendItem.appendChild(statusDot);
+			friendItem.onclick = () => {
+				navigate(`/profil/${friend.id}`);
+			};
+			friendsListContainer.appendChild(friendItem);
+		}
 
-	// Récupération depuis le backend
-	getFriendsList()
-		.then((value) => {
-			if (!value || !Array.isArray(value.friends)) {
-				console.log("Pas d'amis trouvés ou utilisateur non authentifié");
+		// Récupération depuis le backend
+		getFriendsList()
+			.then((value) => {
+				if (!value || !Array.isArray(value.friends)) {
+					console.log("Pas d'amis trouvés ou utilisateur non authentifié");
+					return;
+				}
+
+				console.log("getFriendsList -> ", value);
+
+				value.friends.forEach((friend) => {
+					friendsList.push(friend);
+					createFriendItem(friend);
+				});
+			})
+			.catch((err) => {
+				console.error("Erreur lors de la récupération des amis :", err);
+			});
+
+		// Ajouter un ami
+		const addFriendInput = document.createElement('input');
+		addFriendInput.type = 'text';
+		addFriendInput.placeholder = 'Add a friend...';
+		addFriendInput.className = 'block px-2 py-1 w-[150px] text-xl text-gray-300 bg-transparent rounded-lg';
+
+		const addFriendButton = document.createElement('button');
+		addFriendButton.className = menuClassName + ' w-[50px] text-center';
+		addFriendButton.textContent = '+';
+
+		const addFriendContainer = document.createElement('div');
+		addFriendContainer.className = 'flex justify-start gap-1 px-2 py-1';
+		addFriendContainer.appendChild(addFriendInput);
+		addFriendContainer.appendChild(addFriendButton);
+		dropDownFriendList.prepend(addFriendContainer);
+
+		async function addFriend() {
+			const friendName = addFriendInput.value.trim();
+			if (!friendName) return;
+
+			if (friendName.length > 64) {
+				alert("Erreur : invalid name");
 				return;
 			}
 
-			console.log("getFriendsList -> ", value);
+			addNewFriend(friendName)
+				.then((response) => {
+					if (!response) {
+						alert("Erreur : aucune réponse du serveur.");
+						return null; // arrête la chaîne
+					}
+					return response.json()
+						.catch(() => ({}))
+						.then((data) => ({ response, data }));
+				})
+				.then((result) => {
+					if (!result)
+						return;
 
-			value.friends.forEach((friend) => {
-				friendsList.push(friend);
-				createFriendItem(friend);
-			});
-		})
-		.catch((err) => {
-			console.error("Erreur lors de la récupération des amis :", err);
-		});
+					const { response, data } = result;
 
-	// Ajouter un ami
-	const addFriendInput = document.createElement('input');
-	addFriendInput.type = 'text';
-	addFriendInput.placeholder = 'Add a friend...';
-	addFriendInput.className = 'block px-2 py-1 w-[150px] text-xl text-gray-300 bg-transparent rounded-lg';
+					if (!response.ok) {
+						const errorMessage = data.error || `Erreur inconnue (${response.status})`;
+						alert(errorMessage);
+						console.warn("Erreur backend:", errorMessage);
+						return;
+					}
 
-	const addFriendButton = document.createElement('button');
-	addFriendButton.className = menuClassName + ' w-[50px] text-center';
-	addFriendButton.textContent = '+';
+					alert(data.message || `Friend ${friendName} added!`);
 
-	const addFriendContainer = document.createElement('div');
-	addFriendContainer.className = 'flex justify-start gap-1 px-2 py-1';
-	addFriendContainer.appendChild(addFriendInput);
-	addFriendContainer.appendChild(addFriendButton);
-	dropDownFriendList.prepend(addFriendContainer);
+					const newFriend = { name: friendName, status: data.status, picture: data.picture, id: data.id };
+					friendsList.push(newFriend);
+					createFriendItem(newFriend);
 
-	async function addFriend() {
-		const friendName = addFriendInput.value.trim();
-		if (!friendName) return;
-
-		if (friendName.length > 64) {
-			alert("Erreur : invalid name");
-			return;
+					addFriendInput.value = '';
+					navigate('/');
+				})
+				.catch((err) => {
+					alert("Erreur de connexion au serveur");
+					console.error("Erreur front: ", err);
+				}
+			);
 		}
 
-		addNewFriend(friendName)
-			.then((response) => {
-				if (!response) {
-					alert("Erreur : aucune réponse du serveur.");
-					return null; // arrête la chaîne
-				}
-				return response.json()
-					.catch(() => ({}))
-					.then((data) => ({ response, data }));
-			})
-			.then((result) => {
-				if (!result)
-					return;
+		addFriendInput.onkeydown = (e) => { if (e.key === 'Enter') addFriend(); };
+		addFriendButton.onclick = addFriend;
 
-				const { response, data } = result;
-
-				if (!response.ok) {
-					const errorMessage = data.error || `Erreur inconnue (${response.status})`;
-					alert(errorMessage);
-					console.warn("Erreur backend:", errorMessage);
-					return;
-				}
-
-				alert(data.message || `Friend ${friendName} added!`);
-
-				const newFriend = { name: friendName, status: data.status, picture: data.picture, id: data.id };
-				friendsList.push(newFriend);
-				createFriendItem(newFriend);
-
-				addFriendInput.value = '';
-				navigate('/');
-			})
-			.catch((err) => {
-				alert("Erreur de connexion au serveur");
-				console.error("Erreur front: ", err);
-			}
-		);
-	}
-
-	addFriendInput.onkeydown = (e) => { if (e.key === 'Enter') addFriend(); };
-	addFriendButton.onclick = addFriend;
-
-	// SHOW/HIDE MENU
-	const showFriendList = () => dropDownFriendList.classList.remove('hidden');
-	const hideFriendList = () => dropDownFriendList.classList.add('hidden');
+		// SHOW/HIDE MENU
+		const showFriendList = () => dropDownFriendList.classList.remove('hidden');
+		const hideFriendList = () => dropDownFriendList.classList.add('hidden');
 
 		friendButton.onmouseenter = showFriendList;
 		dropDownFriendList.onmouseenter = showFriendList;
@@ -237,8 +229,6 @@ export default function DropDownMenu() {
 			if (UserCurrent.type !== 'guest')
 				dropDownFriendList.classList.add('hidden');
 		}
-	});
-
 	});
 
  return wrapper;

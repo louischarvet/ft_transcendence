@@ -4,6 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import routesPlugin from './routes/routes.js';
+import cookie from '@fastify/cookie'
 import shutdown from './shutdown.js';
 
 import fastifyHttpProxy from '@fastify/http-proxy';
@@ -26,6 +27,8 @@ server.register(fastifyCors, {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ["Content-Type", "Authorization"],
 });
+
+server.register(cookie);
 
 // Enregistrer shutdown et routes
 server.register(routesPlugin);

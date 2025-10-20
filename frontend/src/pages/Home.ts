@@ -23,10 +23,12 @@ export default function Home(subPage?: string): HTMLElement {
 	separator.className = 'w-3/4 border-t border-white/20 my-5';
 	container.appendChild(separator);
 	
-	checkConnection().then((connected) => {
-		if (connected)
-			container.appendChild(DropDownMenu());
-	});
+	if (subPage) {
+		checkConnection().then((connected) => {
+			if (connected)
+				container.appendChild(DropDownMenu());
+		});
+	}
 	if (subPage === 'login') {
 		container.appendChild(Login());
 	} else if (subPage === 'register') {
@@ -35,14 +37,8 @@ export default function Home(subPage?: string): HTMLElement {
 		container.appendChild(GameSelection());
 	} else if (subPage === '2fa-verification') {
 		container.appendChild(TwofaVerification());
-	} else {
-		checkConnection().then((connected) => {
-			if (connected)
-				navigate('/select-game');
-		});
+	} else
 		container.appendChild(ContinueAs());
-	}
-
 
   return container;
 }

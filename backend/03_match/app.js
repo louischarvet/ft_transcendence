@@ -5,8 +5,11 @@ import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
 import { matchSchema, registeredMatchSchema, tournamentMatchSchema } from './schema/matchSchema.js';
 
+import cookie from '@fastify/cookie'
 
 const fastify = Fastify({ logger: true });
+
+fastify.register(cookie);
 
 fastify.register(jwt, {
 	secret: 'secret-key'

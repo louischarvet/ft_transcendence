@@ -5,7 +5,7 @@
 const secureCookieOptions = {
     httpOnly: true,
     secure: true,
-    sameSite: 'Strict'
+    sameSite: 'none'
 };
 
 async function clearCookies(reply) {

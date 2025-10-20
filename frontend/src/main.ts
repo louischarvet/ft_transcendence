@@ -7,7 +7,6 @@ import Blackjack from './pages/Blackjack';
 import Tournament from './pages/Tournament';
 import Profil from './pages/Profil';
 import FriendProfil from './pages/FriendProfil';
-import { getUserByToken } from './tools/APIStorageManager';
 
 defineRoutes([
 	{ path: '/', render: () => Home() },
@@ -23,29 +22,8 @@ defineRoutes([
 	//{ path: '/logout', render: () => Profil() },
 ]);
 
-async function checkTokenStart(){
-    try {
-        const response = await getUserByToken();
-        // si token invalide (demander confirmation nathan)
-        if (!response || !response.user) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Redirige vers la page de login si user pas trouver
-        navigate('/');
-        return;
-    }
-  } catch (error) {
-    console.error('Erreur lors de la vérification du token :', error);
-    // En cas d’erreur réseau suppression token et redirection
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
 	renderRoute();
-	checkTokenStart();
 	// Interception des clics sur les liens
 	document.body.addEventListener('click', (e) => {
 		const target = e.target as HTMLElement;
