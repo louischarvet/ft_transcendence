@@ -1,17 +1,18 @@
 // controllers/controllers.js
 
+import { clear } from "console";
+
 //import { insertRefresh, getRefresh, deleteRefresh } from '../models/models.js'
 
 const secureCookieOptions = {
     httpOnly: true,
     secure: true,
-    sameSite: 'none'
+    sameSite: 'strict',
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken')
-//		.clearCookie('2fa')
-		.clearCookie('refreshToken');
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
 }
 
 async function generateAccess(sign, name, type, id, jwti, verified) {
@@ -57,6 +58,7 @@ export async function generate(request, reply) {
     } else
         message = 'Access token generated. Waiting 2fa.'
 
+	await clearCookies(reply);
     return reply
         .code(200)
         .send({
@@ -105,7 +107,7 @@ export async function refresh(db, request, reply) {
 
     const { server } = request;
 
-    clearCookies(reply);
+    await clearCookies(reply);
     try {
         const decoded = await request.jwtVerify(refreshToken);
 
@@ -129,12 +131,12 @@ export async function refresh(db, request, reply) {
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
                 maxAge: 1800,
-                path: '/'
+                path: '/api'
             })
             .setCookie('refreshToken', newRefresh, {
                 ...secureCookieOptions,
                 maxAge: 604800,
-                path: '/session/refresh'
+                path: '/api/session/refresh'
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {

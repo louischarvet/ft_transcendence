@@ -509,7 +509,7 @@ export default class PgGui {
           this.currentMatch = match;
           this.vsFriend.visibility(false);
           this.startedType = "local";
-          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
+          this.match.visibility(true, this.currentMatch.p1_name, this.currentMatch.p2_name);
         });
       });
       this.ui.addControl(guestButton);
@@ -823,13 +823,13 @@ export default class PgGui {
           this.currentMatch = this.currentTournament.matchs[0];
           this.tournament.visibility(false);
           this.goBackButton.isVisible = false;
-          if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
+          if (this.currentMatch.p1_type === "ai" && this.currentMatch.p2_type === "ai")
             this.startedType = "watchAI";
-          else if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
+          else if (this.currentMatch.p1_type === "ai" || this.currentMatch.p2_type === "ai")
             this.startedType = "vsAI";
           else
             this.startedType = "local";
-          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
+          this.match.visibility(true, this.currentMatch.p1_name, this.currentMatch.p2_name);
         });
       });
       this.ui.addControl(startButton);
@@ -1160,7 +1160,7 @@ export default class PgGui {
       playAgainButton.onPointerClickObservable.add(() => {
         if (this.currentMatch == null) return;
         
-        createMatch(this.currentMatch?.player2.type, this.panel.players.player2.text).then((match) => {
+        createMatch(this.currentMatch?.p2_type, this.panel.players.player2.text).then((match) => {
           if (match == null) return;
           this.result.visibility(false);
           this.currentMatch = match;
@@ -1198,11 +1198,11 @@ export default class PgGui {
           this.currentTournament = tournament;
           this.currentMatch = this.currentTournament.matchs[0];
           if (this.currentMatch == null) return;
-          if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
+          if (this.currentMatch.p1_type === "ai" || this.currentMatch.p2_type === "ai")
             this.startedType = "vsAI";
           else
             this.startedType = "local";
-          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
+          this.match.visibility(true, this.currentMatch.p1_name, this.currentMatch.p2_name);
         });
       });
       this.ui.addControl(nextMatchButton);
@@ -1244,6 +1244,7 @@ export default class PgGui {
       }
 
       if (this.currentTournament && this.currentMatch) {
+		console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((tournament) => {
           if (tournament == null) return;
           this.currentTournament = tournament;
@@ -1634,7 +1635,7 @@ export default class PgGui {
             this.login.visibility(false);
             this.vsFriend.visibility(false);
             this.startedType = "local";
-            this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
+            this.match.visibility(true, this.currentMatch.p1_name, this.currentMatch.p2_name);
           });
         } else {
           joinTournamentAsLogged(this.currentTournament.id, username, password).then((player) => {

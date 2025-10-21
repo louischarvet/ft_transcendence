@@ -6,11 +6,12 @@
   "main": "app.js",
   "author": "TRIJAUD Nathan",
   "dependencies": {
-	"fastify": "^4.23.2",
+	"fastify": "^4.0.0",
 	"sqlite3": "^5.1.6",
 	"sqlite": "^4.2.1",
     "@fastify/cookie": "^8.3.0",
-	"node-fetch": "^3.3.2"
+	"node-fetch": "^3.3.2",
+	"@fastify/cors": "^8.2.0"
   },
   "scripts": {
 	"start": "node app.js",

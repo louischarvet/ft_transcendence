@@ -33,7 +33,7 @@ async function routesPlugin(fastify, options) {
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://session-service:3000/refresh",
 		prefix: '/session/refresh',
-		rewritePrefix: ''
+		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://twofa-service:3000",

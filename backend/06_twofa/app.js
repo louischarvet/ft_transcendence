@@ -4,11 +4,20 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import twoFARoutes from './routes/routes.js';
 import { initDB } from './database/database.js';
-import shutdown from './shutdown.js';
+import shutdown from './common_tools/shutdown.js';
+import fastifyCors from '@fastify/cors';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
+
+// CORS configuration
+fastify.register(fastifyCors, {
+	origin: true, // Réfléchit le domaine de la requête
+	methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
+	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true
+});
 
 fastify.register(initDB);
 fastify.register(twoFARoutes);

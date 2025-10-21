@@ -1,4 +1,5 @@
-FROM louischarvet/ft_transcendence_backend_base:1.0
+#FROM louischarvet/ft_transcendence_backend_base:1.0
+FROM node:24
 
 WORKDIR /usr/src/app
 
@@ -10,7 +11,7 @@ RUN apt-get install sqlite3 -y
 RUN npm install sqlite3
 RUN npm install sqlite
 
-RUN npm install @fastify/jwt
+#RUN npm install @fastify/jwt
 
 COPY . .
 

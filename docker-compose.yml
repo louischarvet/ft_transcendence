@@ -41,8 +41,10 @@ services:
       - transcendence-net
     restart: on-failure
     volumes:
-      - ./frontend:/app
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
       - /app/node_modules
+
     working_dir: /app
     depends_on:
       - proxy-service

@@ -19,16 +19,22 @@ import { prunePendingRegistered } from './cron/cronFunctions.js';
 
 import fastifyStatic from '@fastify/static';
 import path from 'path';
+import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
+//fastify.register(cookie, {
+	//secret: "secret-key",
+	//hook: 'onRequest',
+//});
 
 // CORS configuration
 fastify.register(fastifyCors, {
     origin: true, // Réfléchit le domaine de la requête
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
 	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true
 });
 
 fastify.register(fastifyStatic, {
@@ -68,7 +74,7 @@ fastify.addSchema(userSchema);
 
 fastify.register(fastifyMultipart);
 fastify.register(userRoutes);
-
+fastify.register(shutdownPlugin);
 
 //! ajout le 16/09/2025
 await initDB();

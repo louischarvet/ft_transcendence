@@ -9,7 +9,7 @@ export function getUser() {
 
 export async function getRefreshToken() {
 	const cookie = await cookieStore.get("refreshToken");
-	console.log("cookie getRefreshToken => ", cookie);
+	console.log("cookie getRefreshToken => ", cookie?.value);
 	return 	cookie?.value;
 }
 
@@ -85,7 +85,6 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 export async function addNewFriend(friendName: string){
 	const response = await fetch(`/api/user/addfriend/${encodeURIComponent(friendName)}`, {
 		method: "POST",
-		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 	});
 
@@ -97,7 +96,6 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 
 	const response = await fetch('/api/user/getfriendsprofiles', {
 		method: 'GET',
-		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 	});
 
@@ -132,8 +130,8 @@ export async function removeFriend(friendId: string){
 }
 
 export async function checkConnection() {
-	const tmp = await getRefreshToken();
-	if (tmp === undefined)
+	const tmp = getUser();
+	if (!tmp)
 		return false;
 
 	const response = await fetch('/api/user/id', {
@@ -143,6 +141,7 @@ export async function checkConnection() {
 	if (!response.ok)
 		return false;
 	const data = await response.json();
+	console.log("data request -> ", data);
 	if (data.user) {
 		if (data.user.type === 'guest' && data.user.status !== 'available')
 			return false;
@@ -246,9 +245,7 @@ export async function verifyTwoFactorCode(code: string) {
 
 	const response = await fetch('/api/twofa/verifycode', {
 		method: 'POST',
-		headers: {
-		'Content-Type': 'application/json',
-		},
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 		body: JSON.stringify({
 			id: user?.id,
@@ -260,19 +257,18 @@ export async function verifyTwoFactorCode(code: string) {
 	});
 	const json = await response.json();
 	console.log("verify2fa -> ", json);
-	if (json.user && json.token) {
-		setUser(json.user);
-		// setToken(json.token);
-		return true;
-	}
-	return false;
+	return true;
 }
 
-
 export type Match = {
+	tournament_id: any | undefined,
 	id: string,
-	player1: any,
-	player2: any,
+	p1_id: any,
+	p1_name: any,
+	p1_type: any,
+	p2_id: any,
+	p2_name: any,
+	p2_type: any,
 	created_at: string
 }
 
@@ -346,7 +342,6 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 
 	const res = await fetch(`/api/tournament/jointournamentguest/${tournamentId}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
 		credentials: 'include',
 	});
 	const data = await res.json();
@@ -360,7 +355,6 @@ export type Tournament = {
 	matchs: Match[],
 	nb_players: number,
 	nbPlayersTotal: number,
-	created_at: string
 }
 
 export async function startTournament(tournamentId: number): Promise<Tournament | null> {
@@ -369,11 +363,12 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 
 	const res = await fetch(`/api/tournament/starttournament/${tournamentId}`, {
 		method: 'POST',
-		headers: {'Content-Type': 'application/json'/* 'Authorization': token*/ },
 		credentials: 'include',
 	});
 	const data = await res.json();
 	if (data.error) return null;
+	console.log("data tournament: ", data.tournament);
+	console.log("data tournament as Type: ", data.tournament as Tournament);
 	return data.tournament as Tournament;
 }
 
@@ -382,7 +377,7 @@ export async function nextTournamentMatch(scoreP1: number, scoreP2: number, matc
 	// if (!token) return null;
 
 	const res = await fetch(`/api/tournament/next`, {
-		method: 'POST',
+		method: 'PUT',
 		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
 		credentials: 'include',
 		body: JSON.stringify({ scoreP1, scoreP2, ...match})

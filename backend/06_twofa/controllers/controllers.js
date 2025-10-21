@@ -5,28 +5,28 @@ import { config } from 'dotenv';
 import speakeasy from 'speakeasy';
 import { insertInTable, getFromTable, deleteInTable } from '../models/models.js';
 import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import path from 'path';
 
 config();
 
 const secureCookieOptions = {
 	httpOnly: true,
 	secure: true,
-	sameSite: 'Strict' //?
+	sameSite: 'none',
 };
 
 // Generation de clef secrete
 const secret = speakeasy.generateSecret({ length: 20 });
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken')
-//		.clearCookie('2fa')
-		.clearCookie('refreshToken');
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api/twofa/verifycode' })
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
 }
 
 
 // Generation du code (one time password)
 async function generateCode() {
-	return (await speakeasy.totp({
+	return (speakeasy.totp({
 		secret: secret.base32,
 		encoding: 'base32'
 	}));
@@ -98,7 +98,7 @@ export async function verifyCode(request, reply) {
 	// revocation de l'ancien accessToken
 	await revokeJWT(request.headers.authorization);
 
-	clearCookies(reply);
+	await clearCookies(reply);
 
 	// si user n'est pas le p2 d'un match
 //	if (tmp === undefined || !tmp) {
@@ -127,12 +127,12 @@ export async function verifyCode(request, reply) {
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
 			maxAge: 1800,
-			path: '/'
+			path: '/api'
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
 			maxAge: 604800,
-			path: '/session/refresh'
+			path: '/api/session/refresh'
 		})
 //	}
 	

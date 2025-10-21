@@ -43,13 +43,15 @@ export async function authenticateJWT(request, reply) {
 }
 
 
-export async function revokeJWT(token) {
-	if (!token)
+export async function revokeJWT(cookies) {
+	console.log("##### revokeJWT token =", cookies);
+	const { accessToken } = cookies;
+	if (!accessToken)
 		return { status: 400, error: 'Unauthorized: No token provided' };
 	const revRes = await fetch('http://session-service:3000/delete', {
 		method: 'DELETE',
 		headers: {
-			'Authorization': token,
+			'Authorization': 'Bearer ' + accessToken,
 		},
 	});
 	return (revRes);

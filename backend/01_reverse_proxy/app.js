@@ -1,11 +1,11 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import routesPlugin from './routes/routes.js';
 import cookie from '@fastify/cookie'
-import shutdown from './shutdown.js';
+import shutdown from './common_tools/shutdown.js';
 
 import fastifyHttpProxy from '@fastify/http-proxy';
 
@@ -26,6 +26,7 @@ server.register(fastifyCors, {
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true,
 });
 
 server.register(cookie);

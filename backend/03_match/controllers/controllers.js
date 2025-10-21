@@ -145,8 +145,10 @@ export async function tournamentMatch(request, reply) {
 	const { player1, player2, tournamentID } = request.body;
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, player2.type, tournamentID);
 	console.log("matches insert in tables match -> ", match, "\n");
+//! fetch changestatus des joueurs a in_game 
+
 	return reply.code(200).send({
-		match: match,
+		match: {...match, p1_name: player1.name, p2_name: player2.name},
 		message: 'Tournament match created'
 	});
 }

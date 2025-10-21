@@ -11,18 +11,13 @@ import path from 'path';
 const secureCookieOptions = {
 	httpOnly: true,
 	secure: true,
-	sameSite: 'Strict'
+	sameSite: 'none'
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken', secureCookieOptions)
-		.clearCookie('refreshToken', secureCookieOptions);
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
 }
-
-//async function clearCookies(reply) {
-//	reply.clearCookie('accessToken')
-//		.clearCookie('refreshToken');
-//}
 
 // rout POST /guest
 export async function createGuest(request, reply) {
@@ -46,12 +41,13 @@ export async function createGuest(request, reply) {
 		const { accessToken, refreshToken } = await generateJWT(user);
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
-			path :'/',
+			path :'/api',
 			maxAge: 1800
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
 			maxAge: 604800,
+			//path :'/',
 			path: '/api/session/refresh'
 		})
 	}
@@ -105,7 +101,7 @@ export async function register(request, reply) {
 		.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
 			maxAge: 1800,
-			path: '/twofa/verify'
+			path: '/api/twofa/verifycode'
 		})
 		.send({
 			user,
@@ -144,12 +140,12 @@ export async function logIn(request, reply) {
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
 				maxAge: 1800,
-				path: '/'
+				path: '/api'
 			})
 			.setCookie('refreshToken', refreshToken, {
 				...secureCookieOptions,
 				maxAge: 604800,
-				path: '/session/refresh'
+				path: '/api/session/refresh'
 			})
 			.send(body);
 	} else
@@ -159,15 +155,15 @@ export async function logIn(request, reply) {
 // Route PUT /logout
 // Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
-	const revRes = await revokeJWT(request.headers.authorization); ///////
+	const revRes = await revokeJWT(request.cookies); ///////
+	await clearCookies(reply);
 	if (revRes.status == 200) {
 		if (request.user.type == "guest")
 			deleteUserInTable(request.user.type, request.user.name);
 		else
 			updateStatus(request.user.type, request.user.name, 'logged_out');
 
-		await clearCookies(reply);
-
+		
 		return reply.code(201).send({ message: "Successfully logged out."});
 	} else
 		return revRes;
@@ -191,7 +187,7 @@ export async function deleteUser(request, reply) {
 	if (!passwordMatch)
 		return reply.code(401).send({ error: 'Bad password' });
 	
-	const revRes = await revokeJWT(request.headers.authorization);
+	const revRes = await revokeJWT(request.cookies);
 	if (revRes.status == 200) {
 		console.log("###request.user.type : ", request.user.type, "\n###");
 		deleteUserInTable(request.user.type, request.user.name);

@@ -548,7 +548,7 @@ export async function startTournament(request, reply) {
 		return reply.code(500).send({ error: 'Could not start tournament' });
 
 	console.log("###\nFonction startTournament : -> INFOS TOURNOI ", updatedTournament, "\n###\n");
-	return reply.code(200).send({ tournament: tournamentMatchData, message: 'Tournament started' });
+	return reply.code(200).send({ tournament: { ...updatedTournament, matches}, message: 'Tournament started' });
 }
 
 

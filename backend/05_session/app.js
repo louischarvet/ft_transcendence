@@ -10,6 +10,7 @@ import { initDB } from './database/db.js';
 import { sessionRoutes } from './routes/routes.js';
 import { generateSchema } from './schema/generateSchema.js';
 import { pruneRevokedAccess } from './cron/cron.js';
+import shutdownPlugin from './common_tools/shutdown.js';
 
 // generer secret-key !!!
 const secretKey = "secret-key"
@@ -21,6 +22,7 @@ fastify.register(fastifyCors, {
 	origin: true, // Réfléchit le domaine de la requête
 	methods: ['GET', 'POST', 'DELETE'], // Méthodes HTTP autorisées
 	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true
 });
 
 // cookies
@@ -50,6 +52,7 @@ fastify.register(sessionRoutes);
 // Schema
 fastify.addSchema(generateSchema);
 
+fastify.register(shutdownPlugin);
 
 const start = async () => {
     try {

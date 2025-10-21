@@ -151,7 +151,7 @@ export default class PgGame {
         this.ball.position.x = this.ball.radius * 3 + this.paddleLeft.width;
         this.ball.position.y = this.paddleLeft.position.y + this.paddleLeft.height / 2;
       }
-      if (this.leftScore == 10 || this.rightScore == 10)
+      if (this.leftScore == 1 || this.rightScore == 1)
         this.started = false;
       // else if (this.againstAI && (this.leftScore - this.rightScore) >= 5)
       //   this.aiMode++;

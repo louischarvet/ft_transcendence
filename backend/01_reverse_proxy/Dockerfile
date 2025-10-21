@@ -1,4 +1,5 @@
-FROM louischarvet/ft_transcendence_backend_base:1.0
+#FROM louischarvet/ft_transcendence_backend_base:1.0
+FROM node:24
 
 EXPOSE 443
 
@@ -25,4 +26,4 @@ RUN mkdir -p ./ssl && openssl req -x509 -nodes \
 COPY . .
 
 # Lancement du serveur
-CMD ["nodemon", "app.js"]
+CMD ["node", "--use-system-ca", "app.js"]

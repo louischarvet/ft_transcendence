@@ -5,7 +5,7 @@ import Fastify from 'fastify';
 import { initDB } from './database/db.js';
 import { tournamentSchema } from './schema/tournamentSchema.js';
 import cookie from '@fastify/cookie'
-
+import shutdownPlugin from './common_tools/shutdown.js';
 const fastify = Fastify({ logger: true });
 
 fastify.register(routesPlugin);
@@ -14,6 +14,7 @@ fastify.register(cookie);
 
 // On instencie les Schemas de JSONs
 fastify.addSchema(tournamentSchema);
+fastify.register(shutdownPlugin);
 
 //! ajout le 16/09/2025
 await initDB();
