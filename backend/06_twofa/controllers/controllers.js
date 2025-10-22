@@ -20,7 +20,7 @@ const secret = speakeasy.generateSecret({ length: 20 });
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api/twofa/verifycode' })
-		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
 
@@ -132,7 +132,7 @@ export async function verifyCode(request, reply) {
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
 			maxAge: 604800,
-			path: '/api/session/refresh'
+			path: '/api/refresh'
 		})
 //	}
 	

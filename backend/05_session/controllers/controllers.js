@@ -7,12 +7,12 @@ import { clear } from "console";
 const secureCookieOptions = {
     httpOnly: true,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'none',
 };
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
-		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
 async function generateAccess(sign, name, type, id, jwti, verified) {
@@ -23,7 +23,7 @@ async function generateAccess(sign, name, type, id, jwti, verified) {
         jwti: jwti,
         verified: verified
     }, {
-        expiresIn : '15m'
+        expiresIn : '1m'
     });
 }
 
@@ -101,45 +101,51 @@ export async function authenticate(db, request, reply) {
 
 // POST /refresh
 export async function refresh(db, request, reply) {
-    const { refreshToken } = request.cookies;
+	const { refreshToken } = request.cookies;
     if (refreshToken === undefined)
-        return reply.code(400).send({ error: 'Missing token' });
-
+        return reply.code(403).send({ error: 'Missing token' });
+	
+	await clearCookies(reply);
+	// a l'arrache
+	request.headers.authorization = 'Bearer ' + refreshToken;
     const { server } = request;
 
-    await clearCookies(reply);
+	console.log("##### REFRESH TOKEN =", refreshToken);
+
     try {
-        const decoded = await request.jwtVerify(refreshToken);
-
+		const decoded = await request.jwtVerify(refreshToken);
+		
         if (!await db.refresh.get(decoded.jwti, decoded.id)) // must delog
-            return reply.code(403).send({ error: 'Obsolete refresh token.' });
-
+		return reply.code(403).send({ error: 'Obsolete refresh token.' });
+		
         const { name, type, id, jwti } = decoded;
         const newJwti = crypto.randomUUID();
 
         // New access token
         const newAccess = await generateAccess(server.jwt.sign, name, type, id, newJwti, true);
-
+		
         // New refresh token
         const newRefresh = await generateRefresh(server.jwt.sign, name, type, id, newJwti);
         // mise a jour db
         db.refresh.erase(jwti, id);
         db.refresh.insert(newJwti, id);
+		
 
         return reply
             .code(200)
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
-                maxAge: 1800,
+                maxAge: 60,
                 path: '/api'
             })
             .setCookie('refreshToken', newRefresh, {
                 ...secureCookieOptions,
                 maxAge: 604800,
-                path: '/api/session/refresh'
+                path: '/api/refresh'
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {
+		console.log("################### REFRESH ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED') // bad code !!!
             return reply.code(403).send({ error: 'Expired refresh token.' });
         else // must relog
@@ -154,6 +160,7 @@ export async function deleteToken(db, request, reply) {
         return reply.code(400).send({ error: 'Missing Bearer' });
     const accessToken = rawToken.split(' ')[1];
 
+    await clearCookies(reply);
     try {
         const decodedAccess = await request.jwtVerify(accessToken);
 

@@ -10,6 +10,7 @@ export function getUser() {
 export async function getRefreshToken() {
 	const cookie = await cookieStore.get("refreshToken");
 	console.log("cookie getRefreshToken => ", cookie?.value);
+	console.log("cookie getRefreshToken => ", cookie);
 	return 	cookie?.value;
 }
 
@@ -109,6 +110,20 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 	return data;
 }
 
+export async function fetchRefreshToken(){
+
+	const response = await fetch ("/api/refresh", {
+		method: 'POST',
+		credentials: 'include',
+	});
+
+	if (response.status === 403) {
+		console.log("Impossible de mettre a jour le refresh token");
+		return false;
+	}
+	return true;
+}
+
 export async function removeFriend(friendId: string){
 
 	const response = await fetch('/api/user/deleteFriend', {
@@ -134,10 +149,19 @@ export async function checkConnection() {
 	if (!tmp)
 		return false;
 
+ 	//const token = await getRefreshToken();
+	//if (token === undefined)
+	//	return false;
+
 	const response = await fetch('/api/user/id', {
 		method: 'GET',
 		credentials: 'include',
 	});
+	if (response.status === 401){
+		if (await fetchRefreshToken() === false)
+			return false;
+		return true;
+	}
 	if (!response.ok)
 		return false;
 	const data = await response.json();
@@ -366,7 +390,8 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 		credentials: 'include',
 	});
 	const data = await res.json();
-	if (data.error) return null;
+	if (data.error)
+		return null;
 	console.log("data tournament: ", data.tournament);
 	console.log("data tournament as Type: ", data.tournament as Tournament);
 	return data.tournament as Tournament;

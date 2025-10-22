@@ -16,7 +16,7 @@ const secureCookieOptions = {
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
-		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/session/refresh' });
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
 // rout POST /guest
@@ -48,7 +48,7 @@ export async function createGuest(request, reply) {
 			...secureCookieOptions,
 			maxAge: 604800,
 			//path :'/',
-			path: '/api/session/refresh'
+			path: '/api/refresh'
 		})
 	}
 
@@ -139,13 +139,13 @@ export async function logIn(request, reply) {
 		return reply.code(201)
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
-				maxAge: 1800,
+				maxAge: 60,
 				path: '/api'
 			})
 			.setCookie('refreshToken', refreshToken, {
 				...secureCookieOptions,
 				maxAge: 604800,
-				path: '/api/session/refresh'
+				path: '/api/refresh'
 			})
 			.send(body);
 	} else

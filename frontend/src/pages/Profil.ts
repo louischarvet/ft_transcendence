@@ -190,9 +190,12 @@ export default function Profile(): HTMLElement {
   container.appendChild(profileCard);
 
   getUserByToken().then((response) => {
-    if(!response || !response.user)
+	console.log("response =\n", response, "#####################");
+    if(!response || !response.user) {
         navigate('/');
-    const user = response.user;
+		return ;
+	}
+	const user = response.user;
     username.textContent = user.name;
     email.textContent = user.email;
     avatar.className = user.picture || './pictures/default.webp';

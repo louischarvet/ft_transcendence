@@ -22,7 +22,7 @@ export async function authenticateJWT(request, reply) {
 //				"\n##############################\n");
 	const { accessToken } = request.cookies;
 	if (accessToken === undefined)
-		return reply.code(400).send({
+		return reply.code(401).send({
 			error: 'Access token missing.'
 		});
 
