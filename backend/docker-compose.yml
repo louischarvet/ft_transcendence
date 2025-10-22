@@ -1,17 +1,27 @@
 services:
+  #proxy-service:
+
+  #  container_name: proxy-service
+
+  #  build:
+  #    context: ./01_reverse_proxy
+  #    dockerfile: Dockerfile
+  #  ports:
+  #    - "3000:3000"
+  #  networks:
+  #    - transcendence-net  
+  #  restart: on-failure
+
   proxy-service:
-
     container_name: proxy-service
-
     build:
       context: ./01_reverse_proxy
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "443:443" # HTTPS
     networks:
       - transcendence-net  
     restart: on-failure
-
 
   user-service:
   
@@ -24,7 +34,9 @@ services:
       - transcendence-net
     restart: unless-stopped
     volumes:
+    - user_db:/usr/src/app/data
     - ./02_user/pictures:/usr/src/app/pictures
+    #- ./02_user/data:/usr/src/app/data/
 #    command: npm run dev
 
 
@@ -40,6 +52,8 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+    volumes:
+      - match_db:/usr/src/app
 #    command: npm run dev
 
 
@@ -56,6 +70,8 @@ services:
     depends_on:
       - user-service
       - match-service
+    volumes:
+    - tournament_db:/usr/src/app/data/
 #    command: npm run dev
 
   session-service:
@@ -70,7 +86,31 @@ services:
     restart: unless-stopped
     depends_on:
       - user-service
+    volumes:
+      - session_db:/usr/src/app/
+
+  twofa-service:
+
+    build: ./06_twofa
+    container_name: twofa-service
+    expose:
+      - "3000"
+    working_dir: /usr/src/app
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+    depends_on:
+      - user-service
+    volumes:
+      - twofa_db:/usr/src/app/
 
 networks:
   transcendence-net:
     driver: bridge
+
+volumes:
+  user_db:
+  tournament_db:
+  match_db:
+  session_db:
+  twofa_db:

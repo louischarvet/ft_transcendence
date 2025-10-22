@@ -17,6 +17,8 @@ transcendence/
 ├── score/
 │   └── ...
 
+ne pas lire....
+fqwr odcx igae hjfv
 
 Rôle de chaque service et modèle dans ta stack
 
@@ -131,3 +133,32 @@ Créer un tournoi qui appelle le match-service :
 A faire:
 
 _ base image en local.
+
+
+
+
+
+
+TO DO
+
+- Proteger la route /user/changeStatus
+- /session : envoyer une requete a /user/changeStatus apres la revocation du token
+- /session : verifier en arriere plan dans active_tokens les JWT expires -> requete a /user/changeStatus
+- /match : historique des matches pour un player
+- /user : empecher les registered de s'appeler "Guest(...)"
+- /user : get friends list
+- /user & /match : login par email OU par name
+- Fermer la DB a la fin du programme !
+- /user : en arriere plan: supprimer les pending trop anciens
+- verifier l'existence des ENV 
+- Securiser les schemas: echapper les caracteres speciaux (attaques XSS)
+
+
+
+NEW TODO
+
+-	Lorsque l'user qui lance un tournoi quitte le tournois ---> Tournois close AND Logout all users
+-	Accec token a tester (Refresh token a mettre a jour dans les cas ou expire)
+-	Si pas accetoken dans requete faire reply 401
+-	Si pas de refreshToken dans /session/refresh, renvoyer 403
+-	Mot de passe incorect (code d'erreur specifique)

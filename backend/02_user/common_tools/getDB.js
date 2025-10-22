@@ -2,7 +2,11 @@ import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
 // Chemin vers le fichier de base de données SQLite
-const dbFile = '/usr/src/app/users_db';
+//! modif le 16/09/2025
+const dbFile = '/usr/src/app/data/users_db';
+if (!dbFile)
+	reply.code(500).send({ error: 'Database file path is not defined' });
+
 // Fonction pour obtenir une instance de la base de données
 async function getDB() {
 	if (!dbFile)

@@ -1,0 +1,201 @@
+Tournoi>
+	entrer le nom du Tournoi
+	> le tournoi existe > rejoindre
+	> il n'existe pas > le cree
+
+Tokens JWT >
+	login >
+	> creation de deux tokens: un "cle privee" stocke dans la BD user,
+		un token "cle publique" qui est donne au client
+	> verification du JWT : on verifie que le token du client
+		correspond au token stocke
+	> duree d'expiration pour le token client ?
+		refresh quand on arrive a la moitie par exemple ?
+
+	logout >
+	> suppression de la cle stockee
+	( pas besoin de revoquer les tokens )
+
+	expiration des tokens 1h / 1d par exemple
+	> si revoques, on verifie dans la BD si la date d'expiration
+		est atteinte
+	> si oui, on supprime le token
+
+	stocker l'iat du token dans les infos du user, comparer les
+	deux pour l'authentification
+
+---------------------------------------------------
+
+data persistante :
+	id = 1
+	name = Nathan
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MSwiaWF0IjoxNzU4NzI0NjQwLCJleHAiOjE3NTg3MzE4NDB9.lbg4FpcnqzvcXpeVAan-gON6mplDUqaa-2t4litmWJM",
+
+{
+    "user": {
+        "id": 3,
+        "name": "Popo",
+        "type": "registered",
+        "status": "pending",
+        "wins": 0,
+        "losses": 0,
+        "friend_ship": null,
+        "picture": "./pictures/BG.webp"
+    },
+    "message": "User Popo created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTmF0aGFuIiwidHlwZSI6InJlZ2lzdGVyZWQiLCJpZCI6MywiaWF0IjoxNzU4NzI0ODg5LCJleHAiOjE3NTg3MzIwODl9.eTJorTV9fzLiNYQO4hht-C5F3y4dSljilmCU6u3Hgtc",
+}
+
+{
+    "user": {
+        "id": 4,
+        "name": "Caca",
+        "type": "registered",
+        "status": "pending",
+        "wins": 0,
+        "losses": 0,
+        "friend_ship": null,
+        "picture": "./pictures/BG.webp"
+    },
+    "message": "User Caca created"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2FjYSIsInR5cGUiOiJyZWdpc3RlcmVkIiwiaWQiOjQsImlhdCI6MTc1ODcyNTE4MiwiZXhwIjoxNzU4NzMyMzgyfQ.fB3ZMxRwJF1otxhGsi9NHP5f3s-pasvCKZn6GTaeenA",
+}
+-----------------------------------------------------------
+17/09/2025
+
+Todo : 
+
+-Impossibilite de PUT name ( function : updateInfo) ---> 	OK👌pour userservice
+
+-Replace getName -> getId (A voir avec Louis)
+	protege et certifit lidentite de luser (name peux changer) ---> OK👌 (name impossible a modifier)
+		A tester pour update et del par exemple , ou updateName et logout, token invalid etc....
+
+-Attaque XSS : 
+
+	PROTECTION AJV (Another JSON Validator)
+
+	1. Ajout des patern dans les schema : ---> 	OK👌pour userservice
+		exple : pattern: "^[^<>{}\"'`]*$"
+	2. Max lenght va limiter les risques ---> 	OK👌pour userservice
+		exple : maxLength: 254
+
+	PROTECTION Sanitization backend facultatif mais utile en plus d’AJV
+		Permet de nettoyer les strings dans le body
+	3 - npm install sanitize-html et import sanitizeHtml from 'sanitize-html';
+		exple : 
+				function sanitizeObject(obj) {
+				for (const key in obj) {
+					if (typeof obj[key] === 'string') {
+					obj[key] = sanitizeHtml(obj[key], {
+						allowedTags: [],
+						allowedAttributes: {}
+					});
+					} else if (typeof obj[key] === 'object') {
+					sanitizeObject(obj[key]);
+					}
+				}
+				}
+
+				et 
+
+				fastify.addHook('preValidation', async (request, reply) => {
+					if (request.body)
+						sanitizeObject(request.body);
+				});
+
+
+	3 - headers de sécurité HTTP ----> ajoute X-Content-Type-Options, X-XSS-Protection ---> 	OK👌 pour userservice
+		npm install @fastify/helmet
+		import helmet from '@fastify/helmet';
+		await fastify.register(helmet, {
+			global: true
+		});
+
+-----------
+
+
+		CREATE TABLE IF NOT EXISTS tournament (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			status TEXT DEFAULT 'waiting',
+
+				ORGANISTAION DES MATCHS ET USERS
+			matchs TEXT,			----> "1;2;3;4			/ 5;6 		/ 7;8"
+			players TEXT DEFAULT,	----> '1:register;2;3;4;5;6;7;8	/ 1;3;5;7	/ 3;7;1;5		/ 5'
+
+
+			nbPlayersTotal INTEGER NOT NULL,
+			remainingPlaces INTEGER NOT NULL,
+			created_at INTEGER NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS history (
+			id INTEGER NOT NULL,
+			matchs TEXT,	----->
+			players TEXT,   ----> ""
+			ranking TEXT,
+			winnerId INTEGER,
+			created_at INTEGER NOT NULL
+		);
+
+
+modules:
+	
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+----------------------------------      SERVICE TOURNOI      -------------------------------------
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+## 1 . Infos général 
+
+Création / affichage des tournois
+	- L’utilisateur peut créer un tournoi ou voir la liste des tournois existants.
+
+Rejoindre un tournoi
+	- Un joueur enregistré, un autre navigateur du même user, ou un guest peut rejoindre.
+
+Lancement du tournoi
+	- Le créateur démarre le tournoi quand toutes les places sont remplies.
+
+Rounds et matchs
+	- Le front récupère les matchs du round courant.
+	- Lorsqu’un match est terminé, le front notifie le backend pour avancer.
+
+Fin du tournoi
+	- Le backend calcule le gagnant final et met à jour le tournoi.
+
+
+## 2 . Routes backend à utiliser côté front-end
+
+| Action front 							  | Route backend 					  | Méthode | Body / Paramètres                     |
+|-----------------------------------------|-----------------------------------|---------|---------------------------------------|
+| Voir tous les tournois 				  | `/tournaments` 					  | GET 	| -                                     |
+| Créer un tournoi 						  | `/tournaments/launch` 			  | POST    | `{ nbPlayers: 4 }` . TOKEN                   |
+| Rejoindre un tournoi loggué 			  | `/tournaments/join/:id` 		  | POST    | -                                     |
+| Rejoindre un tournoi enregistré 		  | `/tournaments/join-registered/:id`| POST    | `{ name, password }`                  |
+| Rejoindre un tournoi guest 			  | `/tournaments/join-guest/:id` 	  | POST    | -                                     |
+| Lancer un tournoi (start) 			  | `/tournaments/start/:id` 		  | POST    | -                                     |
+| Récupérer un tournoi 					  | `/tournaments/:id` 				  | GET     | -                                     |
+| Terminer un match / next round 		  | `/tournaments/next` 		  	  | POST    | `{ match }`                           |
+| Terminer un tournoi 					  | `/tournaments/end` 				  | POST    | `{ tournamentId, winnerId }`          |
+| Mettre à jour match et places restantes | `/tournaments/update-match` 	  | POST    | `{ tournamentId, matchId, playerId }` |
+| Voir tournois gagnés par un user 		  | `/tournaments/wins/:id` 		  | GET     | -                                     |
+
+-------
+
+exemple pour la creation d'un tournoi : 
+	
+	async function createTournament(nbPlayers) {
+	  const res = await fetch('http://backend/tournaments/launch', {
+	    method: 'POST',
+	    headers: { 'Content-Type': 'application/json', 'Authorization': token },
+	    body: JSON.stringify({ nbPlayers })
+	  });
+	  const data = await res.json();
+	  return data;
+	}
+
+Le front envoie le nombre de joueurs et récupère le tournoi créé avec le créateur déjà ajouté.
+Afficher le tournoi dans la page “Mes tournois / En attente”

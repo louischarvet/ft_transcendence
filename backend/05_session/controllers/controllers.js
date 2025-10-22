@@ -1,82 +1,188 @@
-import jwt from 'jsonwebtoken';
-import speakeasy from 'speakeasy';
-import { userAndTokenMatch, insertInActiveTokensTable, insertInTable,
-	isInTable, deleteExpiredTokens, deleteInActiveTokensTable } from '../models/models.js';
+// controllers/controllers.js
 
-//const secret = speakeasy.generateSecret().base32;
-const secret = 'secret-key';
+import { clear } from "console";
 
-// Route POST /generate
-export async function generateToken(request, reply) {
-	const { name, type, id } = request.body;
-	const token = await jwt.sign({
-		name: name,
-		type: type,
-		id: id,
-	},
-		secret,
-		{ expiresIn : '2h' }
-	);
+//import { insertRefresh, getRefresh, deleteRefresh } from '../models/models.js'
 
-	const { iat, exp } = jwt.verify(token, secret);
-	await insertInActiveTokensTable(name, id, type, iat, exp);
+const secureCookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+};
 
-	return reply.code(200).send({
-		token: token,
-		message: 'JWT created'
-	})
+async function clearCookies(reply) {
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
-// Route GET /authenticate
-export async function authenticateUser(request, reply) {
-	const token = request.headers.authorization.split(' ')[1];
+async function generateAccess(sign, name, type, id, jwti, verified) {
+    return await sign({
+        name: name,
+        type: type,
+        id: id,
+        jwti: jwti,
+        verified: verified
+    }, {
+        expiresIn : '1m'
+    });
+}
 
-	if (!token)
-		return reply.code(401).send({ error: 'Missing token' });
-	try {
-		if (await isInTable('revoked_tokens', 'token', token))
-			return reply.code(401).send({ error: 'Token is already revoked' });
+async function generateRefresh(sign, name, type, id, jwti) {
+    return await sign({
+        name: name,
+        type: type,
+        id: id,
+        jwti: jwti
+    }, {
+        expiresIn: '7d',
+    });
+}
 
-		const decoded = jwt.verify(token, secret);
-//		if (await userAndTokenMatch(decoded, request.body)) {
-		if (await userAndTokenMatch(decoded)) {
-			return reply.code(200).send({
-				user: {
-					name: decoded.name,
-					id: decoded.id,
-					type: decoded.type
-				},
-				message: 'Valid token'
-			});
-		} else {
-			return reply.code(401).send({ error: "Token and user infos don't match" });
-		}
-	} catch (err) {
-		return reply.code(401).send({ error: 'Invalid token' });
+// POST /generate
+export async function generate(request, reply) {
+    const { server } = request;
+	const { name, type, id, verified } = request.body;
+    const jwti = crypto.randomUUID();
+
+    // Access token
+    const accessToken = await generateAccess(server.jwt.sign, name, type, id, jwti, verified);
+
+    let message, refreshToken;
+    if (verified === true) {
+        // Refresh token
+        refreshToken = await generateRefresh(server.jwt.sign, name, type, id, jwti);
+
+        // Garder en db le jwtid du refresh token
+        server.db.refresh.insert(jwti, id);
+        message = 'Access and refresh tokens generated.';
+    } else
+        message = 'Access token generated. Waiting 2fa.'
+
+	await clearCookies(reply);
+    return reply
+        .code(200)
+        .send({
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            message: message
+        });
+}
+
+// GET /authenticate
+export async function authenticate(db, request, reply) {
+    const rawToken = request.headers.authorization;
+    if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
+        return reply.code(400).send({ error: 'Missing Bearer' });
+    const accessToken = rawToken.split(' ')[1];
+
+    if (!accessToken) {
+		console.log('Missing token');
+		return reply.code(400).send({ error: 'Missing token' });
 	}
+    try {
+        const decoded = await request.jwtVerify(accessToken);
+
+        const revoked = await db.revokedAccess.get(decoded.jwti);
+        if (revoked !== undefined)
+            return reply.code(400).send({ error: 'Access token is revoked.' }); // 403 ?
+
+        delete decoded.iat;
+        delete decoded.exp;
+
+        return reply.code(200).send(decoded); /////////////
+    } catch (err) {
+        console.log("authenticate ERROR: ", err);
+        if (err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED')
+            return reply.code(401).send({ error: 'Expired access token.' });
+        else
+            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
+    }
 }
 
-// Route POST /revoke
-export async function revokeToken(request, reply) {
-	const token = request.headers.authorization.split(' ')[1];
-	if (!token)
-		return reply.code(401).send({ error: 'Missing token' });
+// POST /refresh
+export async function refresh(db, request, reply) {
+	const { refreshToken } = request.cookies;
+    if (refreshToken === undefined)
+        return reply.code(403).send({ error: 'Missing token' });
+	
+	await clearCookies(reply);
+	// a l'arrache
+	request.headers.authorization = 'Bearer ' + refreshToken;
+    const { server } = request;
 
-	try {
-		if (await isInTable('revoked_tokens', 'token', token))
-			return reply.code(401).send({ error: 'Token is already revoked' });
+	console.log("##### REFRESH TOKEN =", refreshToken);
 
-		const decoded = jwt.verify(token, secret);
-		await insertInTable('revoked_tokens', { token: token, exp: decoded.exp });
-		await deleteInActiveTokensTable(decoded.name);
-		return reply.code(200).send({ message: 'Token has been revoked' });
-	} catch (err) {
-		return reply.code(401).send({ error: 'Invalid token' });
-	}
+    try {
+		const decoded = await request.jwtVerify(refreshToken);
+		
+        if (!await db.refresh.get(decoded.jwti, decoded.id)) // must delog
+		return reply.code(403).send({ error: 'Obsolete refresh token.' });
+		
+        const { name, type, id, jwti } = decoded;
+        const newJwti = crypto.randomUUID();
+
+        // New access token
+        const newAccess = await generateAccess(server.jwt.sign, name, type, id, newJwti, true);
+		
+        // New refresh token
+        const newRefresh = await generateRefresh(server.jwt.sign, name, type, id, newJwti);
+        // mise a jour db
+        db.refresh.erase(jwti, id);
+        db.refresh.insert(newJwti, id);
+		
+
+        return reply
+            .code(200)
+            .setCookie('accessToken', newAccess, {
+                ...secureCookieOptions,
+                maxAge: 60,
+                path: '/api'
+            })
+            .setCookie('refreshToken', newRefresh, {
+                ...secureCookieOptions,
+                maxAge: 604800,
+                path: '/api/refresh'
+            })
+            .send({ message: 'Tokens have been refreshed.' });
+    } catch (err) {
+		console.log("################### REFRESH ERROR: ", err);
+        if (err.code === 'FST_JWT_EXPIRED') // bad code !!!
+            return reply.code(403).send({ error: 'Expired refresh token.' });
+        else // must relog
+            return reply.code(403).send({ error: 'Invalid refresh token.' }); // 403 ?
+    }
 }
 
-// cron pour supprimer les tokens revoques ~ toutes les 30 minutes
-export async function pruneExpiredTokens() {
-	const time = await Math.floor( await Date.now() / 1000 );
-	await deleteExpiredTokens(time);
+// DELETE /delete
+export async function deleteToken(db, request, reply) {
+    const rawToken = request.headers.authorization;
+    if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
+        return reply.code(400).send({ error: 'Missing Bearer' });
+    const accessToken = rawToken.split(' ')[1];
+
+    await clearCookies(reply);
+    try {
+        const decodedAccess = await request.jwtVerify(accessToken);
+
+        const { id, jwti, exp } = decodedAccess;
+        const refreshRef = await db.refresh.get(jwti, id);
+
+        if (refreshRef === undefined)
+            return reply.code(403).send({
+    //            ...decoded,
+                error: 'deleteToken: Obsolete refresh token.'
+            });
+
+        await db.refresh.erase(jwti, id);
+        // revoke access !
+        await db.revokedAccess.insert(jwti, exp);
+
+        return reply.code(200).send({ message: 'Deleted refresh token.' })
+    } catch (err) {
+        console.log("delete ERROR: ", err);
+        if (err.code === 'FST_JWT_EXPIRED') // must relog
+            return reply.code(401).send({ error: 'Expired access token.' });
+        else // must relog
+            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
+    }
 }

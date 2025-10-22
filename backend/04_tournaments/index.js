@@ -1,27 +1,33 @@
 //index.js
 
-import shutdown from './common_tools/shutdown.js';
-import routes from './routes/routes.js';
-import { Pool } from './models/tournaments.js';
+import routesPlugin from './routes/routes.js';
 import Fastify from 'fastify';
-import { initializeDatabase } from './database/db.js';
-import { createSampleData } from './controllers/tournaments.js';
-
+import { initDB } from './database/db.js';
+import { tournamentSchema } from './schema/tournamentSchema.js';
+import cookie from '@fastify/cookie'
+import shutdownPlugin from './common_tools/shutdown.js';
 const fastify = Fastify({ logger: true });
 
-fastify.register(routes);
+fastify.register(routesPlugin);
 
-// Une route pour connecter au frontend ! Cette requette depuis le front a tester
-fastify.get('/api/data', async (request, reply) => {
-	return { message: "Hello from the Fastify backend!" };
-});
+fastify.register(cookie);
+
+// On instencie les Schemas de JSONs
+fastify.addSchema(tournamentSchema);
+fastify.register(shutdownPlugin);
+
+//! ajout le 16/09/2025
+await initDB();
+
+////!ajout le 18/09/2025
+////permet de gerer les attaques XSS
+//await fastify.register(helmet, {
+//	global: true
+////});
 
 async function start() {
-  	//await Pool.initializeDatabase();
 	try {
-		await initializeDatabase();
-		//await createSampleData();
-		await fastify.listen({ port: 3003, host: '0.0.0.0' });
+		await fastify.listen({ port: 3000, host: '0.0.0.0' });
 		console.log('Server listening on port 3001');
 	} catch (err) {
 		fastify.log.error(err);

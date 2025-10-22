@@ -2,55 +2,43 @@
 
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = __dirname + '/db';
-
-export async function getDb() {
-	return open({
-		filename: dbPath,
+export async function initDB() {
+	const db = await open({
+		filename: '/usr/src/app/data/tournament_db',
 		driver: sqlite3.Database
 	});
-}
-
-export async function initializeDatabase() {
-	const db = await getDb();
-
 	await db.exec(`
-		CREATE TABLE IF NOT EXISTS players (
+
+		CREATE TABLE IF NOT EXISTS tournament (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			status TEXT
+			creatorId INTEGER NOT NULL,
+			status TEXT DEFAULT 'waiting',
+			matchs TEXT DEFAULT '',
+			players TEXT DEFAULT '',
+			rounds INTEGER DEFAULT 1,
+			nbPlayersTotal INTEGER NOT NULL,
+			remainingPlaces INTEGER NOT NULL,
+			created_at TEXT NOT NULL
 		);
-		CREATE TABLE IF NOT EXISTS pools (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			remainingPlaces INTEGER NOT NULL
+
+		CREATE TABLE IF NOT EXISTS history (
+			id INTEGER NOT NULL,
+			matchs TEXT,
+			players TEXT,
+			ranking TEXT,
+			winnerId INTEGER default NULL,
+			ended_at TEXT,
+			created_at TEXT NOT NULL
 		);
-		CREATE TABLE IF NOT EXISTS pool_players (
-			pool_id INTEGER,
-			player_id INTEGER,
-			FOREIGN KEY (pool_id) REFERENCES pools(id),
-			FOREIGN KEY (player_id) REFERENCES players(id)
+
+		CREATE TABLE IF NOT EXISTS round (
+			tournament_id	INTEGER NOT NULL,
+			round INTEGER DEFAULT 1,
+			matchs TEXT DEFAULT '',
+			players	TEXT DEFAULT '',
+			statut TEXT DEFAULT 'started'
 		);
 	`);
 	return db;
 }
-
-
-//export async function initializeDatabase() {
-//	const db = await getDb();
-
-//	await db.exec(`
-//		CREATE TABLE IF NOT EXISTS tournaments (
-//		id INTEGER PRIMARY KEY AUTOINCREMENT,
-//		name TEXT NOT NULL,
-//		created_at TEXT DEFAULT CURRENT_TIMESTAMP
-//		);
-//	`);
-
-//	return db;
-//}
-
-//echo 'CREATE TABLE' | sqlite3 mydb

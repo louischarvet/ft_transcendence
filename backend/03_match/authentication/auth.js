@@ -1,11 +1,24 @@
 // ./authentication/auth.js
 
-async function authenticateJWT(request, reply) {
-  try {
-    await request.jwtVerify(); // Le token est validé ici
-  } catch (err) {
-    return reply.code(401).send({ error: 'Unauthorized' });
-  }
-};
+export async function authenticateJWT(request, reply) {
+	const { accessToken } = request.cookies;
+	if (accessToken === undefined)
+		return reply.code(400).send({
+			error: 'Access token missing.'
+		});
+    // Appel vers le session-service
+    const authRes = await fetch('http://session-service:3000/authenticate', {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken
+        }
+    });
+    const data = await authRes.json();
+	if (data.verified === false)
+		return reply.code(400).send({ error: 'User not verified.' });
+    if (data.error)
+        return reply.code(authRes.status).send({ error: data.error });
 
-export { authenticateJWT };
+    request.user = data;
+//    console.log("Utilisateur attaché à la request :", request.user);
+}

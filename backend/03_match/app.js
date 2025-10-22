@@ -1,25 +1,30 @@
 import Fastify from 'fastify';
-import jwt from '@fastify/jwt'
+//import jwt from '@fastify/jwt'
 
 import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
-import { userSchema, matchSchema, matchUpdateSchema } from './schema/matchSchema.js';
+import { matchSchema, registeredMatchSchema, tournamentMatchSchema } from './schema/matchSchema.js';
 
+import cookie from '@fastify/cookie'
+import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
-fastify.register(jwt, {
-	secret: 'secret-key'
-});
+fastify.register(cookie);
+
+//fastify.register(jwt, {
+//	secret: 'secret-key'
+//});
 
 fastify.decorate('authentication', authenticateJWT);
 
-fastify.register(routes);
-fastify.addSchema(userSchema);	
+fastify.addSchema(registeredMatchSchema);	
 fastify.addSchema(matchSchema);
-fastify.addSchema(matchUpdateSchema);
+fastify.addSchema(tournamentMatchSchema);
+fastify.register(routes);
+fastify.register(shutdownPlugin);
 
-const start = async () => {
+async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
 		console.log('match_docker listening on port 3000');

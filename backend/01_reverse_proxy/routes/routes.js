@@ -5,6 +5,16 @@ async function routesPlugin(fastify, options) {
 	fastify.get('/', async (request, reply) => {
         return { hello: 'world' }
     })
+
+	// Routes interdites
+	fastify.put('/user/changestatus', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+	fastify.put('/user/updatestats', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+
+	// Redirections
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://user-service:3000",
 		prefix: '/user',
@@ -16,10 +26,38 @@ async function routesPlugin(fastify, options) {
 		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
-		upstream: "http://tournament-service:3003",
+		upstream: "http://tournament-service:3000",
 		prefix: '/tournament',
 		rewritePrefix: '/',
 	});
+	fastify.register(fastifyHttpProxy, {
+		upstream: "http://session-service:3000/refresh",
+		prefix: '/refresh',
+		rewritePrefix: '',
+	});
+	fastify.register(fastifyHttpProxy, {
+		upstream: "http://twofa-service:3000",
+		prefix: '/twofa',
+		rewritePrefix: '/',
+	});
+
+	// HTTPS ?
+	// fastify.post('/session/refresh', async (request, reply) => {
+	// 	try {
+	// 		const response = await fetch('http://session-service:3000/refresh', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Authorization': request.headers.authorization,
+	// 			}
+	// 		});
+	// 		const data = await response.json();
+	// 		return reply.code(200).send(data);
+	// 	} catch (error) {
+	// 		fastify.log.error(error);
+	// 		reply.status(500).send({ error: 'Internal Server Error' });
+	// 	}
+	// });
+	
 /*	fastify.get('/auth', async (request, reply) => {
 		try {
 			const response = await fetch('http://auth:3001/data');

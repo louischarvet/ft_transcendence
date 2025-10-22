@@ -1,182 +1,273 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, getUsers, updateValue,
+import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
 	getColumnFromTable, getAvailableUser, updateStatus,
-	deleteUserInTable } from '../models/models.js'
-import { generateJWT, authenticateJWT, revokeJWT } from '../authentication/auth.js';
-import { checkNameFormat } from '../common_tools/checkNameFormat.js';	
+	updateStatsWinner, updateStatsLoser, deleteUserInTable, getUserTournament} from '../models/models.js'
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
 
+const secureCookieOptions = {
+	httpOnly: true,
+	secure: true,
+	sameSite: 'none'
+};
+
+async function clearCookies(reply) {
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
+		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
+}
+
 // rout POST /guest
 export async function createGuest(request, reply) {
-	const guests = await getColumnFromTable('id', 'guests');
+	const guests = await getColumnFromTable('id', 'guest');
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
+	const tmp = request.body.tmp;
 
-	await insertInTable('guests', {
+	await insertInTable('guest', {
 		name: name
 	});
 
-	const user = await getUserByName('guests', name);
-	const response = await generateJWT(user);
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
+	// possiblement foireux si creation en tant que P1 avec tmp==true -> pas de token
+	const user = await getUserByName('guest', name);
+	user.verified = true;
+
+	await clearCookies(reply);
+
+	if (!tmp) {
+		const { accessToken, refreshToken } = await generateJWT(user);
+		reply.setCookie('accessToken', accessToken, {
+			...secureCookieOptions,
+			path :'/api',
+			maxAge: 1800
+		})
+		.setCookie('refreshToken', refreshToken, {
+			...secureCookieOptions,
+			maxAge: 604800,
+			//path :'/',
+			path: '/api/refresh'
+		})
+	}
 
 	return reply.code(201).send({
 		user,
-		token,
 		message: 'Guest created'
 	});
 }
 
 // route POST /register
-export async function signIn(request, reply) {
-	const { name, password } = request.body;
+export async function register(request, reply) {
+	const { name, password, email} = request.body;
 
 	if (!await checkNameFormat(name))
 		return reply.code(400).send({ error: 'Name format is incorrect. It must begin with an alphabetic character and contain only alphanumeric characters.' });
-	
+
+	if (!await checkEmailFormat(email))
+		return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
+
 	const exists = await getUserByName('registered', name);
 	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
 	
-	// hachage du password
 	const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt());
 
 	await insertInTable('registered', {
 		name: name,
-		hashedPassword: hashedPassword
+		hashedPassword: hashedPassword,
+		email: email,
 	});
 
 	const user = await getUserByName('registered', name);
 	delete user.hashedPassword;
+	delete user.email;
+	delete user.telephone;
 
-	const response = await generateJWT(user);
-	const jsonRes = await response.json();
-	const token = jsonRes.token;
-
-	return reply.code(201).send({
-		user,
-		token,
-		message: 'User created'
+	// 2FA
+	// temporary accessToken with verified == false
+	const { accessToken } = await sendCode({
+		name: name,
+		email: email,
+		id: user.id
 	});
+	
+	updateStatus('registered', name, 'pending');
+
+	await clearCookies(reply);
+
+	return reply.code(201)
+		.setCookie('accessToken', accessToken, {
+			...secureCookieOptions,
+			maxAge: 1800,
+			path: '/api/twofa/verifycode'
+		})
+		.send({
+			user,
+			message: 'User ' + name + ' created'
+		});
 }
 
 // route PUT /login
 export async function logIn(request, reply) {
-	const { name, password } = request.body;
+	const { name, password, tmp } = request.body;
 
 	const exists = await getUserByName('registered', name);
 
+	await clearCookies(reply);
+	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	else if (exists.status !== 'logged_out')
+	if (exists.status !== 'logged_out')
 		return reply.code(409).send({ error: 'User already logged in.' });
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-		updateStatus('registered', name, 'available');
+		await updateStatus('registered', name, 'available');
 
 		const user = await getUserByName('registered', name);
-		const response = await generateJWT(user);
-		const jsonRes = await response.json();
-		const token = jsonRes.token;
+		delete user.hashedPassword;
+		delete user.email;
+		
+		user.verified = true;
 
-		return reply.code(202).send({
-			user,
-			token,
-			message: 'User logged in'
-		});
+		const { accessToken, refreshToken } = await generateJWT(user);
+		const body = {
+			user: user,
+			message: 'User ' + name + ' available.',
+		};
+		return reply.code(201)
+			.setCookie('accessToken', accessToken, {
+				...secureCookieOptions,
+				maxAge: 60,
+				path: '/api'
+			})
+			.setCookie('refreshToken', refreshToken, {
+				...secureCookieOptions,
+				maxAge: 604800,
+				path: '/api/refresh'
+			})
+			.send(body);
 	} else
-		return reply.code(401).send({ error: 'Bad password' });
+		return reply.code(400).send({ error: 'Bad password' });
 }
 
 // Route PUT /logout
+// Si le joueur est pending, le supprime.
 export async function logOut(request, reply) {
-	const body = request.body;
-
-	const revRes = await revokeJWT(request.headers.authorization);
+	const revRes = await revokeJWT(request.cookies); ///////
+	await clearCookies(reply);
 	if (revRes.status == 200) {
-		if (body.type == 'guest')
-			deleteUserInTable('guest', body.name);
+		if (request.user.type == "guest")
+			deleteUserInTable(request.user.type, request.user.name);
 		else
-			updateStatus(body.type, body.name, 'logged_out');
+			updateStatus(request.user.type, request.user.name, 'logged_out');
 
-		return reply.code(201).send({
-			message: "Successfully logged out."
-		});
-	} else {
+		
+		return reply.code(201).send({ message: "Successfully logged out."});
+	} else
 		return revRes;
-	}
 }
 
 // Route DELETE /delete
 export async function deleteUser(request, reply) {
-	const body = request.body;
+	console.log("####Function deleteUser called:\n");
 
-	const revRes = await revokeJWT(token, body);
+	const user = request.user;
+	console.log("user", user);
+	//! ajout le 02/10/2025
+	//! verifier le token de l'user ?
+	const { password} = request.body;
+
+	const exists = await getUserByName('registered', user.name);
+	if (!exists)
+		return reply.code(400).send({ error: 'User is not in the database' });
+
+	const passwordMatch = await bcrypt.compare(password, exists.hashedPassword);
+	if (!passwordMatch)
+		return reply.code(401).send({ error: 'Bad password' });
+	
+	const revRes = await revokeJWT(request.cookies);
 	if (revRes.status == 200) {
-		deleteUserInTable(body.type, body.name);
+		console.log("###request.user.type : ", request.user.type, "\n###");
+		deleteUserInTable(request.user.type, request.user.name);
+
+		await clearCookies(reply);
 
 		return reply.code(200).send({
 			message: "User successfully deleted."
 		});
 	}
-	else
+	else{
 		return revRes;
+	}
 }
 
+// Route PUT /update
 export async function updateInfo(request, reply) {
-	// pic password email telephone
-	const body = request.body;
-	const { name, password, toUpdate, newValue } = body;
+	console.log("####Function updateInfo called:\n");
 
-	const user = await getUserByName('registered', name);
-
-	console.log("/// HASHED PASS in functuon updateInfos\n", user);
-	if (!await bcrypt.compare(password, user.hashedPassword))
-		return reply.code(401).send({ error: 'Bad password' });
+	const currentUser = await getUserByName('registered', request.user.name);
+	if (!currentUser)
+		return reply.code(401).send( { error : 'User not Authentified'});
 		
-	const col = toUpdate === 'password' ?
-		'hashedPassword' : toUpdate;
-	const val = toUpdate === 'password' ?
-		await bcrypt.hash(newValue, await bcrypt.genSalt()) : newValue;
+	console.log("currentUser : ", currentUser, "\n");
 
-	// verifier si le nom existe deja
-	if (toUpdate === 'name'
-		&& await getUserByName('registered', newValue))
-		return reply.code(401).send({ error: 'Name is already taken' });
+	const { password, toUpdate, newValue } = request.body;
+	if (!password || !toUpdate || !newValue)
+		return reply.code(401).send( { error : 'Need all infos in body'});
 
-	await updateValue('registered', col, name, val);
+	// Verif si schema ok
+	if (!['email', 'password'].includes(toUpdate))
+		return reply.code(400).send({ error: "Only email and password can be updated" });
+	
+	// Verif actuel passwrd
+	const passwordMatch = await bcrypt.compare(password, currentUser.hashedPassword);
+	if (!passwordMatch) 
+		return reply.code(401).send({ error: "Incorrect password" });
 
-	const newUser = await getUserByName('registered', (toUpdate === 'name' ? newValue : name));
-	console.log("/// newUser\n", newUser, "///\n");
-	const retObj = {
-			id: newUser.id,
-			name: newUser.name,
-			type: newUser.type,
-			status: newUser.status };
+
+	let columnToUpdate;
+	let valueToUpdate;
+
+	if (toUpdate === 'password') {
+		columnToUpdate = 'hashedPassword';
+		const salt = await bcrypt.genSalt();
+		valueToUpdate = await bcrypt.hash(newValue, salt);
+		if (!await checkPasswordFormat(newValue))
+			return reply.code(401).send({ error: "Incorrect password format" });
+	} else if (toUpdate === 'email'){
+		if (!await checkEmailFormat(newValue))
+			return reply.code(400).send({ error: "Invalid email format"});
+		columnToUpdate = toUpdate;
+		valueToUpdate = newValue;
+	}
+
+	// Data mis a jour
+	const updatedUser = await updateValue('registered', columnToUpdate, currentUser.name, valueToUpdate);
+	if (updatedUser)
+		delete updatedUser.hashedPassword;
 
 	return reply.code(200).send({
-		user: retObj,
+		user: updatedUser,
 		message: 'User info updated'
 	});
 }
 
+// Route PUT /updateAvatar
 export async function updateAvatar(request, reply) {
-	const user = request.user;
-	if (!user)
-		return reply.code(401).send({ error: 'Unauthorized' });
+	console.log("####Function updateAvatars called:\n");
+	const user = await getUserByName('registered', request.user.name);
 
-	console.log("UpdateAvatar \n");
-	console.log("\t//USER\n", user, "\t//END USER\n");
-	console.log("Request headers:", request.headers);
+	if (!user)
+		return reply.code(400).send({ error: 'Unauthorized' });
 
 	const data = await request.file();
 	if (!data)
 		return reply.code(400).send({ error: 'No file uploaded' });
 
 	const uploadDir = path.join(process.cwd(), 'pictures');
+	console.log("############ UPLOADDIR = ", uploadDir); 
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -190,115 +281,282 @@ export async function updateAvatar(request, reply) {
 	const buffer = await data.toBuffer();
 	fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `./pictures/${fileName}`;
+	const relativePath = `/pictures/${fileName}`;
 	await updateValue('registered', 'picture', user.name, relativePath);
-
+	
+	console.log("####\n");
 	return reply.code(200).send({
 		message: 'Avatar updated successfully',
 		picture: relativePath
 	});
 }
 
+// Route GET /id (recupere ses propre infos via son token)
+export	async function fetchUserByIdToken(request, reply){
 
+	const user = request.user;
+	if (!user)
+		return reply.code(400).send({ error : 'Bad Token'}); // inutile
 
-// Autre service ?
+	const userId = user.id;
+	if (!userId)
+		return reply.code(400).send({ error : 'Id of user required'}); // inutile
+
+	const type = user.type;
+	if (!type)
+		return reply.code(400).send({ error : 'Type of user required'}); // inutile
+
+	const userInfos = await getUserById(type, userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+	delete userInfos.hashedPassword;
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+};
+
+// Route GET /:id
+export	async function fetchUserById(request, reply){
+	const user = request.params;
+	if (!user)
+		return reply.code(400).send({ error : 'Need param'});
+	//! ajout le 17/09/2025
+	const userId = request.params.id;
+	if (!userId)
+		return reply.code(400).send({ error : 'Id of user required'});
+
+	const userInfos = await getUserById('registered', userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+
+	delete userInfos.hashedPassword;
+	delete userInfos.email;
+	delete userInfos.friends;
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+};
+
+// Route GET /getguest/:id
+export async function getGuestById(request, reply) {
+	const userId = request.params.id;
+	if (!userId)
+		return reply.code(400).send({ error : 'Id of user required'});
+
+	const userInfos = await getUserById('guest', userId);
+	if (!userInfos)
+		return reply.code(404).send({ error : 'User not found'});
+
+	return reply.code(200).send({
+		user: userInfos
+	});
+}
+
+// Route POST /addfriend/(name)
 export async function addFriend(request, reply) {
-	// Auth deja faite et token deja verifier
-	// request.params cest l'amis a ajouter
+	const currentUser = request.user;
+	if(request.params.friendName.length > 64)
+		return reply.code(401).send({ error: 'Invalid name' });
 
-	const body = request.body;
-	console.log("body dans addFriend :", body);
-	const name  = body.name;
-	if (name === undefined)
-		return reply.code(401).send({ error: 'Name is missing' });
-
-	const user = await getUserByName('registered', name);
+	if (currentUser.type !== 'registered')
+		return reply.code(400).send({ error: 'Only registered users can add friends' });
+	
+	const user = await getUserByName('registered', currentUser.name);
 	if (!user) 
-		return reply.code(401).send({ error: 'User not found' });
+		return reply.code(400).send({ error: 'User not found' });
 
 	const { friendName } = request.params;
 	if (friendName === undefined)
-		return reply.code(401).send({ error: 'friendName is missing' });
+		return reply.code(400).send({ error: 'friendName is missing' });
 
 	const friend = await getUserByName('registered', friendName);
-	if (!friend) 
-		return reply.code(401).send({ error: 'User friend not found' });
+	if (!friend)
+		return reply.code(404).send({ error: 'Username not found' });
 
 	
-	let friendListString = user.friend_ship || "";
+	let friendListString = user.friends || "";
 	//split en tableau sans ; pour verifier apres si l'ami est deja dans la liste en js
 	const friendList = friendListString ? friendListString.split(";").filter(f => f) : [];
-	console.log("friendList :", friendList);
+	console.log("friendList before add friend :", friendList);
 
 	//verifier si l'ami est deja dans la liste
 	if (friendList.includes(String(friend.id)))
 		return reply.code(409).send({ error: 'Friend already in the list' });
 
-	const col = 'friend_ship';
 	const val = friendListString + friend.id + ";";
 
 	//ajouter via la methode updateValue
-	await updateValue('registered', col, name, val);
-    return reply.code(200).send({ message: `Friend ${friendName} added.` });
+	await updateValue('registered', "friends", user.name, val);
+	console.log("####\n");
+
+	delete friend.hashedPassword;
+	delete friend.type;
+	delete friend.friends;
+
+	// renvoyer le profil user mis a jour!
+    return reply.code(200).send({newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
-
-
-
-// Récupère tous les utilisateurs
-export async function fetchUsers(request, reply) {
-	const users = await getUsers();
-	return reply.send(users);
+// Route GET pour recuperer les profiles des amis
+export async function getFriendsProfiles(request, reply) {
+	const user = await getUserById('registered', request.user.id);
+	const { friends } = user;
+	if (friends === undefined || friends === null)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
+	else {
+		// console.log("friends : ", friends);
+		const friendsIDs = await friends.split(';').filter(p => p);
+		let friendsProfiles = new Array();
+		for (let i = 0, n = friendsIDs.length; i < n; i++) {
+			friendsProfiles[i] = await getUserById('registered', friendsIDs[i]);
+			if(!friendsProfiles[i])
+				continue;
+			delete friendsProfiles[i].hashedPassword;
+			delete friendsProfiles[i].email;
+			
+			if (friendsProfiles[i] === undefined)
+				return reply.code(400).send({ error: 'Bad friend ID.' });
+		}
+		return reply.code(200).send({
+			friends: friendsProfiles,
+			message: 'Friends profiles.'
+		});
+	}
 }
 
-// Recupere un user par son nom
-// route GET /users/:name
-export async function fetchUserByName(request, reply) {
-	const { name } = request.params;
-	if (!name)
-		return reply.code(400).send({ error: 'Name is required' });
+export async function deleteFriend(request, reply) {
+	const friendId = request.body.id;
+	if (!friendId)
+		return reply.code(400).send({ error: 'Need friend id to delete' });
 
-	const user = await getUserByName(name);
+	const friend = await getUserById('registered', friendId);
+	if (!friend)
+		return reply.code(404).send({ error: 'Friend user not found' });
+
+	const user = await getUserById('registered', request.user.id);
 	if (!user)
-		return reply.code(404).send({ error: 'User not found' });
+		return reply.code(401).send({ error: 'User not authenticated' });
 
-	return reply.send(user);
+	const { friends } = user;
+	if (!friends)
+		return reply.code(204).send({ friends: [], message: "User has no friends" });
+
+	const friendList = friends.split(";").filter(f => f);
+	console.log("friendList before delete:", friendList);
+
+	if (!friendList.includes(String(friend.id)))
+		return reply.code(409).send({ error: 'Friend not in the list' });
+
+	// Retirer le friend.id de la liste
+	const newFriendList = friendList.filter(id => id !== String(friend.id));
+
+	await updateValue('registered', "friends", user.name, newFriendList.join(";"));
+
+	return reply.code(200).send({
+		friends: newFriendList,
+		message: `Friend ${friend.name || friend.id} deleted successfully.`,
+	});
 }
 
 // Récupère le statut d'un utilisateur par son nom
 export async function fetchUserStatus(request, reply) {
 	const { name } = request.params;
 	const user = await getUserByName(name);
+
+	//! ajout le 17/09/2025
+	if (!user)
+		return reply.code(404).send({ error: 'User not found' });
+
 	return reply.send(user.status);
 }
 
-
-export async function getRandomUser(request, reply) {
-	const { name } = request.user;
-
-	const randomUser = await getAvailableUser(name);
-//	console.log("Test randomUser :", randomUser);
-	if (randomUser === undefined)
-		return reply.code(404).send({ error: 'No player available.' });
-
-	return reply.code(201).send(randomUser);
-}
-
+// Route PUT /changestatus
 export async function changeStatus(request, reply) {
-	const reqBody = request.body;
-	// check si player2 existe
-	// s'il n'existe pas -> player1 VS IA
-	const name = reqBody.name;
+	const { name, status, type } = request.body;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
-	
-	const newState = reqBody.status;
-	if (newState === undefined)
+	if (status === undefined)
 		return reply.code(400).send({ error: 'Status is required' });
 	
+	await updateStatus(type, name, status);
+	const user = await getUserByName(type, name);
+	delete user.hashedPassword;
+	delete user.telephone;
+	delete user.email;
+	return reply.code(201).send({
+		user: user,
+		message : 'Status updated!',
+	});
+}
 
-	// verifier si l'etat n'a pas change entre temps ?
-	// et si les deux jouerus concernes cherchent a /random en meme temps?
-	await updateStatus(name, newState);
-	return reply.code(201).send({message : 'Status updated!'});
+export async function updateStats(request, reply) {
+	const { p1_id, p1_type, p2_id, p2_type, winner_id } = request.body;
+	let winner_type, loser_id, loser_type;
+	if (winner_id === p1_id) {
+		winner_type = p1_type;
+		loser_id = p2_id;
+		loser_type = p2_type;
+	} else {
+		winner_type = p2_type;
+		loser_id = p1_id;
+		loser_type = p1_type;
+	}
+
+	if (winner_id > 0)
+		await updateStatsWinner(winner_type, winner_id);
+
+	if (loser_id > 0)
+		await updateStatsLoser(loser_type, loser_id);
+
+	const user1 = p1_id > 0 ? await getUserById(p1_type, p1_id) : {
+		id: 0,
+		type: 'ia'
+	};
+	const user2 = p2_id > 0 ? await getUserById(p2_type, p2_id) : {
+		id: 0,
+		type: 'ia'
+	};
+	delete user1.hashedPassword;
+	delete user2.hashedPassword;
+	delete user1.email;
+	delete user2.email;
+	delete user1.telephone;
+	delete user2.telephone;
+
+	return reply.code(200).send({
+		user1: user1,
+		user2: user2,
+		message: 'Stats updated.'
+	});
+}
+
+// Route Get / tournaments
+export async function fetchUserTournament(request, reply) {
+	const listUsers = request.body.ArrayIdAndType;
+	if (!listUsers || listUsers.length === 0)
+		return reply.code(400).send({ error: 'List of users is required' });
+	
+	let listLogin =new Array();
+	let listGuests =new Array();
+	for (let i = 0; i < listUsers.length; i++){
+		if (listUsers[i].type === 'registered')
+			listLogin.push(listUsers[i].id);
+		else if (listUsers[i].type === 'guest')
+			listGuests.push(listUsers[i].id);
+		else
+			return reply.code(400).send({ error: 'Type of user is not correct' });
+	};
+	const usersInfos = await getUserTournament(listLogin, listGuests);
+	if (!usersInfos || usersInfos.length === 0)
+		return reply.code(404).send({ error: 'Users not found' });
+
+	delete usersInfos.hashedPassword;
+	delete usersInfos.email;
+	delete usersInfos.friend_ship;
+	return reply.code(200).send({
+		users: JSON.stringify(usersInfos),
+		message: 'Users found'
+	});
 }

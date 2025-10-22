@@ -1,6 +1,7 @@
-FROM louischarvet/ft_transcendence_backend_base:1.0
+#FROM louischarvet/ft_transcendence_backend_base:1.0
+FROM node:24
 
-EXPOSE 3000
+EXPOSE 443
 
 # Crée le dossier de travail
 WORKDIR /usr/src/app
@@ -15,6 +16,7 @@ RUN npm install -g nodemon
 #RUN npm install @fastify/http-proxy @fastify/cors
 
 # Génère les certificats SSL
+
 RUN mkdir -p ./ssl && openssl req -x509 -nodes \
 -out ./ssl/proxy.crt \
 -keyout ./ssl/proxy.key \
@@ -24,4 +26,4 @@ RUN mkdir -p ./ssl && openssl req -x509 -nodes \
 COPY . .
 
 # Lancement du serveur
-CMD ["nodemon", "app.js"]
+CMD ["node", "--use-system-ca", "app.js"]

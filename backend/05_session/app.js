@@ -1,41 +1,64 @@
 // app.js
 
 import Fastify from 'fastify';
-import fastifyCron from 'fastify-cron';
-
+import fastifyCors from '@fastify/cors';
+import fp from 'fastify-plugin';
+import fCron from 'fastify-cron';
+import cookie from '@fastify/cookie';
+import fastifyJWT from '@fastify/jwt';
+import { initDB } from './database/db.js';
 import { sessionRoutes } from './routes/routes.js';
+import { generateSchema } from './schema/generateSchema.js';
+import { pruneRevokedAccess } from './cron/cron.js';
+import shutdownPlugin from './common_tools/shutdown.js';
 
-//import { sessionInput } from './schema/sessionInput.js';
-import { userSchema } from './schema/userSchema.js';
+// generer secret-key !!!
+const secretKey = "secret-key"
 
-import { pruneExpiredTokens } from './controllers/controllers.js';
-
-//const secret = "secret-key";
 const fastify = Fastify({ logger: true });
 
-// supprimer toutes les 30 minutes les tokens expires
-// stockes dans revoked_tokens
-fastify.register(fastifyCron, {
+// CORS configuration
+fastify.register(fastifyCors, {
+	origin: true, // Réfléchit le domaine de la requête
+	methods: ['GET', 'POST', 'DELETE'], // Méthodes HTTP autorisées
+	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true
+});
+
+// cookies
+fastify.register(cookie);
+
+// JWT
+fastify.register(fastifyJWT, { secret: secretKey });
+
+// DB
+fastify.register(fp(initDB));
+
+// cron
+fastify.register(fCron, {
 	jobs: [
 		{
-			cronTime: '*/30 * * * *',
-			onTick: pruneExpiredTokens,
+			cronTime: '*/10 * * * *',
+			onTick: () => pruneRevokedAccess(fastify.db.revokedAccess.erase),
 			start: true,
 			timeZone: 'Europe/Paris'
 		}
 	]
 });
 
+// Routes
 fastify.register(sessionRoutes);
 
-//fastify.addSchema(sessionInput);
-fastify.addSchema(userSchema);
+// Schema
+fastify.addSchema(generateSchema);
+
+fastify.register(shutdownPlugin);
 
 const start = async () => {
-	try {
-		await fastify.listen({ port: 3000, host: '0.0.0.0' });
+    try {
+        await fastify.listen({ port: 3000, host: '0.0.0.0' });
 		console.log('Session-service listening on port 3000');
-	} catch (err) {
+    } catch (err) {
 		fastify.log.error(err);
 		process.exit(1);
 	}

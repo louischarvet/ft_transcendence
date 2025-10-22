@@ -1,66 +1,45 @@
 import Fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import routesPlugin from './routes/routes.js';
+import cookie from '@fastify/cookie'
+import shutdown from './common_tools/shutdown.js';
+
+import fastifyHttpProxy from '@fastify/http-proxy';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-//! a suprrimer apres
-const server = Fastify({ logger: false });
+// Lire le certificat et la clé
+const httpsOptions = {
+    key: fs.readFileSync(path.join(dirname, 'ssl/proxy.key')),
+    cert: fs.readFileSync(path.join(dirname, 'ssl/proxy.crt'))
+};
 
-//test connection
-console.log('Starting server ...');
+// Créer le serveur Fastify avec HTTPS
+const server = Fastify({ logger: true, https: httpsOptions });
 
-// Enregistrez le plugin CORS
+// Enregistrer CORS
 server.register(fastifyCors, {
-    origin: true, // Réfléchit le domaine de la requête
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
-	allowedHeaders: ["Content-Type", "Authorization"],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true,
 });
 
-console.log('after registering CORS ...');
-// Enregistrez vos routes
-server.register(routesPlugin);
+server.register(cookie);
 
-console.log('after registering routes ...');
-server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
-	console.log('after starting server...');
-	if (err) {
+// Enregistrer shutdown et routes
+server.register(routesPlugin);
+server.register(shutdown);
+
+// Lancement du serveur
+server.listen({ port: 443, host: '0.0.0.0' }, (err) => {
+    if (err) {
         server.log.error(err);
         process.exit(1);
     }
-    console.log('Server is running on http://localhost:3000');
+    console.log('Reverse proxy is running on https://localhost');
 });
-
-//import Fastify from 'fastify'
-//import fs from 'fs'
-//import { fileURLToPath } from 'url'
-//import path from 'path'
-////import fastifyHttpProxy from '@fastify/http-proxy'
-//import routesPlugin from './routes/routes.js'
-
-//const filename = fileURLToPath(import.meta.url);
-//const dirname = path.dirname(filename);
-
-//const httpsOptions = {
-//    key: fs.readFileSync(path.join(dirname, 'ssl/proxy.key')),
-//    cert: fs.readFileSync(path.join(dirname, 'ssl/proxy.crt'))
-//};
-
-
-//const server = Fastify({
-//    logger: false,
-//    https: httpsOptions
-//})
-
-//server.register(routesPlugin)
-
-//server.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
-//    if (err) {
-//        server.log.error(err);
-//        process.exit(1);
-//    }
-//});
