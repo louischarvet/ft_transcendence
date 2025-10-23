@@ -149,7 +149,7 @@ export async function logIn(request, reply) {
 			})
 			.send(body);
 	} else
-		return reply.code(400).send({ error: 'Bad password' });
+		return reply.code(444).send({ error: 'Bad password' });
 }
 
 // Route PUT /logout
@@ -185,7 +185,7 @@ export async function deleteUser(request, reply) {
 
 	const passwordMatch = await bcrypt.compare(password, exists.hashedPassword);
 	if (!passwordMatch)
-		return reply.code(401).send({ error: 'Bad password' });
+		return reply.code(444).send({ error: 'Bad password' });
 	
 	const revRes = await revokeJWT(request.cookies);
 	if (revRes.status == 200) {
@@ -224,7 +224,7 @@ export async function updateInfo(request, reply) {
 	// Verif actuel passwrd
 	const passwordMatch = await bcrypt.compare(password, currentUser.hashedPassword);
 	if (!passwordMatch) 
-		return reply.code(401).send({ error: "Incorrect password" });
+		return reply.code(444).send({ error: "Bad password" });
 
 
 	let columnToUpdate;

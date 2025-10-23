@@ -159,6 +159,8 @@ NEW TODO
 
 -	Lorsque l'user qui lance un tournoi quitte le tournois ---> Tournois close AND Logout all users
 -	Accec token a tester (Refresh token a mettre a jour dans les cas ou expire)
--	Si pas accetoken dans requete faire reply 401
--	Si pas de refreshToken dans /session/refresh, renvoyer 403
--	Mot de passe incorect (code d'erreur specifique)
+
+
+DONE	Si pas accetoken dans requete faire reply 401
+DONE	Si pas de refreshToken dans /session/refresh, renvoyer 403
+DONE	Mot de passe incorect (code d'erreur specifique) ->> 444
