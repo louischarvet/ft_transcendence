@@ -1,20 +1,16 @@
 import Fastify from 'fastify';
 //import jwt from '@fastify/jwt'
 
+import cookie from '@fastify/cookie'
 import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
 import { matchSchema, registeredMatchSchema, tournamentMatchSchema } from './schema/matchSchema.js';
 
-import cookie from '@fastify/cookie'
 import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
-
-//fastify.register(jwt, {
-//	secret: 'secret-key'
-//});
 
 fastify.decorate('authentication', authenticateJWT);
 

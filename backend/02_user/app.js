@@ -2,7 +2,6 @@
 
 import Fastify from 'fastify';
 import fastifyCron from 'fastify-cron';
-import jwt from '@fastify/jwt'
 import cookie from '@fastify/cookie'
 // Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
@@ -10,24 +9,21 @@ import fastifyCors from '@fastify/cors';
 //!ajout le 18/09/2025
 //permet de gerer les attaques XSS
 import helmet from '@fastify/helmet';
+
+import fastifyStatic from '@fastify/static';
+import path from 'path';
+
 import userRoutes from './routes/routes.js';
 import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
 //! ajout le 16/09/2025
 import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
-
-import fastifyStatic from '@fastify/static';
-import path from 'path';
 import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
-//fastify.register(cookie, {
-	//secret: "secret-key",
-	//hook: 'onRequest',
-//});
 
 // CORS configuration
 fastify.register(fastifyCors, {
@@ -40,11 +36,6 @@ fastify.register(fastifyCors, {
 fastify.register(fastifyStatic, {
 	root: path.join(process.cwd(), 'pictures'),
 	prefix: '/pictures/', // toutes les images seront accessibles via /pictures/nom_fichier
-});
-
-// Authentification par token
-fastify.register(jwt, {
-	secret: 'secret-key' //! A modifier -- >.env
 });
 
 //!ajout le 18/09/2025

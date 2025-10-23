@@ -14,6 +14,7 @@ RUN npm install @fastify/cookie
 RUN npm install @fastify/jwt
 RUN npm install fastify-cron
 RUN npm install @fastify/cors
+RUN npm install speakeasy
 
 COPY . .
 
