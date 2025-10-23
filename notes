@@ -160,6 +160,9 @@ NEW TODO
 -	Lorsque l'user qui lance un tournoi quitte le tournois ---> Tournois close AND Logout all users
 -	Accec token a tester (Refresh token a mettre a jour dans les cas ou expire)
 
+- Bug: si pas d'access token, en tant que register on clique sur profil: le profil s'affiche
+	brièvement et on revient sur la page d'accueil. Logout -> erreur lors de la
+	déconnexion.
 
 DONE	Si pas accetoken dans requete faire reply 401
 DONE	Si pas de refreshToken dans /session/refresh, renvoyer 403

@@ -144,15 +144,13 @@ TO DO
 
 - Retaper les DBs (ouverture, globale forbidden ! try catch)
 - Penser a fermer les DBs a la fin du programme !
+- Eventuellement retaper les DBs comme dans session
 
-- 401 -> refresh / 403 -> relog
 
 - En l'etat actuel, on peut envoyer plusieurs requetes a /session/refresh
 	pour generer plusieurs accessTokens....
 	Retourner une clé avec la 401 ?
 
-
-- Proteger la route /user/changeStatus -> cles API
 - /match : historique des matches pour un player
 - verifier l'existence des ENV 
 - liste d'amis: si un ami delete son compte, mettre a jour la liste d'amis ?
@@ -160,6 +158,8 @@ TO DO
 X /session : 2 cles secretes (access, refresh)
 X service stats ? db : wins, losses, win streak, ... ?
 
+DONE 401 -> refresh / 403 -> relog
+DONE Proteger la route /user/changeStatus -> cles API
 DONE secretKey with speakeasy in /session
 DONE /match -> /endOfMatch : contient update match, update status, et met le match dans la table history
 DONE remplacer winner_id par winner : "3:registered"

@@ -45,6 +45,18 @@ async function sendMail(name, email, code) {
 		}
 	});
 
+	// verification de la connexion pour envoi d'email
+	// await transporter.verify((error, success) => {
+	// 	if (error) {
+	// 		// fetch exit pour tous les containers
+	// 	//	fetchExitSMTPError();
+	// 		console.error('Erreur de connexion :', error.message);
+	// 		process.exit(2);
+	// 	} else
+	// 		console.log('Connexion réussie : les identifiants sont valides.');
+	// 	transporter.close(); // Ferme la connexion
+	// });
+
 	await transporter.sendMail({
 		from: `"2FA Service" <` + process.env.USR_ADDR + `>`,
 		to: email,
