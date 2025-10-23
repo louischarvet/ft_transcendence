@@ -40,6 +40,7 @@ async function generateRefresh(sign, name, type, id, jwti) {
 
 // POST /generate
 export async function generate(request, reply) {
+	await clearCookies(reply);
     const { server } = request;
 	const { name, type, id, verified } = request.body;
     const jwti = crypto.randomUUID();
@@ -58,7 +59,6 @@ export async function generate(request, reply) {
     } else
         message = 'Access token generated. Waiting 2fa.'
 
-	await clearCookies(reply);
     return reply
         .code(200)
         .send({
@@ -101,11 +101,11 @@ export async function authenticate(db, request, reply) {
 
 // POST /refresh
 export async function refresh(db, request, reply) {
+	await clearCookies(reply);
 	const { refreshToken } = request.cookies;
     if (refreshToken === undefined)
         return reply.code(403).send({ error: 'Missing token' });
 	
-	await clearCookies(reply);
 	// a l'arrache
 	request.headers.authorization = 'Bearer ' + refreshToken;
     const { server } = request;
@@ -155,12 +155,12 @@ export async function refresh(db, request, reply) {
 
 // DELETE /delete
 export async function deleteToken(db, request, reply) {
+	await clearCookies(reply);
     const rawToken = request.headers.authorization;
     if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
         return reply.code(400).send({ error: 'Missing Bearer' });
     const accessToken = rawToken.split(' ')[1];
 
-    await clearCookies(reply);
     try {
         const decodedAccess = await request.jwtVerify(accessToken);
 

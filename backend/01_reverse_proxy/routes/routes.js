@@ -13,6 +13,9 @@ async function routesPlugin(fastify, options) {
 	fastify.put('/user/updatestats', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
+	fastify.post('/match/tournament', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
 
 	// Redirections
 	fastify.register(fastifyHttpProxy, {

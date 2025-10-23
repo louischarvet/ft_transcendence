@@ -295,7 +295,6 @@ export default class PgScene {
         if (cinematicElapsedTime >= cinematicDuration) {
           cinematicEndUp = true;
           this.gui.score.visibility(true);
-          this.gui.panel.visibility(true);
         }
         return;
       }

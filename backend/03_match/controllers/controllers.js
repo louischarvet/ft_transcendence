@@ -148,7 +148,7 @@ export async function tournamentMatch(request, reply) {
 //! fetch changestatus des joueurs a in_game 
 
 	return reply.code(200).send({
-		match: {...match, p1_name: player1.name, p2_name: player2.name},
+		match: match,
 		message: 'Tournament match created'
 	});
 }
@@ -162,8 +162,8 @@ export async function getAllMatchesController(request, reply) {
 
 // Route GET pour récupérer un match par son ID
 // route /matches/:id
-export async function getMatchById(request, reply) {
-	const match = await getMatch(request.params.id);
+export async function getMatch(request, reply) {
+	const match = await getMatchByID(request.params.id);
 	return reply.code(200).send({ match });
 }
 

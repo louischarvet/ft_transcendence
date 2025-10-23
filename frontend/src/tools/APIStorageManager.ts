@@ -118,7 +118,7 @@ export async function fetchRefreshToken(){
 	});
 
 	if (response.status === 403) {
-		console.log("Impossible de mettre a jour le refresh token");
+		console.log("Impossible de mettre a jour le refresh token", response);
 		return false;
 	}
 	return true;
@@ -285,18 +285,13 @@ export async function verifyTwoFactorCode(code: string) {
 }
 
 export type Match = {
-	tournament_id: any | undefined,
 	id: string,
-	p1_id: any,
-	p1_name: any,
-	p1_type: any,
-	p2_id: any,
-	p2_name: any,
-	p2_type: any,
-	created_at: string
+	player1: { id: string, name?: string , type: string },
+	player2: { id: string, name?: string , type: string },
+	tournament_id: any | undefined
 }
 
-export async function createMatch(playerType: "ai" | "guest" | "registered", name?: string, password?: string): Promise<Match | null> {
+export async function createMatch(playerType: string, name?: string, password?: string) {
 	// const token = getToken();
 	// if (!token) return null;
 
@@ -306,7 +301,6 @@ export async function createMatch(playerType: "ai" | "guest" | "registered", nam
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json',/* 'Authorization': token */},
 		credentials: 'include',
-
 		body: JSON.stringify({ playerType, ...(playerType == "registered" ? { name, password } : {}) })
 	});
 	const data = await res.json();
@@ -376,7 +370,7 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 
 export type Tournament = {
 	id: number,
-	matchs: Match[],
+	matches: Match[],
 	nb_players: number,
 	nbPlayersTotal: number,
 }
@@ -397,7 +391,7 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	return data.tournament as Tournament;
 }
 
-export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<Tournament | null> {
+export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<any | null> {
 	// const token = getToken();
 	// if (!token) return null;
 
@@ -408,7 +402,10 @@ export async function nextTournamentMatch(scoreP1: number, scoreP2: number, matc
 		body: JSON.stringify({ scoreP1, scoreP2, ...match})
 	});
 	const data = await res.json();
-	if (data.error) return null;
-	return data.tournament as Tournament;
-
+	if (data.error){
+		console.error(data.error);
+		return null;
+	}
+	console.log("next data : ", data);
+	return data;
 }

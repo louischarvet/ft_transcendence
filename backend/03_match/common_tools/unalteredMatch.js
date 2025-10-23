@@ -17,8 +17,6 @@ export async function unalteredMatch(request, reply) {
         || body.p1_id !== match.p1_id
         || body.p1_type !== match.p1_type
         || body.p2_id !== match.p2_id
-        || body.p2_type !== match.p2_type
-        || body.created_at !== match.created_at
-		|| (body.tournament_id !== undefined && body.tournament_id !== match.tournament_id))
+        || body.p2_type !== match.p2_type	)
         return reply.code(400).send({ error: 'Match object is altered.' });
 }

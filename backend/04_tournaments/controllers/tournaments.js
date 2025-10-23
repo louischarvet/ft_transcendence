@@ -14,6 +14,18 @@ import {
   finishRound
 } from '../models/model.js';
 
+export async function getMatchTournament(){
+	const res = await fetch(`http://match-service:3000/tournament/match/${id}`, {
+		method: 'GET',
+	});
+
+	if(!res.ok)
+		return ({ error : 'Match not found'});
+	const match = await res.json();
+
+	return (match);
+}
+
 //! ajout le 25/09/2025
 export async function fetchUserTournament(ArrayIdAndType){
 	const res = await fetch(`http://user-service:3000/tournament`, {
@@ -133,10 +145,7 @@ export async function fetchFinishMatchForTournament(match, token){
 
 	const res = await fetch('http://match-service:3000/finish', {
 		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `${token}` 
-		},
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(match)
 	});
 	if(!res.ok)
@@ -426,7 +435,9 @@ export async function startTournament(request, reply) {
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
 
 	// on verifie les place restantent
-	for(; tournament.remainingPlaces > 0; tournament.remainingPlaces--)
+	let countIa = 0;
+	countIa = tournament.remainingPlaces;
+	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--)
 		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
 
 	console.log("###\nFonction startTournament : Valeur du tournoi récupéré --> ", tournament, "\n###\n");
@@ -441,13 +452,13 @@ export async function startTournament(request, reply) {
 		return reply.code(500).send({ error: 'Impossible to get list of players tournament' });
 	const playersArray = stringPlayers.split(';');
 
-	// console.log("###\nFonction startTournament : playersArray --> ", playersArray, "\n###\n");
+	console.log("###\nFonction startTournament : playersArray --> ", playersArray, "\n###\n");
 
-	let countIa = 0;
-	for (let i = 0; i < playersArray.length; i++){
-		if(playersArray[i] === '0:ia')
-			countIa++;
-	}
+	//let countIa = 0;
+	//for (let i = 0; i < playersArray.length; i++){
+	//	if(playersArray[i] === '0:ia')
+	//		countIa++;
+	//}
 	 console.log("###\nFonction startTournament :nombre d'ia a ajouter prochainement --> ", countIa, "\n###\n");
 
 	//Data des joueur
@@ -481,7 +492,7 @@ export async function startTournament(request, reply) {
 	let finalPlayers = new Array();
 	for (let i = 0; i < tournament.nbPlayersTotal; i++){
 		if (rankedUsers[i])
-			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString());
+			finalPlayers.push(rankedUsers[i].id.toString() + ':' + rankedUsers[i].type.toString() + ':' + rankedUsers[i].name);
 		if (countIa > 0 ){
 			const { id, type } = { id: 0, type: 'ia' };
 			finalPlayers.push(id.toString() + ':' + type.toString());
@@ -498,7 +509,7 @@ export async function startTournament(request, reply) {
 
 	//!regler avec 2 guest et un user login et lancer tournoi
 	//Data des matchs
-	const matches = new Array();
+	let matches = new Array();
 	for(let i = 0; i < finalPlayers.length; i+=2){
 		const [p1Id, p1Type] = finalPlayers[i].split(':');
 		const [p2Id, p2Type] = finalPlayers[i + 1].split(':');
@@ -519,6 +530,19 @@ export async function startTournament(request, reply) {
 			return reply.code(500).send({ error: 'Could not create matches for tournament' });
 		tournamentMatchData.push(res.match);
 	}
+	console.log("###\nFonction startTournament : -> liste tournamentMatchData", tournamentMatchData, "\n###\n");
+
+	matches = new Array();
+	for(let i = 0; i < finalPlayers.length; i+=2){
+		const [p1Id, p1Type, p1Name] = finalPlayers[i].split(':');
+		const [p2Id, p2Type, p2Name] = finalPlayers[i + 1].split(':');
+		matches.push({
+			id: tournamentMatchData[i / 2].id,
+			player1: { id: Number(p1Id), type: p1Type , name: p1Name},
+			player2: { id: Number(p2Id), type: p2Type ,  name: p2Name},
+			tournamentID: tournamentId
+		});
+	};
 
 	//chaine string match a ajouter a la db tournament et tournament history
 	let matchesString = '';
@@ -581,7 +605,7 @@ function getWinnerInfo(match) {
 //!modification 01/10/2025
 export async function nextRound(request, reply){
 
-	const { match } = request.body;
+	let match = request.body;
 	const user = request.user;
 
 	console.log("###\nFonction nextRound : -> match dans le body ", match, "\n###\n");
@@ -589,17 +613,14 @@ export async function nextRound(request, reply){
 	/***********************/
 	/***** TEST TOURNOI *****/
 	/***********************/
-	if (!match.tournament_id || match.tournament_id <= 0)
+	if (!match.tournamentID || match.tournamentID <= 0)
 		return reply.code(400).send( { error : 'TournamentId is required'});
 
-	const tournament = await getTournament(match.tournament_id);
+	const tournament = await getTournament(match.tournamentID);
 	if (!tournament)
 		return reply.code(404).send( { error : 'TournamentId not found'});
 	if (tournament.status !== 'started')
 		return reply.code(404).send( { error : 'Tournament not started or finished'});
-	
-	if (match.tournament_id !== tournament.id || request.body.tournamentId !== tournament.id )
-		return reply.code(404).send( { error : 'tournament id does not match'});
 	
 	console.log("###\nFonction nextRound : -> infos tournoi -->", tournament, "\n###\n");
 
@@ -624,7 +645,7 @@ export async function nextRound(request, reply){
 	/***********************/
 
 	// GET recupérer l'historique des match du tournoiID
-	let matchHistory = await fetchHistoryMatchForTournament(match.tournament_id);
+	let matchHistory = await fetchHistoryMatchForTournament(match.tournamentID);
 	if (matchHistory.error)
 		return reply.code(500).send({ error: 'Could not fetch match history' });
 	console.log("###\nFonction nextRound : matchHistory --> ", matchHistory, "\n###\n");
@@ -650,6 +671,8 @@ export async function nextRound(request, reply){
 		return reply.code(404).send( { error : 'Does not found match in round'});
 
 	// PUT mettre a jour la DB history MATCH . on fini le match(recu dans la request)
+	console.log("BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA =>", match);
+	match = { ...(await getMatchTournament()), scoreP1: match.scoreP1, scoreP2: match.scoreP2};
 	const finishMatch = await fetchFinishMatchForTournament(match, request.headers.authorization);
 	if (!finishMatch)
 		return reply.code(500).send( { error: 'Impossible to finish match'});
@@ -664,7 +687,7 @@ export async function nextRound(request, reply){
 	console.log("###\nFonction nextRound : roundMatchIds --->",roundMatchIds, "\n###\n");
 	
 	// recupere l'historique des match
-	matchHistory = await fetchHistoryMatchForTournament(match.tournament_id);
+	matchHistory = await fetchHistoryMatchForTournament(match.tournamentID);
 	if (matchHistory.error)
 		return reply.code(500).send({ error: 'Could not fetch match history' });
 
@@ -679,7 +702,7 @@ export async function nextRound(request, reply){
 		return reply.code(200).send({
 			tournament: tournament,
 			matchFinish : matchHistory,
-			mathcmessage: 'All matchs round not finished'
+			matchmessage: 'All matchs round not finished'
 		});
 	}
 
@@ -758,7 +781,7 @@ export async function nextRound(request, reply){
 	console.log("###\nFonction nextRound : nextRound --->",nextRound, "\n###\n");
 	//!init prochain match 
 	return reply.code(200).send({
-		matchsNextRound: matchsNextRound,
+		matches: matchsNextRound,
 		matchFinish : matchHistory,
 		message: 'next round'
 	});

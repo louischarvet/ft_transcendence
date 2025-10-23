@@ -1,4 +1,4 @@
-import { registeredMatch, guestMatch, iaMatch, getHistory, finish, tournamentMatch, getAllMatchesController, getMatchById, updateMatchResultController , getHistoryByTournamentID} from '../controllers/controllers.js';
+import { registeredMatch, guestMatch, iaMatch, getHistory, finish, tournamentMatch, getAllMatchesController, getMatch, updateMatchResultController , getHistoryByTournamentID} from '../controllers/controllers.js';
 import { registeredMatchSchema, matchSchema, tournamentMatchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 import { isAvailable } from '../common_tools/isAvailable.js';
@@ -31,37 +31,14 @@ export default async function matchRoutes(fastify, opts) {
 	// Route GET pour recuperer l'historique des matchs d'un tournoi (par ID)
 	fastify.get('/history/tournament/:id', getHistoryByTournamentID);
 	
+	// Route GET pour récupérer un match par id
+	//! important ;-)
+	fastify.get('/tournament/match/:id', { preHandler: [ authenticateJWT ] }, getMatch);
+
 	// Route PUT pour mettre fin au match, update les infos necessaires
-	fastify.put('/finish', { preHandler: [ authenticateJWT, unalteredMatch ], schema: matchSchema }, finish);
-	
+	fastify.put('/finish', { preHandler: [ authenticateJWT/*, unalteredMatch */], schema: matchSchema }, finish);
+
 	// Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
-	// preHandler: cle API
 	fastify.post('/tournament', { schema: tournamentMatchSchema }, tournamentMatch);
-
-
-
-
-
-	// Route GET pour récupérer tous les matches
-	fastify.get('/matches', { preHandler: authenticateJWT }, getAllMatchesController);
-
-	// Route GET pour récupérer un match par son ID
-	fastify.get('/matches/:id', { preHandler: authenticateJWT }, getMatchById);
-
-	// Route PUT pour mettre à jour le résultat d'un match
-	fastify.put('/matches/:id/result', { preHandler: authenticateJWT, schema: matchSchema }, updateMatchResultController);
-
-	// Route par types de match :
-	// Route PUT pour créer un match local
-//	fastify.put('/local', { preHandler: authenticateJWT, schema: userSchema }, createMatch);
-
-	// Route PUT pour créer un match vs meme schema que pour createMatch
-//	fastify.put('/vs', { preHandler: authenticateJWT }, createMatch);
-
-	// Route de test JWT
-	fastify.post('/jwt', { preHandler: authenticateJWT }, async (request, reply) => {
-		const playerName = request.user.name;
-		reply.send({ message: `Hello ${playerName}`, user: request.user });
-	});
 
 }
