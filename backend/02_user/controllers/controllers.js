@@ -15,7 +15,7 @@ const secureCookieOptions = {
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api' })
+	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
@@ -140,7 +140,7 @@ export async function logIn(request, reply) {
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
 				maxAge: 60,
-				path: '/api'
+				path: '/'
 			})
 			.setCookie('refreshToken', refreshToken, {
 				...secureCookieOptions,

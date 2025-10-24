@@ -62,7 +62,7 @@ services:
     build: ./04_tournaments
     container_name: tournament-service
     expose:
-      - "3003"
+      - "3000"
     working_dir: /usr/src/app
     networks:
       - transcendence-net

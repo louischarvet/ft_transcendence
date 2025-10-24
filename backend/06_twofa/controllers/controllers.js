@@ -127,7 +127,7 @@ export async function verifyCode(request, reply) {
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
 			maxAge: 1800,
-			path: '/api'
+			path: '/'
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,

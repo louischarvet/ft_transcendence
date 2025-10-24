@@ -60,7 +60,7 @@ export const updateStatsSchema = {
 			p1_id: { type: 'integer' },
 			p1_type: {
 				type: 'string',
-				enum: [ 'registered', 'guest' ]
+				enum: [ 'registered', 'guest', 'ia' ]
 			},
 			p2_id: { type: 'integer' },
 			p2_type: {

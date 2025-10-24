@@ -397,7 +397,7 @@ export async function nextTournamentMatch(scoreP1: number, scoreP2: number, matc
 
 	const res = await fetch(`/api/tournament/next`, {
 		method: 'PUT',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
 		body: JSON.stringify({ scoreP1, scoreP2, ...match})
 	});

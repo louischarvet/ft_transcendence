@@ -163,7 +163,8 @@ export async function getAllMatchesController(request, reply) {
 // Route GET pour récupérer un match par son ID
 // route /matches/:id
 export async function getMatch(request, reply) {
-	const match = await getMatchByID(request.params.id);
+
+	const match = await getMatchByID(Number(request.params.id));
 	return reply.code(200).send({ match });
 }
 

@@ -1196,6 +1196,7 @@ export default class PgGui {
         
 		this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
 		if (this.currentMatch == null) return;
+        this.result.visibility(false);
 		if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
 		this.startedType = "vsAI";
 		else

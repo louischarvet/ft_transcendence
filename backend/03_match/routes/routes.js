@@ -33,7 +33,7 @@ export default async function matchRoutes(fastify, opts) {
 	
 	// Route GET pour récupérer un match par id
 	//! important ;-)
-	fastify.get('/tournament/match/:id', { preHandler: [ authenticateJWT ] }, getMatch);
+	fastify.get('/:id', getMatch);
 
 	// Route PUT pour mettre fin au match, update les infos necessaires
 	fastify.put('/finish', { preHandler: [ authenticateJWT/*, unalteredMatch */], schema: matchSchema }, finish);

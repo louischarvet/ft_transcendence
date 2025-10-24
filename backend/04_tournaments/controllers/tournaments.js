@@ -14,8 +14,8 @@ import {
   finishRound
 } from '../models/model.js';
 
-export async function getMatchTournament(){
-	const res = await fetch(`http://match-service:3000/tournament/match/${id}`, {
+export async function getMatchTournament(id){
+	const res = await fetch(`http://match-service:3000/${id}`, {
 		method: 'GET',
 	});
 
@@ -141,13 +141,20 @@ export async function fetchHistoryMatchForTournament(tournamentId){
 }
 
 //! ajout le 30/09/2025
-export async function fetchFinishMatchForTournament(match, token){
-
+export async function fetchFinishMatchForTournament(match, cookies){
+	const body = JSON.stringify(match);
+	console.log("azeazeazeazeazeazeazeeaz" ,cookies);
+	 const cookieHeader = `accessToken=${cookies.accessToken}`;
 	const res = await fetch('http://match-service:3000/finish', {
 		method: 'PUT',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(match)
+		headers: {
+			'Content-Type': 'application/json',
+			'Cookie': cookieHeader
+		},
+		credentials: 'include',
+		body: body
 	});
+	console.log("######## fetchFinishMatchForTournament -> res ", res, "\n");
 	if(!res.ok)
 		return ({ error : 'Match creation failed'});
 
@@ -671,9 +678,10 @@ export async function nextRound(request, reply){
 		return reply.code(404).send( { error : 'Does not found match in round'});
 
 	// PUT mettre a jour la DB history MATCH . on fini le match(recu dans la request)
+
+	match = { ...(await getMatchTournament(match.id)).match, scoreP1: match.scoreP1, scoreP2: match.scoreP2};
 	console.log("BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA =>", match);
-	match = { ...(await getMatchTournament()), scoreP1: match.scoreP1, scoreP2: match.scoreP2};
-	const finishMatch = await fetchFinishMatchForTournament(match, request.headers.authorization);
+	const finishMatch = await fetchFinishMatchForTournament(match, request.cookies);
 	if (!finishMatch)
 		return reply.code(500).send( { error: 'Impossible to finish match'});
 	console.log("###\nFonction nextRound : finishMatch (return la db history match a jour)--> ", finishMatch, "\n###\n");
@@ -687,7 +695,7 @@ export async function nextRound(request, reply){
 	console.log("###\nFonction nextRound : roundMatchIds --->",roundMatchIds, "\n###\n");
 	
 	// recupere l'historique des match
-	matchHistory = await fetchHistoryMatchForTournament(match.tournamentID);
+	matchHistory = await fetchHistoryMatchForTournament(match.tournament_id);
 	if (matchHistory.error)
 		return reply.code(500).send({ error: 'Could not fetch match history' });
 
