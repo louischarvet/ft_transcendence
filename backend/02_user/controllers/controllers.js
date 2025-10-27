@@ -538,23 +538,33 @@ export async function fetchUserTournament(request, reply) {
 	if (!listUsers || listUsers.length === 0)
 		return reply.code(400).send({ error: 'List of users is required' });
 	
-	let listLogin =new Array();
-	let listGuests =new Array();
-	for (let i = 0; i < listUsers.length; i++){
-		if (listUsers[i].type === 'registered')
-			listLogin.push(listUsers[i].id);
-		else if (listUsers[i].type === 'guest')
-			listGuests.push(listUsers[i].id);
-		else
+	let listLogin = [];
+	let listGuests = [];
+	for (const u of listUsers) {
+		if (u.type === 'registered') 
+			listLogin.push(Number(u.id));
+		else if (u.type === 'guest') 
+			listGuests.push(Number(u.id));
+		else 
 			return reply.code(400).send({ error: 'Type of user is not correct' });
-	};
+	}
+	
 	const usersInfos = await getUserTournament(listLogin, listGuests);
 	if (!usersInfos || usersInfos.length === 0)
 		return reply.code(404).send({ error: 'Users not found' });
 
-	delete usersInfos.hashedPassword;
-	delete usersInfos.email;
-	delete usersInfos.friend_ship;
+	usersInfos.registered.forEach(u => {
+		delete u.hashedPassword;
+		delete u.email;
+		delete u.friend_ship;
+	});
+	usersInfos.guests.forEach(u => {
+		delete u.hashedPassword;
+		delete u.email;
+		delete u.friend_ship;
+	});
+
+
 	return reply.code(200).send({
 		users: JSON.stringify(usersInfos),
 		message: 'Users found'

@@ -1,0 +1,80 @@
+// user.controller.js
+
+// Recupere les player d'un tournoi par une liste d'id et de type
+export async function fetchUserTournament(ArrayIdAndType){
+
+	if (!ArrayIdAndType || !Array.isArray(ArrayIdAndType) || ArrayIdAndType.length === 0)
+        return { error: 'ArrayIdAndType is required' };
+	
+	const res = await fetch(`http://user-service:3000/tournament`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ ArrayIdAndType })
+	});
+
+    if (!res.ok) {
+        const error = await res.json();
+        return { error: error.error || 'Users not found' };
+    }
+	const data = await res.json();
+	return data.users;
+	//return JSON.parse(users.users);
+}
+
+// recupere user par Id
+export async function fetchGetUserById(id){
+	const user = await fetch(`http://user-service:3000/${id}`, { method: 'GET' });
+	if(!user.ok)
+		return { error : 'User not found' };
+	const currentUser = await user.json();
+	return currentUser.user;
+}
+
+// recupere un guest par son id
+export async function fetchGetGuestById(id){
+	const user = await fetch(`http://user-service:3000/getguest/${id}`, { method: 'GET' });
+	if(!user.ok)
+		return { error : 'User not found' };
+	const currentUser = await user.json();
+	return currentUser.user;
+}
+
+
+// Change le status d'un user
+export async function fetchChangeStatusUser(user){
+	const res = await fetch(`http://user-service:3000/changestatus`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(user)
+	});
+	if(!res.ok)
+		return { error : 'User not found' };
+	const updatedUser = await res.json();
+	return updatedUser.user;
+}
+
+// Login d'un user en temporaire pour le tournoi
+export async function fetchUserLogin(name, password){
+	const res = await fetch(`http://user-service:3000/login`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name, password, tmp: true })
+	});
+	if(!res.ok)
+		return { error : 'Login failed' };
+	const loggedUser = await res.json();
+	return loggedUser.user;
+}
+
+// Creer un user guest temporaire pour le tournoi
+export async function fetchCreateGuest(){
+	const res = await fetch(`http://user-service:3000/guest`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ tmp: true })
+	});
+	if(!res.ok)
+		return { error : 'Login failed' };
+	const guestUser = await res.json();
+	return guestUser.user;
+}

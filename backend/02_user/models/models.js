@@ -116,8 +116,27 @@ export async function deletePendingRegistered(time) {
 }
 
 async function getUserTournament(listLogin, listGuests) {
-	const registered = await db.all(`SELECT win_rate , id , type, name FROM registered WHERE id IN (${listLogin.join(',')})`);
-	const guests = await db.all(`SELECT win_rate , id , type, name FROM guest WHERE id IN (${listGuests.join(',')})`);
+	if (!Array.isArray(listLogin))
+		listLogin = [];
+	if (!Array.isArray(listGuests))
+		listGuests = [];
+
+	let registered = [];
+	let guests = [];
+
+	if (listLogin.length > 0) {
+		registered = await db.all(
+			`SELECT win_rate, id, type, name FROM registered WHERE id IN (${listLogin.map(() => '?').join(',')})`,
+			listLogin
+		);
+	}
+
+	if (listGuests.length > 0) {
+		guests = await db.all(
+			`SELECT win_rate, id, type, name FROM guest WHERE id IN (${listGuests.map(() => '?').join(',')})`,
+			listGuests
+		);
+	}
 	return { registered, guests };
 }
 

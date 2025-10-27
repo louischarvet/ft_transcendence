@@ -2,11 +2,14 @@ import { navigate } from "../router";
 import { checkConnection, register } from "./APIStorageManager";
 
 export default function Register(): HTMLElement {
-  checkConnection().then((connected) => {
-    if (connected) {
-      navigate('/select-game');
-    }
-  });
+	if (localStorage.getItem('user')){
+		checkConnection().then((connected) => {
+			if (connected) {
+				navigate('/select-game');
+				return;
+			}
+		});
+	}
 
   const form: { [name: string]: string} = {};
 
