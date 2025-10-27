@@ -24,7 +24,7 @@ export default class PgGui {
   currentMatchIndex = 0;
 
   started: boolean = false;
-  startedType: string = "";
+  startedType: { type: string, aiMode1?: string, aiMode2?: string } | null = null;
 
   menu: {
     title: TextBlock,
@@ -509,7 +509,7 @@ export default class PgGui {
           if (match == null) return;
           this.currentMatch = match;
           this.vsFriend.visibility(false);
-          this.startedType = "local";
+          this.startedType = { type: "local" };
           this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
         });
       });
@@ -639,25 +639,24 @@ export default class PgGui {
         console.log(tournament);
         if (tournament == null) return;
         this.currentTournament = tournament;
+        // Hide size selection
+        this.tournament.selectSize.isVisible = false;
+        this.tournament.size4.isVisible = false;
+        this.tournament.size8.isVisible = false;
+        this.tournament.size16.isVisible = false;
+  
+        // Show players setting and Start button
+  
+        this.tournament.playersScrollViewer.players = [];
+        this.tournament.playersScrollViewer.playersBlock.height = "0px";
+        this.tournament.playersScrollViewer.scrollViewer.isVisible = true;
+        this.tournament.addLogin.isVisible = true;
+        this.tournament.addGuest.isVisible = true;
+        this.tournament.numberOfAI.text = `Number of AI: ${nbOfPlayers - 1}`;
+        this.tournament.numberOfAI.isVisible = true;
+        this.tournament.resetplayers.isVisible = true;
+        this.tournament.start.isVisible = true;
       });
-
-      // Hide size selection
-      this.tournament.selectSize.isVisible = false;
-      this.tournament.size4.isVisible = false;
-      this.tournament.size8.isVisible = false;
-      this.tournament.size16.isVisible = false;
-
-      // Show players setting and Start button
-
-      this.tournament.playersScrollViewer.players = [];
-      this.tournament.playersScrollViewer.playersBlock.height = "0px";
-      this.tournament.playersScrollViewer.scrollViewer.isVisible = true;
-      this.tournament.addLogin.isVisible = true;
-      this.tournament.addGuest.isVisible = true;
-      this.tournament.numberOfAI.text = `Number of AI: ${nbOfPlayers - 1}`;
-      this.tournament.numberOfAI.isVisible = true;
-      this.tournament.resetplayers.isVisible = true;
-      this.tournament.start.isVisible = true;
     };
 
     const addLoginButton = Button.CreateSimpleButton("addLoginButton", "Add Login"); {
@@ -825,12 +824,17 @@ export default class PgGui {
           this.tournament.visibility(false);
           this.goBackButton.isVisible = false;
           if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
-            this.startedType = "watchAI";
-          else if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
-            this.startedType = "vsAI";
+            this.startedType = { type: "watchAI", aiMode1: "normal", aiMode2: "normal" };
+          else if (this.currentMatch.player1.type === "ai")
+            this.startedType = { type: "vsAI", aiMode1: "normal" };
+          else if (this.currentMatch.player2.type === "ai")
+            this.startedType = { type: "vsAI", aiMode2: "normal" };
           else
-            this.startedType = "local";
-          this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name ? this.currentMatch.player2.name : "NormalAI");
+            this.startedType = { type: "local" };
+          this.match.visibility(true,
+            this.currentMatch.player1.name ? this.currentMatch.player1.name : "normalAI",
+            this.currentMatch.player2.name ? this.currentMatch.player2.name : "normalAI"
+          );
         });
       });
       this.ui.addControl(startButton);
@@ -962,7 +966,7 @@ export default class PgGui {
       if (visible && player1 && player2) {
         player1Text.text = player1;
         player2Text.text = player2;
-		this.panel.visibility(true);
+		    this.panel.visibility(true);
       }
     };
 
@@ -1027,7 +1031,7 @@ export default class PgGui {
         restartButton.alpha = 0.5;
       });
       restartButton.onPointerClickObservable.add(() => {
-        this.startedType = "restart";
+        this.startedType = { type: "restart" };
         this.pause.visibility(false);
       });
       this.ui.addControl(restartButton);
@@ -1166,8 +1170,8 @@ export default class PgGui {
           if (match == null) return;
           this.result.visibility(false);
           this.currentMatch = match;
-          this.startedType = "restart";
-          this.match.visibility(true, this.panel.players.player1.text, this.currentMatch.player2.name ? this.currentMatch.player2.name : "NormalAI");
+          this.startedType = { type: "restart" };
+          this.match.visibility(true, this.panel.players.player1.text, this.panel.players.player2.text);
         });
       });
       this.ui.addControl(playAgainButton);
@@ -1194,14 +1198,21 @@ export default class PgGui {
       nextMatchButton.onPointerClickObservable.add(() => {
         if (this.currentTournament == null) return;
         
-		this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
-		if (this.currentMatch == null) return;
-        this.result.visibility(false);
-		if (this.currentMatch.player1.type === "ai" || this.currentMatch.player2.type === "ai")
-		this.startedType = "vsAI";
-		else
-		this.startedType = "local";
-		this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name ? this.currentMatch.player2.name : "NormalAI");
+        this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
+        if (this.currentMatch == null) return;
+            this.result.visibility(false);
+        if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
+          this.startedType = { type: "watchAI", aiMode1: "normal", aiMode2: "normal" };
+        else if (this.currentMatch.player1.type === "ai")
+          this.startedType = { type: "vsAI", aiMode1: "normal" };
+        else if (this.currentMatch.player2.type === "ai")
+          this.startedType = { type: "vsAI", aiMode2: "normal" };
+        else
+          this.startedType = { type: "local" };
+        this.match.visibility(true,
+          this.currentMatch.player1.name ? this.currentMatch.player1.name : "normalAI",
+          this.currentMatch.player2.name ? this.currentMatch.player2.name : "normalAI"
+        );
       });
       this.ui.addControl(nextMatchButton);
     }
@@ -1234,43 +1245,42 @@ export default class PgGui {
     }
 
     const show = () => {
+      this.started = false;
       // update win parts
       if (this.score.left.text > this.score.right.text) {
         this.panel.winParts.player2.text = (parseInt(this.panel.winParts.player2.text) + 1).toString();
-		this.result.player.text = this.panel.players.player2;
+		    this.result.player.text = this.panel.players.player2;
       } else {
-		  this.panel.winParts.player1.text = (parseInt(this.panel.winParts.player1.text) + 1).toString();
-		  this.result.player.text = this.panel.players.player1;
+        this.panel.winParts.player1.text = (parseInt(this.panel.winParts.player1.text) + 1).toString();
+        this.result.player.text = this.panel.players.player1;
       }
 
       if (this.currentTournament && this.currentMatch) {
-		console.log("match: ", this.currentMatch);
+		    console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((data) => {
         	if (!data || !this.currentTournament) return;
-			if (data.message !== "next round")
-				this.currentMatchIndex++;
-			else {
-				this.currentTournament.matches = data.matches;
-				this.currentMatchIndex = 0;
-			}
+          if (data.message !== "next round")
+            this.currentMatchIndex++;
+          else if (data.message === "next round") {
+            this.currentTournament.matches = data.matches;
+            this.currentMatchIndex = 0;
+          } else {
+            this.currentTournament = null;
+          }
         });
       } else if (this.currentMatch) {
-        updateMatchResult(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((res) => {
-          if (!res) return;
-          this.currentMatch = null;
-        });
+        updateMatchResult(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch);
       }
+
+      this.currentMatch = null;
 
       // reset score
       this.score.update("left", 0);
       this.score.update("right", 0);
 
-      if (this.startedType != "watchAI") {
-        this.startedType = "";
-        this.result.visibility(true);
-        return;
-      }
-      this.startedType = "restart";
+      this.startedType = null;
+      this.result.visibility(true);
+      return;
     };
 
     const visibility = (visible: boolean) => {
@@ -1283,7 +1293,7 @@ export default class PgGui {
       if (visible) {
         if (this.currentTournament) {
           this.result.playAgain.isVisible = false;
-        } else {
+        } else{
           this.result.nextMatch.isVisible = false;
         }
         if (this.score.left.text > this.score.right.text) {
@@ -1429,12 +1439,18 @@ export default class PgGui {
       });
       startButton.onPointerClickObservable.add(() => {
         // Start match vs AI
+        Object.values(AIMode).forEach((obj) => {
+          if (obj.alpha === 1) {
+            AIMode.selectedAIMode = obj === AIMode.restless ? "restless" : obj === AIMode.normal ? "normal" : "smart";
+          }
+        });
+        if (AIMode.selectedAIMode === "") return;
         createMatch("ai").then((match) => {
           if (match == null) return;
           this.currentMatch = match;
           this.vsAI.visibility(false);
-          this.startedType = "vsAI";
-          this.match.visibility(true, this.currentMatch.player1.name, "NormalAI");
+          this.startedType = { type: "vsAI", aiMode2: AIMode.selectedAIMode };
+          this.match.visibility(true, this.currentMatch.player1.name, AIMode.selectedAIMode + "AI");
         });
       });
       this.ui.addControl(startButton);
@@ -1449,6 +1465,7 @@ export default class PgGui {
       this.font.isVisible = visible;
       if (visible) {
         // Reset AI mode selection
+        AIMode.selectedAIMode = "";
         AIMode.restless.alpha = 0.5;
         AIMode.normal.alpha = 0.5;
         AIMode.smart.alpha = 0.5;
@@ -1493,14 +1510,26 @@ export default class PgGui {
       });
       startButton.onPointerClickObservable.add(() => {
         // Start match vs AI // Without Backend
+        Object.values(leftAIMode).forEach((obj) => {
+          if (obj.alpha === 1) {
+            leftAIMode.selectedAIMode = obj === leftAIMode.restless ? "restless" : obj === leftAIMode.normal ? "normal" : "smart";
+          }
+        });
+        Object.values(rightAIMode).forEach((obj) => {
+          if (obj.alpha === 1) {
+            rightAIMode.selectedAIMode = obj === rightAIMode.restless ? "restless" : obj === rightAIMode.normal ? "normal" : "smart";
+          }
+        });
+        if (leftAIMode.selectedAIMode === "" || rightAIMode.selectedAIMode === "") return;
         this.watchAI.visibility(false);
-        this.startedType = "watchAI";
-        this.started = true;
+        this.startedType = { type: "watchAI", aiMode1: leftAIMode.selectedAIMode, aiMode2: rightAIMode.selectedAIMode };
+        this.match.visibility(true, leftAIMode.selectedAIMode + "AI", rightAIMode.selectedAIMode + "AI");
       });
       this.ui.addControl(startButton);
     }
 
     const visibility = (visible: boolean) => {
+      console.log("watchAI visibility:", visible);
       Object.values(this.watchAI).forEach((obj) => {
         if ("isVisible" in obj) {
           obj.isVisible = visible;
@@ -1519,9 +1548,11 @@ export default class PgGui {
       this.font.isVisible = visible;
       if (visible) {
         // Reset AI mode selection
+        leftAIMode.selectedAIMode = "";
         leftAIMode.restless.alpha = 0.5;
         leftAIMode.normal.alpha = 0.5;
         leftAIMode.smart.alpha = 0.5;
+        rightAIMode.selectedAIMode = "";
         rightAIMode.restless.alpha = 0.5;
         rightAIMode.normal.alpha = 0.5;
         rightAIMode.smart.alpha = 0.5;
@@ -1639,7 +1670,7 @@ export default class PgGui {
             this.currentMatch = match;
             this.login.visibility(false);
             this.vsFriend.visibility(false);
-            this.startedType = "local";
+            this.startedType = { type: "local" };
             this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
           });
         } else {
@@ -1897,10 +1928,10 @@ export default class PgGui {
     const visibility = (visible: boolean) => {
       this.panel.block.isVisible = visible;
 
-	  if (visible) {
-		this.panel.players.player1 = this.match.player1;
-		this.panel.players.player2 = this.match.player2;
-	  }
+      if (visible) {
+        this.panel.players.player1.text = this.match.player1.text;
+        this.panel.players.player2.text = this.match.player2.text;
+      }
     };
 
     return {
