@@ -178,22 +178,22 @@ export async function checkConnection() {
 export async function register(name: string, email: string, password: string) {
 	const response = await fetch('/api/user/register', {
 		method: 'POST',
-		headers: {
-		'Content-Type': 'application/json',
-		},
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
-		body: JSON.stringify({
-			name,
-			email,
-			password,
-		}),
+		body: JSON.stringify({ name, email, password }),
 	});
+
 	const json = await response.json();
+
+	// Si le serveur renvoie ereur (400, 409, etc.)
+	if (!response.ok)
+		return { success: false, message: json.message || json.error || 'Unknown error' };
+
 	if (json.user) {
 		setUser(json.user);
-		return true;
+		return { success: true };
 	}
-	return false;
+	return { success: false, message: json.error || 'Unknown error' };
 }
 
 export async function asGuest(asPlayer2: Boolean = false) { // TO DO

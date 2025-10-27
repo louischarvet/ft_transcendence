@@ -48,6 +48,16 @@ export default function Register(): HTMLElement {
       alert("All fields are required");
       return;
     }
+	const nameRegex = /^[A-Za-z][A-Za-z0-9]*$/;
+	if (!nameRegex.test(form.name)) {
+		alert("Invalid name format. It must begin with a letter and contain only alphanumeric characters.");
+		return;
+	}
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(form.email) || form.email.length < 8) {
+		alert("Invalid email format");
+		return;
+	}
     if (form.password !== form.confirmPassword){
       alert("The two passwords are different");
       return;
@@ -60,12 +70,13 @@ export default function Register(): HTMLElement {
 		alert("Password must contain a number");
 		return;
 	}
-
     register(form.name, form.email, form.password).then( (res) => {
-      if(!res)
-        console.error('User creation failed');
-      else
-        navigate('/2fa-verification');
+		if (!res.success) {
+			console.error('User creation failed:', res.message);
+			alert(res.message);
+		}
+		else
+			navigate('/2fa-verification');
     })
   };
   buttonsWrapper.appendChild(registerButton);
