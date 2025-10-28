@@ -5,9 +5,8 @@ export const userSchema = {
 	$id: 'userSchema',
 	body: {
 		type: 'object',
-		required: ['id', 'name', 'type', 'status'],
+		required: ['name', 'type', 'status'],
 		properties: {
-			id: { type: 'integer' },
 			name: {
 				type: 'string',
 				minLength: 1,

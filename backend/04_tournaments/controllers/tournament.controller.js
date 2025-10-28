@@ -34,17 +34,17 @@ export async function getTournamentWinUserId(request, reply){
 
 export async function launchTournament(request, reply){
 	const user = request.user;
-	if (!user)
-		return reply.code(400).send({ error: 'Only logged-in users can create a tournament' });
+	// if (!user)
+	// 	return reply.code(400).send({ error: 'Only logged-in users can create a tournament' });
 
 	const body = request.body;
-	if (!body)
-		return reply.code(400).send({ error: 'Invalid body' });
-	const nbPlayers = body.nbPlayers;
-	if (![4,8,16].includes(nbPlayers))
-		return reply.code(400).send({ error: 'nbPlayers invalid' });
+	// if (!body)
+	// 	return reply.code(400).send({ error: 'Invalid body' });
+	// const nbPlayers = body.nbPlayers;
+	// if (![4,8,16].includes(nbPlayers))
+	// 	return reply.code(400).send({ error: 'nbPlayers invalid' });
 
-	const tmpTournament = await createTournamentRow(nbPlayers, user.id);
+	const tmpTournament = await createTournamentRow(body.nbPlayers, user.id);
 	if (!tmpTournament)
 		return reply.code(500).send({ error: 'Could not create tournament' });
 
@@ -80,12 +80,12 @@ export async function startTournament(request, reply){
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
 	if (tournament.creatorId != user.id)
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
-	
+	console.log("tournament -> ",tournament);
 	// Ajout IA si nécessaire
 	let countIa = 0;
-	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--){
+	for(; tournament.remainingPlaces > 0;){
 		countIa++;
-		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
+		tournament = await addNewPlayerToTournament(tournamentId, '0', 'ia');
 	}
 	
 	const playersArray = tournament.players.split(';');
@@ -101,9 +101,8 @@ export async function startTournament(request, reply){
 		}
 	}
 
-
+	// Recupere les player d'un tournoi par une liste d'id et de type
 	let listPlayers = await fetchUserTournament(playersInfos);
-	console.log('########listPlayers:', listPlayers);
 	if (listPlayers.error)
 		return reply.code(500).send({ error: 'Could not fetch users for tournament' });
 
@@ -111,12 +110,14 @@ export async function startTournament(request, reply){
 	let rankedUsers = [...listPlayers.registered, ...listPlayers.guests].sort((a,b)=>a.win_rate-b.win_rate);
 
 	let finalPlayers = [];
-	countIa = tournament.remainingPlaces;
 	for (let i=0; i<tournament.nbPlayersTotal; i++){
-		if (rankedUsers[i]) finalPlayers.push(`${rankedUsers[i].id}:${rankedUsers[i].type}:${rankedUsers[i].name}`);
-		if (countIa>0){ finalPlayers.push('0:ia'); countIa--; }
+		if (rankedUsers[i])
+			finalPlayers.push(`${rankedUsers[i].id}:${rankedUsers[i].type}:${rankedUsers[i].name}`);
+		if (countIa > 0){
+			finalPlayers.push('0:ia');
+			countIa--;
+		}
 	}
-
 	// Création des matchs
 	let matches = [];
 	for(let i=0; i<finalPlayers.length; i+=2){

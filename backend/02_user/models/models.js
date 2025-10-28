@@ -74,7 +74,6 @@ async function updateValue(table, column, name, newValue) {
 
 // Update Status
 async function updateStatus(table, name, newStatus) {
-//	const db = await getDB();
 	await db.run('UPDATE ' + table + ' SET status = ? WHERE name = ?', [newStatus, name]);
 }
 

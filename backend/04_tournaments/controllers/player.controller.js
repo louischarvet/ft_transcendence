@@ -52,13 +52,13 @@ export async function joinTournamentRegistered(request, reply){
 		return reply.code(400).send({ error: 'Player unavailable' });
 
 	// Ajoute le joueur au tournoi
-        const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
-        await addNewPlayerToTournament(tournamentId, addPlayer);
+	const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
+	await addNewPlayerToTournament(tournamentId, addPlayer);
 
-        // Met à jour le statut du joueur
-        await fetchChangeStatusUser(currentUser);
+	// Met à jour le statut du joueur
+	await fetchChangeStatusUser(currentUser, "in_game");
 
-        return reply.code(200).send({ user: player2, message: 'Joined tournament' });
+	return reply.code(200).send({ user: player2, message: 'Joined tournament' });
 }
 
 // rejoindre un tournoi en guest temporaire
@@ -81,7 +81,8 @@ export async function joinTournamentGuest(request, reply){
 		return reply.code(400).send({ error: 'Tournament is full' });
 
 	// Ajoute le guest au tournoi
-	const addPlayer = guest.id.toString() + ':' + guest.type + ';';
-	await addNewPlayerToTournament(tournamentId, addPlayer);
+	// const addPlayer = guest.id.toString() + ':' + guest.type + ';';
+	await addNewPlayerToTournament(tournamentId, guest.id.toString(),  guest.type);
+	await fetchChangeStatusUser(guest, "in_game");
 	return reply.code(200).send({ user: guest, message: 'Joined tournament' });
 }

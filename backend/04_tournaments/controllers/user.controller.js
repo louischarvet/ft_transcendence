@@ -44,16 +44,21 @@ export async function fetchGetGuestById(id){
 
 
 // Change le status d'un user
-export async function fetchChangeStatusUser(user){
+export async function fetchChangeStatusUser(user, newStatus){
 	const res = await fetch(`http://user-service:3000/changestatus`, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(user)
+		body: JSON.stringify({
+			name: user.name,
+			status: newStatus,
+			type: user.type
+		})
 	});
-	if(!res.ok)
-		return { error : 'User not found' };
-	const updatedUser = await res.json();
-	return updatedUser.user;
+
+	const data = await res.json();
+	if (!res.ok)
+		return { error: data.error || 'Failed to update status' };
+	return data.user;
 }
 
 // Login d'un user en temporaire pour le tournoi
