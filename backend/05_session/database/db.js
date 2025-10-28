@@ -13,7 +13,6 @@ async function getDB() {
 }
 
 export async function initDB(fastify) {
-	console.log("######### SESSION: opening db...");
 	const db = await getDB();
 	// a modifier en fonction des necessites
 	await db.exec(`

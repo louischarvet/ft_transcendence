@@ -1,6 +1,7 @@
-import { createGuest, register, logIn, logOut, deleteUser, fetchUserStatus,
+import { createGuest, register, logIn, logOut, deleteUser, getUserStatus,
 	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
-	fetchUserByIdToken,fetchUserById, getGuestById, getFriendsProfiles, fetchUserTournament , deleteFriend}
+	getUserByIdToken,getUserById, getGuestById, getFriendsProfiles,
+	getUsersTournament , deleteFriend}
 	from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema, guestTmp , deleteSchema, deleteFriendSchema} from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
@@ -25,12 +26,13 @@ async function userRoutes(fastify, options) {
 
 	//! ajout le 17/09/2025
 	// pour recuperer un user par son id (via son token)
-	fastify.get('/id', { preHandler: authenticateJWT }, fetchUserByIdToken);
-	fastify.get('/:id', fetchUserById);
+	fastify.get('/id', { preHandler: authenticateJWT }, getUserByIdToken);
+	fastify.get('/:id', getUserById);
+	fastify.get('/getguest/:id', getGuestById); // redondant
 
 	//! ajout le 17/09/2025
 	//! supprimer les schemas userSchema
-	fastify.put('/logout', {preHandler: authenticateJWT },  logOut);
+	fastify.put('/logout', {preHandler: authenticateJWT }, logOut);
 	fastify.delete('/delete',{preHandler: authenticateJWT , schema: deleteSchema },  deleteUser);
 
 	//! ajout le 17/09/2025
@@ -39,7 +41,6 @@ async function userRoutes(fastify, options) {
 	fastify.delete('/deleteFriend',{preHandler: authenticateJWT , schema: deleteFriendSchema },  deleteFriend);
 	fastify.get('/getfriendsprofiles', { preHandler: authenticateJWT }, getFriendsProfiles);
 
-	fastify.get('/getguest/:id', getGuestById);
 
 	// dans quels cas sont utilisees ces deux routes ?
 	// fetchUserByName et fetchUserStatus seront utilisees dans la route /vs
@@ -48,12 +49,12 @@ async function userRoutes(fastify, options) {
 	// remplacer par search ou fetch ?
 	//fastify.get('/find/:name', fetchUserByName);
 
-	fastify.get('/find/:name/status', fetchUserStatus);
+	fastify.get('/find/:name/status', getUserStatus); // utilise ?
 
 	//! ajout le 25/09/2025
 	// a voir pour schema route tournament
 	// faut t il mettre un prehandler ?
-	fastify.post('/tournament', fetchUserTournament);
+	fastify.post('/tournament', getUsersTournament);
 
 
 	// Dédié aux autres dockers 

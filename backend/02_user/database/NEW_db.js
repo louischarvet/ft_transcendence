@@ -2,7 +2,8 @@
 
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { getUserByName, insertInTable } from '../models/models';
+import { deleteUserInTable, getColumnFromTable, getUserByName, updateStatsLoser,
+	updateStatsWinner, getUserById, updateColumn, getUsersTournament } from '../models/models';
 
 const dbFile = '/usr/src/app/data/users_db';
 
@@ -71,62 +72,75 @@ export async function initDB(fastify) {
 			);
 		},
 		async getByName(name) {
-			return (
-				await db.get(
-					`SELECT * FROM ${this.table} WHERE name = ?`,
-					[ name ]
-				)
-			);
+			return (await getUserByName(this.table, name));
 		},
 		async getById(id) {
-			return (
-				await db.get(
-					`SELECT * FROM ${this.table} WHERE id = ?`,
-					[ id ]
-				)
-			);
+			return (await getUserById(this.table, id));
 		},
-		async updateCol(name, col, value) {
-			await db.run(
-				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
-				[ value, name ]
-			);
+		async updateCol(col, name, value) {
+			return (await updateColumn(this.table, col, name, value));
 		},
-		async updateStatsWinner(id) {
-			let { played_matches, match_wins } = await db.get(
-				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`,
-				[ id ]
-			);
-			played_matches++;
-			match_wins++;
-			const win_rate = (match_wins / played_matches) * 100;
-			await db.run(
-				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
-				played_matches = ?,	win_rate = ? WHERE id = ?`,
-				[ match_wins, played_matches, win_rate, id ]
-			);
+		async updateStatsW(id) {
+			await updateStatsWinner(this.table, id);
 		},
-		async updateStatsLoser(id) {
-			let { played_matches, match_wins } = await db.get(
-				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`, 
-				[ userID ]
-			);
-			played_matches++;
-			const win_rate = (match_wins / played_matches) * 100;
-			await db.run(
-				`UPDATE ${this.table} SET wins_streak = 0, played_matches = ?,
-				win_rate = ? WHERE id = ?`,
-				[ played_matches, win_rate, id ]
-			);
+		async updateStatsL(id) {
+			await updateStatsLoser(this.table, id);
 		},
 		async delete(name) {
+			await deleteUserInTable(this.table, name);
+		},
+		// cron
+		async deletePending(time) {
 			await db.run(
-				`DELETE FROM ${this.table} WHERE name = ?`,
-				[ name ]
+				`DELETE FROM ${this.table} WHERE status = 'pending' AND created_at <= ?`,
+				[ time ]
+			);
+		}
+	};
+
+	db.guest = {
+		table: 'guest',
+
+		async insert(toInsert) { // guest specific
+			const time = Math.floor( Date.now() / 1000 );
+			await db.run(
+				`INSERT INTO ${this.table}(name) VALUES (?)`,
+				[toInsert.name]
 			);
 		},
-//		async getCol(col) { // guest only
-//		},
-		// getUserTournament
+		async getByName(name) {
+			return (await getUserByName(this.table, name));
+		},
+		async getById(id) {
+			return (await getUserById(this.table, id));
+		},
+		async updateCol(col, name, value) {
+			return (await updateColumn(this.table, col, name, value));
+		},
+		async updateStatsW(id) {
+			await updateStatsWinner(this.table, id);
+		},
+		async updateStatsL(id) {
+			await updateStatsLoser(this.table, id);
+		},
+		async delete(name) {
+			await deleteUserInTable(this.table, name);
+		},
+		async getCol(col) {
+			await getColumnFromTable(col, this.table);
+		},
 	};
+
+	db.tournament = {
+		async getUsers(listRegistered, listGuests) {
+			return (await getUsersTournament(listRegistered, listGuests));
+		},
+	}
+
+    await fastify.decorate('db', db);
+
+    await fastify.addHook('onClose', async (instance) => {
+		console.log("Database closed")
+		await instance.db.close();
+	});
 }

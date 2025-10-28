@@ -2,6 +2,7 @@
 
 import Fastify from 'fastify';
 import fastifyCron from 'fastify-cron';
+import fp from 'fastify-plugin';
 import cookie from '@fastify/cookie'
 // Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
@@ -44,12 +45,15 @@ await fastify.register(helmet, {
 	global: true
 });
 
+// DB
+fastify.register(fp(initDB));
+
 // supprimer toutes les 15 minutes les registered pending qui n'ont pas fait le 2fa
 fastify.register(fastifyCron, {
 	jobs: [
 		{
 			cronTime: '*/10 * * * *',
-			onTick: prunePendingRegistered,
+			onTick: () => prunePendingRegistered(fastify.db.registered.deletePending),
 			start: true,
 			timeZone: 'Europe/Paris'
 		}
