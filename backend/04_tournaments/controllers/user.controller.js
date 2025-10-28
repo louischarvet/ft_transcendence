@@ -3,8 +3,8 @@
 // Recupere les player d'un tournoi par une liste d'id et de type
 export async function fetchUserTournament(ArrayIdAndType){
 
-	if (!ArrayIdAndType || !Array.isArray(ArrayIdAndType) || ArrayIdAndType.length === 0)
-        return { error: 'ArrayIdAndType is required' };
+	//if (!ArrayIdAndType || !Array.isArray(ArrayIdAndType) || ArrayIdAndType.length === 0)
+    //    return { error: 'ArrayIdAndType is required' };
 	
 	const res = await fetch(`http://user-service:3000/tournament`, {
 		method: 'POST',
@@ -16,8 +16,10 @@ export async function fetchUserTournament(ArrayIdAndType){
         const error = await res.json();
         return { error: error.error || 'Users not found' };
     }
-	const data = await res.json();
-	return data.users;
+	const users = await res.json();
+	const usersInfos = JSON.parse(users.users);
+
+	return (usersInfos);
 	//return JSON.parse(users.users);
 }
 
@@ -31,6 +33,7 @@ export async function fetchGetUserById(id){
 }
 
 // recupere un guest par son id
+//! peut etre utile pour front
 export async function fetchGetGuestById(id){
 	const user = await fetch(`http://user-service:3000/getguest/${id}`, { method: 'GET' });
 	if(!user.ok)

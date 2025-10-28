@@ -9,8 +9,11 @@ import {
 	addMatchesStringToTournament,
 	addMatchesAndPlayersToHistory,
 	addDataRoundTable,
+	addPlayerToTournament,
+	
 } from '../models/model.js';
 
+import { addNewPlayerToTournament } from './player.controller.js';
 import { fetchUserTournament } from './user.controller.js';
 import { fetchMatchForTournament, fetchHistoryMatchForTournament, fetchFinishMatchForTournament } from './match.controller.js';
 
@@ -71,18 +74,36 @@ export async function startTournament(request, reply){
 	const user = request.user;
 	const tournamentId = request.params.id;
 	let tournament = await getTournament(tournamentId);
-
+	if (!tournament)
+		return reply.code(404).send({ error: 'Tournament not found' });
+	if (tournament.status !== 'waiting')
+		return reply.code(400).send({ error: 'Tournament already started or finished' });
+	if (tournament.creatorId != user.id)
+		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
+	
 	// Ajout IA si nécessaire
-	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--)
+	let countIa = 0;
+	for(; tournament.remainingPlaces >= 0; tournament.remainingPlaces--){
+		countIa++;
 		tournament = await addNewPlayerToTournament(tournamentId, '0:ia;');
-
+	}
+	
 	const playersArray = tournament.players.split(';');
-	let playersInfos = playersArray.filter(p => p !== '0:ia').map(p => {
-		const [id, type] = p.split(':');
-		return { id: Number(id), type: type };
-	});
+	//Data des joueur
+	let playersInfos = new Array(playersArray.length - 1 - countIa);
+
+	for (let i = 0, j = 0; i < playersArray.length - 1; i++){
+		if (playersArray[i] !== '0:ia'){
+			const [id, type] = playersArray[i].toString().split(':');
+			//liste d'objet a envoyé au service match apres
+			playersInfos[j] = { id: Number(id), type: type};
+			j++;
+		}
+	}
+
 
 	let listPlayers = await fetchUserTournament(playersInfos);
+	console.log('########listPlayers:', listPlayers);
 	if (listPlayers.error)
 		return reply.code(500).send({ error: 'Could not fetch users for tournament' });
 
@@ -90,7 +111,7 @@ export async function startTournament(request, reply){
 	let rankedUsers = [...listPlayers.registered, ...listPlayers.guests].sort((a,b)=>a.win_rate-b.win_rate);
 
 	let finalPlayers = [];
-	let countIa = tournament.remainingPlaces;
+	countIa = tournament.remainingPlaces;
 	for (let i=0; i<tournament.nbPlayersTotal; i++){
 		if (rankedUsers[i]) finalPlayers.push(`${rankedUsers[i].id}:${rankedUsers[i].type}:${rankedUsers[i].name}`);
 		if (countIa>0){ finalPlayers.push('0:ia'); countIa--; }

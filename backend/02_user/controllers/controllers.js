@@ -538,16 +538,16 @@ export async function fetchUserTournament(request, reply) {
 	if (!listUsers || listUsers.length === 0)
 		return reply.code(400).send({ error: 'List of users is required' });
 	
-	let listLogin = [];
-	let listGuests = [];
-	for (const u of listUsers) {
-		if (u.type === 'registered') 
-			listLogin.push(Number(u.id));
-		else if (u.type === 'guest') 
-			listGuests.push(Number(u.id));
-		else 
+	let listLogin =new Array();
+	let listGuests =new Array();
+	for (let i = 0; i < listUsers.length; i++){
+		if (listUsers[i].type === 'registered')
+			listLogin.push(listUsers[i].id);
+		else if (listUsers[i].type === 'guest')
+			listGuests.push(listUsers[i].id);
+		else
 			return reply.code(400).send({ error: 'Type of user is not correct' });
-	}
+	};
 	
 	const usersInfos = await getUserTournament(listLogin, listGuests);
 	if (!usersInfos || usersInfos.length === 0)

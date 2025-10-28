@@ -703,8 +703,14 @@ export default class PgGui {
         // Add Guest player
         if (this.currentTournament == null) return;
         joinTournamentAsGuest(this.currentTournament.id).then((player) => {
-          if (player == null) return;
-          this.tournament.addPlayer(player);
+			if ('error' in player) {
+				alert(`Error : ${player.error}`);
+				console.error(player.error);
+				return;
+			}
+          	this.tournament.addPlayer(player);
+			if (player.message != "Joined tournament")
+				alert(player.message);
         });
       });
       this.ui.addControl(addGuestButton);
