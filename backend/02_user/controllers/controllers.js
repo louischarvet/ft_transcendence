@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
-import { insertInTable, getUserByName, getUserById, getUsers, updateValue,
-	getColumnFromTable, getAvailableUser, updateStatus,
+import { insertInTable, getUserByName, getUserById, updateValue,
+	getColumnFromTable, updateStatus,
 	updateStatsWinner, updateStatsLoser, deleteUserInTable, getUserTournament} from '../models/models.js'
 import { generateJWT, revokeJWT } from '../authentication/auth.js';
 import { sendCode } from '../authentication/twofa.js';

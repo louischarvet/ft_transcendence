@@ -2,9 +2,7 @@
 
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-//import { insert, get, erase } from '../models/models.js'
 
-// Chemin vers le fichier de base de données SQLite
 const dbFile = '/usr/src/app/data/session_db';
 
 async function getDB() {

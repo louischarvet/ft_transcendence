@@ -5,9 +5,9 @@ import { getDB } from '../common_tools/getDB.js';
 const db = await getDB();
 
 // Récupère tous les utilisateurs
-async function getUsers() {
-	return db.all('SELECT * FROM users');
-}
+// async function getUsers() {
+// 	return db.all('SELECT * FROM users');
+// }
 
 // Récupère un utilisateur par son nom
 async function getUserByName(table, name) {
@@ -46,12 +46,12 @@ async function isRevokedToken(token) {
 }
 
 // Get un user disponible pour jouer
-async function getAvailableUser(name){
-//	const db = await getDB();
-	const user = await db.get('SELECT * FROM users WHERE status = "pending" AND name != ?', [name]);
-	console.log("From getAvailableUser :", user);
-	return user;
-}
+// async function getAvailableUser(name){
+// //	const db = await getDB();
+// 	const user = await db.get('SELECT * FROM users WHERE status = "pending" AND name != ?', [name]);
+// 	console.log("From getAvailableUser :", user);
+// 	return user;
+// }
 
 // Get pour 
 
