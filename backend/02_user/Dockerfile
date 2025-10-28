@@ -20,7 +20,7 @@ RUN npm install bcrypt
 RUN npm install speakeasy
 
 COPY . .
-RUN mkdir ./data/
+RUN mkdir -p ./data/
 
 EXPOSE 3000
 #CMD ["node", "index.js"]

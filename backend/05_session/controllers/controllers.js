@@ -136,7 +136,7 @@ export async function refresh(db, request, reply) {
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
                 maxAge: 60,
-                path: '/api'
+                path: '/'
             })
             .setCookie('refreshToken', newRefresh, {
                 ...secureCookieOptions,

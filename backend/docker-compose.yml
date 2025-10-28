@@ -36,7 +36,7 @@ services:
       context: ./01_reverse_proxy
       dockerfile: Dockerfile
     ports:
-      - "443:443" # HTTPS
+      - "4343:443" # HTTPS
     networks:
       - transcendence-net
     depends_on:
