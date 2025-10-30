@@ -12,7 +12,7 @@ async function getDB() {
 	});
 }
 
-export async function initDB(fastify, options, next) {
+export async function initDB(fastify) {
 	const db = await getDB();
 
 	await db.exec(`

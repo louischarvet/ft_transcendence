@@ -6,7 +6,6 @@ export async function authenticateJWT(request, reply) {
 		return reply.code(401).send({
 			error: 'Access token missing.'
 		});
-    // Appel vers le session-service
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {
@@ -20,5 +19,4 @@ export async function authenticateJWT(request, reply) {
         return reply.code(authRes.status).send({ error: data.error });
 
     request.user = data;
-//    console.log("Utilisateur attaché à la request :", request.user);
 }

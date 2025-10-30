@@ -1,16 +1,27 @@
 import Fastify from 'fastify';
-//import jwt from '@fastify/jwt'
-
 import cookie from '@fastify/cookie'
+import fastifyCors from '@fastify/cors';
+import fp from 'fastify-plugin';
+
 import { authenticateJWT } from './authentication/auth.js'
 import routes from './routes/routes.js';
-import { matchSchema, registeredMatchSchema, tournamentMatchSchema } from './schema/matchSchema.js';
-
+import { matchSchema, registeredMatchSchema, tournamentMatchSchema }
+	from './schema/matchSchema.js';
+import { initDB } from './database/db.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
+
+fastify.register(fastifyCors, {
+	origin: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE'],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	credentials: true
+});
+
+await fastify.register(fp(initDB));
 
 fastify.decorate('authentication', authenticateJWT);
 
