@@ -16,6 +16,7 @@ export async function getRefreshToken() {
 
 export async function getTokenAcces() {
 	const cookie = await cookieStore.get("accessToken");
+	console.log("cookie accessToken => ", cookie?.value);
 	return 	cookie?.value;
 }
 
@@ -283,12 +284,21 @@ export type Match = {
 	player2: { id: string, name?: string , type: string },
 	tournament_id: any | undefined
 }
+// ce       | match --> {
+// match-service       |   id: 1,
+// match-service       |   p1_id: 1,
+// match-service       |   p1_type: 'guest',
+// match-service       |   p2_id: 2,
+// match-service       |   p2_type: 'guest',
+// match-service       |   tournament_id: 0,
+// match-service       |   created_at: 'Thu Oct 30 2025 15:31:37'
+// match-service       | }
 
 export async function createMatch(playerType: string, name?: string, password?: string) {
 
 	if (playerType == "registered" && !name && !password) return null;
 
-	const res = await fetch(`/api/match/matches`, {
+	const res = await fetch(`/api/match/` + playerType, {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
@@ -296,12 +306,16 @@ export async function createMatch(playerType: string, name?: string, password?: 
 	});
 	const data = await res.json();
 	if (data.error) return null;
-	return data.match as Match;
+	return {
+		id: data.match.id,
+		player1: {id: data.match.p1_id, type: data.match.p1_type, name: data.user1.name},
+		player2: {id: data.match.p2_id, type: data.match.p2_type, name: data.user2.name}
+	} as Match;
 }
 
 export async function updateMatchResult(scoreP1: number, scoreP2: number, match: Match) {
 
-	const res = await fetch(`/api/match/matches/${match.id}.result`, {
+	const res = await fetch(`/api/match/finish`, {
 		method: 'PUT',
 		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',

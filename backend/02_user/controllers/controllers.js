@@ -41,7 +41,7 @@ export async function createGuest(request, reply) {
 		const { accessToken, refreshToken } = await generateJWT(user);
 		reply.setCookie('accessToken', accessToken, {
 			...secureCookieOptions,
-			path :'/api',
+			path :'/',
 			maxAge: 1800
 		})
 		.setCookie('refreshToken', refreshToken, {

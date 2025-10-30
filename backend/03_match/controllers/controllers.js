@@ -32,14 +32,10 @@ export async function registeredMatch(request, reply) {
 	// Cree le match en DB et le renvoie
 	const match = await insertInTable('matches', player1.id, player1.type, player2.id, 'registered', 0);
 
-	// Remplacer le JWT pour eviter d'etre delog pendant un match
-	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
-
 	return reply.code(200).send({
 		match: match,
 		user1: user1,
 		user2: user2,
-		token: newToken,
 		message: 'Registered match successfully created',
 	});
 
@@ -58,14 +54,12 @@ export async function guestMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, guest.id, guest.type, 0);
 
-	// Remplacer le JWT pour eviter d'etre delog pendant un match
-	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
+	console.log("match -->",match);
 
 	return reply.code(200).send({
-		match: match,
+		match: { ...match,p1_name: user.name, p2_name: guest.name},
 		user1: user,
 		user2: guest,
-		token: newToken,
 		message: 'Guest match successfully created',
 	});
 }
@@ -79,8 +73,6 @@ export async function iaMatch(request, reply) {
 
 	const match = await insertInTable('matches', player1.id, player1.type, iaID, 'ia', 0);
 
-	// Remplacer le JWT pour eviter d'etre delog pendant un match
-	const newToken = await fetchReplaceJWT(request.headers.authorization.split(' ')[1]);
 
 	return reply.code(200).send({
 		match: match,
@@ -89,7 +81,6 @@ export async function iaMatch(request, reply) {
 			id: 0,
 			type: 'ia',
 		},
-		token: newToken,
 		message: 'IA match successfully created',
 	});
 }
@@ -109,7 +100,9 @@ export async function getHistory(request, reply) {
 // Route PUT pour mettre fin au match, update les infos necessaires
 export async function finish(request, reply) {
 	const match = request.body;
-
+	// verifier que le match est bien en cours
+	if (match = await getMatchByID(match.id) === undefined)
+		return reply.code(400).send({ error: 'There is no match with this ID.' });
 	console.log("SERVICE MATCH : match ---> ", match, "SERVICE MATCH\n");
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
@@ -117,9 +110,7 @@ export async function finish(request, reply) {
 	match.winner_id = winner_id;
 	match.loser_id = loser_id;
 
-	// verifier que le match est bien en cours
-	if (await getMatchByID(match.id) === undefined)
-		return reply.code(400).send({ error: 'There is no match with this ID.' });
+
 
 	// mettre le match dans la table history
 	const historyMatch = await insertInHistory(match);

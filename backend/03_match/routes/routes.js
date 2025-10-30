@@ -36,7 +36,7 @@ export default async function matchRoutes(fastify, opts) {
 	fastify.get('/:id', getMatch);
 
 	// Route PUT pour mettre fin au match, update les infos necessaires
-	fastify.put('/finish', { preHandler: [ authenticateJWT/*, unalteredMatch */], schema: matchSchema }, finish);
+	fastify.put('/finish', { preHandler: [ authenticateJWT/*, unalteredMatch */]},/* schema: matchSchema },*/ finish);
 
 	// Route POST pour creer un match avec IDs des joueurs deja definis (via tournament)	
 	fastify.post('/tournament', { schema: tournamentMatchSchema }, tournamentMatch);
