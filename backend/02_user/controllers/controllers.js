@@ -553,6 +553,7 @@ export async function fetchUserTournament(request, reply) {
 	if (!usersInfos || usersInfos.length === 0)
 		return reply.code(404).send({ error: 'Users not found' });
 
+	console.log("usersInfosin in fetchUserTournament : ", usersInfos);
 	usersInfos.registered.forEach(u => {
 		delete u.hashedPassword;
 		delete u.email;

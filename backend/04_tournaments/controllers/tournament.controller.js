@@ -118,12 +118,14 @@ export async function startTournament(request, reply){
 			countIa--;
 		}
 	}
+
+	console.log("finalPlayers --> ", finalPlayers);
 	// Création des matchs
 	let matches = [];
 	for(let i=0; i<finalPlayers.length; i+=2){
-		const [p1Id,p1Type] = finalPlayers[i].split(':');
-		const [p2Id,p2Type] = finalPlayers[i+1].split(':');
-		matches.push({ player1:{id:Number(p1Id),type:p1Type}, player2:{id:Number(p2Id),type:p2Type}, tournamentID:tournamentId });
+		const [p1Id,p1Type,p1Name] = finalPlayers[i].split(':');
+		const [p2Id,p2Type,p2Name] = finalPlayers[i+1].split(':');
+		matches.push({ player1:{id:Number(p1Id),type:p1Type, name:p1Name}, player2:{id:Number(p2Id),type:p2Type, name:p2Name}, tournamentID:tournamentId });
 	}
 
 	let tournamentMatchData = [];

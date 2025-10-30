@@ -9,12 +9,12 @@ import {
 import { fetchFinishMatchForTournament } from './match.controller.js';
 
 export async function nextRound(request, reply){
-	const { tournamentId } = request.body;
-	const tournament = await getTournament(tournamentId);
+	const { tournamentID } = request.body;
+	const tournament = await getTournament(tournamentID);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
-	const roundData = await getRoundTable(tournamentId);
+	const roundData = await getRoundTable(tournamentID, tournament.rounds);
 	return reply.code(200).send({ roundData });
 }
 
