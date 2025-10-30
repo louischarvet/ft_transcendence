@@ -20,7 +20,7 @@ export const verifySchema = {
 		type: 'object',
 		required: [ 'code' ],
 		properties: {
-			code: { type: 'integer' },
+			code: { type: 'string' },
 		},
 		additionalProperties: false
 	}

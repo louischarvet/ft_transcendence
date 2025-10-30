@@ -1,13 +1,8 @@
 // controllers/controllers.js
 
 import nodemailer from 'nodemailer';
-import { config } from 'dotenv';
 import speakeasy from 'speakeasy';
-import { insertInTable, getFromTable, deleteInTable } from '../models/models.js';
-import { generateJWT, revokeJWT } from '../authentication/auth.js';
-import path from 'path';
-
-config();
+import { generateJWT } from '../authentication/auth.js';
 
 const secureCookieOptions = {
 	httpOnly: true,
@@ -15,14 +10,12 @@ const secureCookieOptions = {
 	sameSite: 'none',
 };
 
-// Generation de clef secrete
 const secret = speakeasy.generateSecret({ length: 20 });
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/api/twofa/verifycode' })
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
-
 
 // Generation du code (one time password)
 async function generateCode() {
@@ -34,9 +27,6 @@ async function generateCode() {
 
 // Envoyer le mail
 async function sendMail(name, email, code) {
-	// console.log("##### USR_ADDR = ", process.env.USR_ADDR,
-	// 			"\n##### APP_PASS = ", process.env.APP_PASS
-	// );
 	const transporter = nodemailer.createTransport({
 		service: 'gmail',
 		auth: {
@@ -44,18 +34,6 @@ async function sendMail(name, email, code) {
 			pass: process.env.APP_PASS
 		}
 	});
-
-	// verification de la connexion pour envoi d'email
-	// await transporter.verify((error, success) => {
-	// 	if (error) {
-	// 		// fetch exit pour tous les containers
-	// 	//	fetchExitSMTPError();
-	// 		console.error('Erreur de connexion :', error.message);
-	// 		process.exit(2);
-	// 	} else
-	// 		console.log('Connexion réussie : les identifiants sont valides.');
-	// 	transporter.close(); // Ferme la connexion
-	// });
 
 	await transporter.sendMail({
 		from: `"2FA Service" <` + process.env.USR_ADDR + `>`,
@@ -69,13 +47,12 @@ async function sendMail(name, email, code) {
 
 // Route POST pour verifier l'email
 export async function sendCode(request, reply) {
+	const { db } = request.server;
 	const { name, email, id } = request.body;
 	const code = await generateCode();
 
 	await sendMail(name, email, code);
-	console.log("##### sendCode after sendMail\n");
-	await insertInTable(id, name, code);
-	console.log("##### sendCode after insertInTable\n");
+	await db.twofa.insert(id, name, code);
 
 	const res = await generateJWT({
 		id: id,
@@ -97,58 +74,55 @@ export async function sendCode(request, reply) {
 
 // Route POST pour verifier le code généré
 export async function verifyCode(request, reply) {
-	const { code, id, name, type } = request.user;
-	const codeToCompare = await getFromTable(id, name);
+	const { db } = request.server;
+	const { code } = request.body;
+	const { id, name, type } = request.user;
+	const codeToCompare = await db.twofa.getCode(id, name);
 	if (codeToCompare === undefined)
 		return reply.code(400).send({ error: 'Unauthorized (verifyCode)' });
 
 //////////////////////////// DECOMMENTER POUR ACTIVER LE 2FA !!!!!!
-//	if (code !== codeToCompare.code)
-//		return reply.code(400).send({error : 'bad code. Retry !'});
+	if (code !== codeToCompare.code) {
+		return reply.code(400).send({error : 'bad code. Retry !'});
+	}
 ///////////////////////////////////////////////////////////////////
-
-	// revocation de l'ancien accessToken
-	await revokeJWT(request.headers.authorization);
 
 	await clearCookies(reply);
 
-	// si user n'est pas le p2 d'un match
-//	if (tmp === undefined || !tmp) {
-		const response = await generateJWT({ 
-				id: id,
-				type: 'registered',
-				name: name,
-				verified: true
-		});
-		const jsonRes = await response.json();
-		const { accessToken, refreshToken } = jsonRes;
-		
-		// Changer le status dans user-service: pending -> available
-		await fetch('http://user-service:3000/changestatus', {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				name: name,
-				id: id,
-				status: 'available',
-				type: type
-			}),
-		});
-		reply.setCookie('accessToken', accessToken, {
-			...secureCookieOptions,
-			maxAge: 1800,
-			path: '/'
-		})
-		.setCookie('refreshToken', refreshToken, {
-			...secureCookieOptions,
-			maxAge: 604800,
-			path: '/api/refresh'
-		})
-//	}
+	const response = await generateJWT({ 
+		id: id,
+		type: 'registered',
+		name: name,
+		verified: true
+	});
+	const jsonRes = await response.json();
+	const { accessToken, refreshToken } = jsonRes;
 	
-	await deleteInTable(id);
+	await fetch('http://user-service:3000/changestatus', {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			name: name,
+			id: id,
+			status: 'available',
+			type: type
+		}),
+	});
+
+	reply.setCookie('accessToken', accessToken, {
+		...secureCookieOptions,
+		maxAge: 1800,
+		path: '/'
+	})
+	.setCookie('refreshToken', refreshToken, {
+		...secureCookieOptions,
+		maxAge: 604800,
+		path: '/api/refresh'
+	})
+	
+	await db.twofa.delete(id);
 
 	return reply.code(201)
 		.send({
