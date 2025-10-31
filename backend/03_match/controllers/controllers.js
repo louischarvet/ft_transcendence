@@ -122,7 +122,7 @@ export async function finish(request, reply) {
 	if (await db.matches.getByID(match.id) === undefined)
 		return reply.code(400).send({ error: 'There is no match with this ID.' });
 
-	const historyMatch = db.history.insert(match);
+	const historyMatch = await db.history.insert(match);
 	await db.matches.delete(match.id);
 
 	const { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);

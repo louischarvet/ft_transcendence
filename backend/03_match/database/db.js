@@ -59,7 +59,7 @@ export async function initDB(fastify) {
 			const shortDate = date.split(" GMT")[0];
 			await db.run(
 				`INSERT INTO ${this.table}(p1_id, p1_type, p2_id, p2_type,
-				tournamentID, created_at) VALUES(?, ?, ?, ?, ?, ?)`,
+				tournament_id, created_at) VALUES(?, ?, ?, ?, ?, ?)`,
 				[ p1_id, p1_type, p2_id, p2_type, tournament_id, shortDate ]
 			);
 			return (await db.get(

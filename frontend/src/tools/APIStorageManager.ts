@@ -2,6 +2,24 @@ function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
 }
 
+function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
+  const createdAt = match.created_at
+    ?? new Date().toLocaleString('fr-FR').split(' GMT')[0]; // même format que DB
+
+  return {
+    id: Number(match.id),
+    p1_id: Number(match.player1?.id ?? match.p1_id ?? 0),
+    p1_type: match.player1?.type ?? match.p1_type ?? 'guest',
+    p2_id: Number(match.player2?.id ?? match.p2_id ?? 0),
+    p2_type: match.player2?.type ?? match.p2_type ?? 'guest',
+    scoreP1: Number(scoreP1),
+    scoreP2: Number(scoreP2),
+    created_at: createdAt,
+    tournament_id: match.tournament_id ?? 0
+  };
+}
+
+
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
@@ -24,7 +42,7 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	return response;
 }
 
-//exemple dutilisation
+// exemple dutilisation
 // export async function getFriendsList() {
 // 	const response = await apiFetch('/api/user/getfriendsprofiles', {
 // 		method: 'GET',
@@ -59,9 +77,8 @@ export async function getTokenAcces() {
 }
 
 export async function getUserByToken(){
-	const response = await fetch('/api/user/id', {
+	const response = await apiFetch('/api/user/id', {
 		method: 'GET',
-		credentials: 'include',
 	});
 	const json = await response.json();
 	if (json.user) {
@@ -73,12 +90,10 @@ export async function getUserByToken(){
 
 export async function getUserById(id: number){
 
-	const response = await fetch(`/api/user/${id}`, {
+	const response = await apiFetch(`/api/user/${id}`, {
 		method: 'GET',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 	});
-
 	if (!response.ok) {
 		console.warn("Erreur backend :", response.status);
 		return null;
@@ -90,6 +105,7 @@ export async function getUserById(id: number){
 
 export async function Logout(): Promise<Response | null> {
 
+	// <-- Do NOT change this to apiFetch (used by apiFetch on token refresh failure)
 	const response = await fetch('/api/user/logout', {
 		method: 'PUT',
 		credentials: 'include',
@@ -102,10 +118,9 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 
 	console.log("ooooo", password, toUpdate, newValue);
 
-	const response = await fetch(`/api/user/update`, {
+	const response = await apiFetch(`/api/user/update`, {
 		method: "PUT",
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({
 			password : password,
 			toUpdate : toUpdate,
@@ -123,9 +138,8 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 }
 
 export async function addNewFriend(friendName: string){
-	const response = await fetch(`/api/user/addfriend/${encodeURIComponent(friendName)}`, {
+	const response = await apiFetch(`/api/user/addfriend/${encodeURIComponent(friendName)}`, {
 		method: "POST",
-		credentials: 'include',
 	});
 
 	return response;
@@ -133,17 +147,20 @@ export async function addNewFriend(friendName: string){
 
 export async function getFriendsList(): Promise<{ friends: { name: string; status: string , id: number }[] } | null> {
 
-
-	const response = await fetch('/api/user/getfriendsprofiles', {
+	const response = await apiFetch('/api/user/getfriendsprofiles', {
 		method: 'GET',
-		credentials: 'include',
 	});
 
-	//Si le backend renvoie 204 No Content, on retourne null
+	// Si le backend renvoie 204 No Content, on retourne []
 	if (response.status === 204) {
     	console.log("Aucun ami trouvé.");
 		return { friends: [] };
   	};
+
+	if (!response.ok) {
+		console.warn("Erreur backend getFriendsList:", response.status);
+		return null;
+	}
 
 	const data = await response.json() as { friends: { name: string; status: string, id: number }[] };
 	return data;
@@ -151,6 +168,7 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 
 export async function fetchRefreshToken(){
 
+	// <-- Do NOT change this to apiFetch (sinon boucle potentielle)
 	const response = await fetch ("/api/refresh", {
 		method: 'POST',
 		credentials: 'include',
@@ -165,10 +183,9 @@ export async function fetchRefreshToken(){
 
 export async function removeFriend(friendId: string){
 
-	const response = await fetch('/api/user/deleteFriend', {
+	const response = await apiFetch('/api/user/deleteFriend', {
 		method: 'DELETE',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({
 			id: friendId,
 		}),
@@ -188,9 +205,8 @@ export async function checkConnection() {
 	if (!tmp)
 		return false;
 
-	const response = await fetch('/api/user/id', {
+	const response = await apiFetch('/api/user/id', {
 		method: 'GET',
-		credentials: 'include',
 	});
 	if (response.status === 401){
 		if (await fetchRefreshToken() === false)
@@ -211,16 +227,15 @@ export async function checkConnection() {
 }
 
 export async function register(name: string, email: string, password: string) {
-	const response = await fetch('/api/user/register', {
+	const response = await apiFetch('/api/user/register', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
 		body: JSON.stringify({ name, email, password }),
 	});
 
 	const json = await response.json();
 
-	// Si le serveur renvoie ereur (400, 409, etc.)
+	// Si le serveur renvoie erreur (400, 409, etc.)
 	if (!response.ok)
 		return { success: false, message: json.message || json.error || 'Unknown error' };
 
@@ -232,10 +247,9 @@ export async function register(name: string, email: string, password: string) {
 }
 
 export async function asGuest(asPlayer2: Boolean = false) { // TO DO
-	const response = await fetch('/api/user/guest', {
+	const response = await apiFetch('/api/user/guest', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
 		body: JSON.stringify({
 			tmp: asPlayer2,
 		}),
@@ -257,10 +271,9 @@ export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 }
 
 export async function login(name: string, password: string) {
-	const response = await fetch('/api/user/login', {
+	const response = await apiFetch('/api/user/login', {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({ name: name, password: password, tmp: false })
 	});
 	
@@ -279,10 +292,9 @@ export async function login(name: string, password: string) {
 
 export async function deleteUser(password : string) {
 
-	const response = await fetch('/api/user/delete', {
+	const response = await apiFetch('/api/user/delete', {
 		method: 'DELETE',
 		headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
 		body: JSON.stringify({ password }),
 	});
 	const json = await response.json();
@@ -299,10 +311,9 @@ export async function deleteUser(password : string) {
 export async function verifyTwoFactorCode(code: string) {
 	const user = getUser();
 
-	const response = await fetch('/api/twofa/verifycode', {
+	const response = await apiFetch('/api/twofa/verifycode', {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({
 			id: user?.id,
 			name: user?.name,
@@ -322,24 +333,14 @@ export type Match = {
 	player2: { id: string, name?: string , type: string },
 	tournament_id: any | undefined
 }
-// ce       | match --> {
-// match-service       |   id: 1,
-// match-service       |   p1_id: 1,
-// match-service       |   p1_type: 'guest',
-// match-service       |   p2_id: 2,
-// match-service       |   p2_type: 'guest',
-// match-service       |   tournament_id: 0,
-// match-service       |   created_at: 'Thu Oct 30 2025 15:31:37'
-// match-service       | }
 
 export async function createMatch(playerType: string, name?: string, password?: string) {
 
 	if (playerType == "registered" && !name && !password) return null;
 
-	const res = await fetch(`/api/match/` + playerType, {
+	const res = await apiFetch(`/api/match/` + playerType, {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({ playerType, ...(playerType == "registered" ? { name, password } : {}) })
 	});
 	const data = await res.json();
@@ -352,12 +353,13 @@ export async function createMatch(playerType: string, name?: string, password?: 
 }
 
 export async function updateMatchResult(scoreP1: number, scoreP2: number, match: Match) {
-
-	const res = await fetch(`/api/match/finish`, {
+	console.log('updateMatchResult called'); // vérif que la fn est appelée
+	const payload = buildFinishPayload(scoreP1, scoreP2, match);
+	console.log('[DEBUG] updateMatchResult payload ->', payload);
+	const res = await apiFetch(`/api/match/finish`, {
 		method: 'PUT',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
-		body: JSON.stringify({ scoreP1, scoreP2, ...match })
+		body: JSON.stringify(payload)
 	});
 	const data = await res.json();
 	if (data.error) return false;
@@ -366,10 +368,9 @@ export async function updateMatchResult(scoreP1: number, scoreP2: number, match:
 
 export async function launchTournament(nbPlayers: number) {
 
-	const res = await fetch('/api/tournament/launchtournament', {
+	const res = await apiFetch('/api/tournament/launchtournament', {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({ nbPlayers })
 	});
 	const data = await res.json();
@@ -380,10 +381,9 @@ export async function launchTournament(nbPlayers: number) {
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
 
-	const res = await fetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
+	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
-		credentials: 'include',
 		body: JSON.stringify({ name, password })
 	});
 	const data = await res.json();
@@ -393,9 +393,8 @@ export async function joinTournamentAsLogged(tournamentId: number, name: string,
 
 export async function joinTournamentAsGuest(tournamentId: number) {
 
-	const res = await fetch(`/api/tournament/jointournamentguest/${tournamentId}`, {
+	const res = await apiFetch(`/api/tournament/jointournamentguest/${tournamentId}`, {
 		method: 'POST',
-		credentials: 'include',
 	});
 	const data = await res.json();
 	if (data.error)
@@ -417,9 +416,8 @@ export type Tournament = {
 
 export async function startTournament(tournamentId: number): Promise<Tournament | null> {
 
-	const res = await fetch(`/api/tournament/starttournament/${tournamentId}`, {
+	const res = await apiFetch(`/api/tournament/starttournament/${tournamentId}`, {
 		method: 'POST',
-		credentials: 'include',
 	});
 	const data = await res.json();
 	if (data.error)
@@ -431,10 +429,9 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 
 export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<any | null> {
 
-	const res = await fetch(`/api/tournament/next`, {
+	const res = await apiFetch(`/api/tournament/next`, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
 		body: JSON.stringify({ scoreP1, scoreP2, ...match})
 	});
 	const data = await res.json();
