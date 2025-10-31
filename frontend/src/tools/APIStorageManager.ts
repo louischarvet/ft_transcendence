@@ -2,6 +2,44 @@ function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
 }
 
+export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
+	
+	let response = await fetch(input, { ...init, credentials: 'include' });
+
+	// Si token expiré ou invalide
+	if (response.status === 401 || response.status === 403) {
+		console.warn("Access token expiré, tentative de refresh...");
+
+		const refreshed = await fetchRefreshToken();
+		if (!refreshed) {
+			console.error("Refresh token invalide. Déconnexion...");
+			await Logout();
+			return response;
+		}
+
+		// Relance une seule fois la requête initiale
+		response = await fetch(input, { ...init, credentials: 'include' });
+	}
+
+	return response;
+}
+
+//exemple dutilisation
+// export async function getFriendsList() {
+// 	const response = await apiFetch('/api/user/getfriendsprofiles', {
+// 		method: 'GET',
+// 	});
+
+// 	if (response.status === 204)
+// 		return { friends: [] };
+
+// 	if (!response.ok)
+// 		return null;
+
+// 	const data = await response.json();
+// 	return data;
+// }
+
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
@@ -16,6 +54,7 @@ export async function getRefreshToken() {
 
 export async function getTokenAcces() {
 	const cookie = await cookieStore.get("accessToken");
+	console.log("cookie accessToken => ", cookie?.value);
 	return 	cookie?.value;
 }
 
@@ -118,7 +157,7 @@ export async function fetchRefreshToken(){
 	});
 
 	if (response.status === 403) {
-		console.log("Impossible de mettre a jour le refresh token");
+		console.log("Impossible de mettre a jour le refresh token", response);
 		return false;
 	}
 	return true;
@@ -149,10 +188,6 @@ export async function checkConnection() {
 	if (!tmp)
 		return false;
 
- 	//const token = await getRefreshToken();
-	//if (token === undefined)
-	//	return false;
-
 	const response = await fetch('/api/user/id', {
 		method: 'GET',
 		credentials: 'include',
@@ -178,30 +213,28 @@ export async function checkConnection() {
 export async function register(name: string, email: string, password: string) {
 	const response = await fetch('/api/user/register', {
 		method: 'POST',
-		headers: {
-		'Content-Type': 'application/json',
-		},
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
-		body: JSON.stringify({
-			name,
-			email,
-			password,
-		}),
+		body: JSON.stringify({ name, email, password }),
 	});
+
 	const json = await response.json();
+
+	// Si le serveur renvoie ereur (400, 409, etc.)
+	if (!response.ok)
+		return { success: false, message: json.message || json.error || 'Unknown error' };
+
 	if (json.user) {
 		setUser(json.user);
-		return true;
+		return { success: true };
 	}
-	return false;
+	return { success: false, message: json.error || 'Unknown error' };
 }
 
 export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 	const response = await fetch('/api/user/guest', {
 		method: 'POST',
-		headers: {
-		'Content-Type': 'application/json',
-		},
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
 		body: JSON.stringify({
 			tmp: asPlayer2,
@@ -245,7 +278,6 @@ export async function login(name: string, password: string) {
 }
 
 export async function deleteUser(password : string) {
-	// const token = getToken();
 
 	const response = await fetch('/api/user/delete', {
 		method: 'DELETE',
@@ -276,7 +308,7 @@ export async function verifyTwoFactorCode(code: string) {
 			name: user?.name,
 			email: user?.email,
 			type: user?.type,
-			code,
+			code
 		}),
 	});
 	const json = await response.json();
@@ -285,42 +317,45 @@ export async function verifyTwoFactorCode(code: string) {
 }
 
 export type Match = {
-	tournament_id: any | undefined,
 	id: string,
-	p1_id: any,
-	p1_name: any,
-	p1_type: any,
-	p2_id: any,
-	p2_name: any,
-	p2_type: any,
-	created_at: string
+	player1: { id: string, name?: string , type: string },
+	player2: { id: string, name?: string , type: string },
+	tournament_id: any | undefined
 }
+// ce       | match --> {
+// match-service       |   id: 1,
+// match-service       |   p1_id: 1,
+// match-service       |   p1_type: 'guest',
+// match-service       |   p2_id: 2,
+// match-service       |   p2_type: 'guest',
+// match-service       |   tournament_id: 0,
+// match-service       |   created_at: 'Thu Oct 30 2025 15:31:37'
+// match-service       | }
 
-export async function createMatch(playerType: "ai" | "guest" | "registered", name?: string, password?: string): Promise<Match | null> {
-	// const token = getToken();
-	// if (!token) return null;
+export async function createMatch(playerType: string, name?: string, password?: string) {
 
 	if (playerType == "registered" && !name && !password) return null;
 
-	const res = await fetch(`/api/match/matches`, {
+	const res = await fetch(`/api/match/` + playerType, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token */},
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
-
 		body: JSON.stringify({ playerType, ...(playerType == "registered" ? { name, password } : {}) })
 	});
 	const data = await res.json();
 	if (data.error) return null;
-	return data.match as Match;
+	return {
+		id: data.match.id,
+		player1: {id: data.match.p1_id, type: data.match.p1_type, name: data.user1.name},
+		player2: {id: data.match.p2_id, type: data.match.p2_type, name: data.user2.name}
+	} as Match;
 }
 
 export async function updateMatchResult(scoreP1: number, scoreP2: number, match: Match) {
-	// const token = getToken();
-	// if (!token) return false;
 
-	const res = await fetch(`/api/match/matches/${match.id}.result`, {
+	const res = await fetch(`/api/match/finish`, {
 		method: 'PUT',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 		body: JSON.stringify({ scoreP1, scoreP2, ...match })
 	});
@@ -330,12 +365,10 @@ export async function updateMatchResult(scoreP1: number, scoreP2: number, match:
 }
 
 export async function launchTournament(nbPlayers: number) {
-	// const token = getToken();
-	// if (!token) return null;
 
 	const res = await fetch('/api/tournament/launchtournament', {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 		body: JSON.stringify({ nbPlayers })
 	});
@@ -346,12 +379,10 @@ export async function launchTournament(nbPlayers: number) {
 }
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
-	// const token = getToken();
-	// if (!token) return null;
 
 	const res = await fetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
+		headers: {'Content-Type': 'application/json'},
 		credentials: 'include',
 		body: JSON.stringify({ name, password })
 	});
@@ -361,29 +392,30 @@ export async function joinTournamentAsLogged(tournamentId: number, name: string,
 }
 
 export async function joinTournamentAsGuest(tournamentId: number) {
-	// const token = getToken();
-	// if (!token) return null;
 
 	const res = await fetch(`/api/tournament/jointournamentguest/${tournamentId}`, {
 		method: 'POST',
 		credentials: 'include',
 	});
 	const data = await res.json();
-	if (data.error) return null;
-	console.log("joinTournamentAsGuest data -> ", data);
-	return { id: data.user.id, name: data.user.name };
+	if (data.error)
+		return { error: data.error };
+ 	console.log("joinTournamentAsGuest data -> ", data);
+    return { 
+        id: data.user.id,
+        name: data.user.name, 
+        message: data.message
+    };
 }
 
 export type Tournament = {
 	id: number,
-	matchs: Match[],
+	matches: Match[],
 	nb_players: number,
 	nbPlayersTotal: number,
 }
 
 export async function startTournament(tournamentId: number): Promise<Tournament | null> {
-	// const token = getToken();
-	// if (!token) return null;
 
 	const res = await fetch(`/api/tournament/starttournament/${tournamentId}`, {
 		method: 'POST',
@@ -397,18 +429,19 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	return data.tournament as Tournament;
 }
 
-export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<Tournament | null> {
-	// const token = getToken();
-	// if (!token) return null;
+export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<any | null> {
 
 	const res = await fetch(`/api/tournament/next`, {
 		method: 'PUT',
-		headers: { 'Content-Type': 'application/json',/* 'Authorization': token*/ },
+		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
 		body: JSON.stringify({ scoreP1, scoreP2, ...match})
 	});
 	const data = await res.json();
-	if (data.error) return null;
-	return data.tournament as Tournament;
-
+	if (data.error){
+		console.error(data.error);
+		return null;
+	}
+	console.log("next data : ", data);
+	return data;
 }

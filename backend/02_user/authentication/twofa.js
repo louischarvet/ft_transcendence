@@ -1,8 +1,6 @@
 // ./authentification/twofa.js
 
 export async function sendCode(user) {
-	console.log("############### USER in SendCode\n", user,
-				"################################\n");
 	const genRes = await fetch('http://twofa-service:3000/sendcode', {
 		method: 'POST',
 		headers: {
@@ -11,7 +9,5 @@ export async function sendCode(user) {
 		body: JSON.stringify(user)
 	});
 	const data = await genRes.json();
-	console.log("################## sendCode data\n", data,
-				"\n################################\n");
 	return data;
 }

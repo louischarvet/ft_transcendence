@@ -10,6 +10,11 @@ backend-clean:
 up:
 	@docker compose up --build
 
+up-d:
+	@docker compose up -d --build
+	@echo "✅ Containers launched in detached mode. Showing logs..."
+	@docker compose logs -f
+
 down:
 	@docker compose down
 

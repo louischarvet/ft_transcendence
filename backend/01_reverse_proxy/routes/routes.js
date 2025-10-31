@@ -2,15 +2,21 @@ import fastifyHttpProxy from '@fastify/http-proxy'
 
 async function routesPlugin(fastify, options) {
 	// page d'accueil, route standard
-	fastify.get('/', async (request, reply) => {
-        return { hello: 'world' }
-    })
+	fastify.get('/ping', async (request, reply) => {
+        return reply.code(200).send({
+			hello: 'world',
+			status: 'ok'
+		});
+    });
 
 	// Routes interdites
 	fastify.put('/user/changestatus', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
 	fastify.put('/user/updatestats', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+	fastify.post('/match/tournament', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
 

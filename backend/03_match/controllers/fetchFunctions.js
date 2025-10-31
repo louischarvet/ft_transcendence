@@ -1,29 +1,10 @@
 // controllers/fetchFunctions.js
 
-// Requete pour renouveller le JWT
-export async function fetchReplaceJWT(token) {
-//	console.log("###### TOKEN: ", token);
-    const body = JSON.stringify({
-        token: token
-    });
-    // envoyer le token brut sans "Bearer : "
-    const res = await fetch('http://session-service:3000/replace', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: body
-    });
-    if (!res.ok)
-        return (res);
-    return ((await res.json()).token);
-}
-
 // Requete a user-service pour update le status d'un joueur
 export async function fetchChangeStatus(player, status) {
     const body = JSON.stringify({
         name: player.name,
-        id: player.id,
+        // id: player.id,
         status: status,
         type: player.type,
     });

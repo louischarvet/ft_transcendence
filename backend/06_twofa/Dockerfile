@@ -2,6 +2,7 @@
 FROM node:24
 
 WORKDIR /usr/src/app
+RUN mkdir /usr/src/app/data
 
 COPY ./package.json ./
 

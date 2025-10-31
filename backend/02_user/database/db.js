@@ -1,11 +1,19 @@
-import	sqlite3		from	'sqlite3';
-import	{ open }	from	'sqlite';
+//./database/db.js
 
-export async function initDB(){
-	const db = await open({
-		filename: '/usr/src/app/data/users_db',
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+
+const dbFile = '/usr/src/app/data/users_db';
+
+async function getDB() {
+	return await open({
+		filename: dbFile,
 		driver: sqlite3.Database
 	});
+}
+
+export async function initDB(fastify) {
+	const db = await getDB();
 
 	await db.exec(`
 		CREATE TABLE IF NOT EXISTS registered (
@@ -29,9 +37,7 @@ export async function initDB(){
 
 			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
-	`);
 
-	await db.exec(`
 		CREATE TABLE IF NOT EXISTS guest (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
@@ -52,9 +58,166 @@ export async function initDB(){
 		);
 	`);
 
-	//! a delete
-	await db.exec(`UPDATE registered SET win_rate = 10 WHERE id = 3;`);
+	db.registered = {
+		table: 'registered',
 
-	console.log('Database user initialized');
-	return db;
-};
+		async insert(toInsert) {
+			const time = Math.floor( Date.now() / 1000 );
+			const { name, hashedPassword, email } = toInsert;
+			await db.run(
+				`INSERT INTO ${this.table}(name, hashedPassword, email, created_at) VALUES(?, ?, ?, ?)`,
+				[ name, hashedPassword, email, time ]
+			);
+		},
+		async getByName(name) {
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE name = ?`,
+				[ name ]
+			));
+		},
+		async getById(id) {
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			));
+		},
+		async updateCol(col, name, value) {
+			await db.run(
+				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
+				[ value, name ]
+			);
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE name = ?`,
+				[ name ]
+			));
+		},
+		async updateStatsW(id) {
+			let { played_matches, match_wins } = await db.get(
+				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			);
+			played_matches++;
+			match_wins++;
+			const win_rate = (match_wins / played_matches) * 100;
+			await db.run(
+				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
+				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				[ match_wins, played_matches, win_rate, id ]
+			);
+		},
+		async updateStatsL(id) {
+			let { played_matches, match_wins } = await db.get(
+				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			);
+			played_matches++;
+			const win_rate = (match_wins / played_matches) * 100;
+			await db.run(`UPDATE ${this.table} SET wins_streak = 0,
+				played_matches = ?, win_rate = ? WHERE id = ?`,
+				[ played_matches, win_rate, id ]
+			);
+		},
+		async delete(name) {
+			await db.run(
+				`DELETE FROM ${this.table} WHERE name = ?`,
+				[name]
+			);
+		},
+		// cron
+		async deletePending(time) {
+			await db.run(
+				`DELETE FROM registered WHERE status = 'pending' AND created_at <= ?`,
+				[ time ]
+			);
+		}
+	};
+
+	db.guest = {
+		table: 'guest',
+
+		async insert(toInsert) {
+			const time = Math.floor( Date.now() / 1000 );
+			await db.run(
+				`INSERT INTO ${this.table}(name) VALUES (?)`,
+				[toInsert.name]
+			);
+		},
+		async getByName(name) {
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE name = ?`,
+				[ name ]
+			));
+		},
+		async getById(id) {
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			));
+		},
+		async updateCol(col, name, value) {
+			await db.run(
+				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
+				[ value, name ]
+			);
+			return (await db.get(
+				`SELECT * FROM ${this.table} WHERE name = ?`,
+				[ name ]
+			));
+		},
+		async updateStatsW(id) {
+			let { played_matches, match_wins } = await db.get(
+				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			);
+			played_matches++;
+			match_wins++;
+			const win_rate = (match_wins / played_matches) * 100;
+			await db.run(
+				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
+				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				[ match_wins, played_matches, win_rate, id ]
+			);
+		},
+		async updateStatsL(id) {
+			let { played_matches, match_wins } = await db.get(
+				`SELECT played_matches, match_wins FROM ${this.table} WHERE id = ?`,
+				[ id ]
+			);
+			played_matches++;
+			const win_rate = (match_wins / played_matches) * 100;
+			await db.run(`UPDATE ${this.table} SET wins_streak = 0,
+				played_matches = ?, win_rate = ? WHERE id = ?`,
+				[ played_matches, win_rate, id ]
+			);
+		},
+		async delete(name) {
+			await db.run(
+				`DELETE FROM ${this.table} WHERE name = ?`,
+				[name]
+			);
+		},
+		async getCol(col) {
+			return (await db.all(
+				`SELECT ${col} FROM ${this.table}`
+			));
+		},
+	};
+
+	db.tournament = {
+		async getUsers(listLogin, listGuests) {
+			const registered = await db.all(
+				`SELECT win_rate , id , type FROM registered WHERE id IN (${listLogin.join(',')})`
+			);
+			const guests = await db.all(
+				`SELECT win_rate , id , type FROM guest WHERE id IN (${listGuests.join(',')})`
+			);
+			return { registered, guests };
+		},
+	};
+
+    await fastify.decorate('db', db);
+
+    await fastify.addHook('onClose', async (instance) => {
+		await instance.db.close();
+	});
+}

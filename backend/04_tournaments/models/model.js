@@ -123,8 +123,8 @@ export async function finishRound(tournamentId, roundNumber) {
 	const newRound = roundNumber + 1;
 	await db.run(`
 		UPDATE round 
-		SET "statut" = 'finish', "round" = ?
-		WHERE "tournament_id" = ?`,
+		SET statut = 'finish', round = ?
+		WHERE tournament_id = ?`,
 		[newRound, tournamentId]
 	);
 	return await getRoundTable(tournamentId, newRound);

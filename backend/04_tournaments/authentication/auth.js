@@ -21,6 +21,7 @@ export async function authenticateJWT(request, reply) {
 //	console.log("################# AUTH COOKIES\n", request.cookies,
 //				"\n##############################\n");
 	const { accessToken } = request.cookies;
+	console.log("Accestoken in tournament auth -->", accessToken);
 	if (accessToken === undefined)
 		return reply.code(401).send({
 			error: 'Access token missing.'
@@ -28,9 +29,7 @@ export async function authenticateJWT(request, reply) {
 
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
-        headers: {
-            'Authorization': 'Bearer ' + accessToken
-        }
+        headers: { 'Authorization': 'Bearer ' + accessToken }
     });
 	if (!authRes.ok) {
 		return reply.code(authRes.status).send({ error: 'Unauthorized: Invalid token' });

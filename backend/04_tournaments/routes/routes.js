@@ -1,4 +1,24 @@
-import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces, nextRound } from '../controllers/tournaments.js';
+//import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces, nextRound } from '../controllers/tournaments.js';
+import { 
+	launchTournament, 
+	getTournamentWinUserId, 
+	endTournament, 
+	startTournament, 
+	getTournamentById, 
+	getAllTournaments 
+} from '../controllers/tournament.controller.js';
+
+import { 
+	joinTournamentSession, 
+	joinTournamentRegistered, 
+	joinTournamentGuest 
+} from '../controllers/player.controller.js';
+
+import { 
+	nextRound, 
+	updateMatchAndRemainingPlaces 
+} from '../controllers/round.controller.js';
+
 import { authenticateJWT } from '../authentication/auth.js';
 import { tournamentSchema } from '../schema/tournamentSchema.js';
 import { loginInput } from '../schema/userInput.js';

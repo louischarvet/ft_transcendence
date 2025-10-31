@@ -15,7 +15,7 @@ export default class PgScene {
   gui: PgGui;
   game: PgGame;
   gameStarted: boolean = false;
-  gameMode: string | null = null;
+  gameMode: { type: string, aiMode1?: string, aiMode2?: string } | null = null;
   gameStartTime: number = 2000; // ms
   camera: FreeCamera;
   
@@ -295,7 +295,6 @@ export default class PgScene {
         if (cinematicElapsedTime >= cinematicDuration) {
           cinematicEndUp = true;
           this.gui.score.visibility(true);
-          this.gui.panel.visibility(true);
         }
         return;
       }
@@ -303,7 +302,7 @@ export default class PgScene {
         this.gameStartTime -= deltaTime;
         if (this.gameStartTime <= 0) {
           this.gameStarted = true;
-          if (this.gameMode === "restart") {
+          if (this.gameMode.type === "restart") {
             this.gameMode = this.game.restart();
             this.gui.startedType = this.gameMode;
           } else {

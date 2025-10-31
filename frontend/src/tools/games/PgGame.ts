@@ -6,14 +6,13 @@ export default class PgGame {
   width = 30;
   height = 20;
 
-  gameMode: string | null = null;
+  gameMode: { type: string, aiMode1?: string, aiMode2?: string } | null = null;
 
   fps = 1000/60;
 
   keys: { [key: string]: boolean };
 
   sceneFunctions: any;
-  aiMode: "restless" | "normal" | "smart" = "normal";
 
   leftScore = 0;
   rightScore = 0;
@@ -73,7 +72,7 @@ export default class PgGame {
 
   private delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-  async start(gameMode: string) {
+  async start(gameMode: { type: string, aiMode1?: string, aiMode2?: string }) {
     let timer = 0;
     this.reset();
     this.gameMode = gameMode;
@@ -118,11 +117,19 @@ export default class PgGame {
 
     // Move IA every 1000ms
     if (timer % 1000 < this.fps) {
-      if (this.gameMode === "vsAI" || this.gameMode === "watchAI") {
-        this.aiMovement("Right", this.currentSpeed, this.ball, new Victor(this.paddleRight.position.x + (this.paddleRight.width / 2), this.paddleRight.position.y + (this.paddleRight.height / 2)), this.aiMode);
+      if (this.gameMode?.aiMode1) {
+        this.aiMovement("Left", this.currentSpeed, this.ball,
+          new Victor(this.paddleLeft.position.x + (this.paddleLeft.width / 2),
+          this.paddleLeft.position.y + (this.paddleLeft.height / 2)),
+          this.gameMode.aiMode1 as "restless" | "normal" | "smart"
+        );
       }
-      if (this.gameMode === "watchAI") {
-        this.aiMovement("Left", this.currentSpeed, this.ball, new Victor(this.paddleLeft.position.x + (this.paddleLeft.width / 2), this.paddleLeft.position.y + (this.paddleLeft.height / 2)), "restless");
+      if (this.gameMode?.aiMode2) {
+        this.aiMovement("Right", this.currentSpeed, this.ball,
+          new Victor(this.paddleRight.position.x + (this.paddleRight.width / 2),
+          this.paddleRight.position.y + (this.paddleRight.height / 2)),
+          this.gameMode.aiMode2 as "restless" | "normal" | "smart"
+        );
       }
     }
 
@@ -196,14 +203,14 @@ export default class PgGame {
   }
 
   private paddlesMovement() {
-    if (this.gameMode === "watchAI") {
+    if (this.gameMode?.aiMode1) {
       this.handlePaddle("LeftAIUp", "LeftAIDown", this.paddleLeft);
     } else {
       this.handlePaddle("KeyW", "KeyS", this.paddleLeft);
-    } if (this.gameMode !== "vsAI" && this.gameMode !== "watchAI") {
-      this.handlePaddle("ArrowUp", "ArrowDown", this.paddleRight);
-    } else {
+    } if (this.gameMode?.aiMode2) {
       this.handlePaddle("RightAIUp", "RightAIDown", this.paddleRight);
+    } else {
+      this.handlePaddle("ArrowUp", "ArrowDown", this.paddleRight);
     }
   }
 

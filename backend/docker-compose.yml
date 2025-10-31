@@ -12,16 +12,37 @@ services:
   #    - transcendence-net  
   #  restart: on-failure
 
+  twofa-service:
+    build: ./06_twofa
+    container_name: twofa-service
+    expose:
+      - "3000"
+    working_dir: /usr/src/app
+    networks:
+      - transcendence-net
+    restart: on-failure:3
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 2s
+    volumes:
+      - twofa_db:/usr/src/app/
+
   proxy-service:
     container_name: proxy-service
     build:
       context: ./01_reverse_proxy
       dockerfile: Dockerfile
     ports:
-      - "443:443" # HTTPS
+      - "4343:443" # HTTPS
     networks:
-      - transcendence-net  
-    restart: on-failure
+      - transcendence-net
+    depends_on:
+      twofa-service:
+        condition: service_healthy
+    restart: on-failure:3
 
   user-service:
   
@@ -32,6 +53,9 @@ services:
     working_dir: /usr/src/app
     networks:
       - transcendence-net
+    depends_on:
+      twofa-service:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
     - user_db:/usr/src/app/data
@@ -51,7 +75,10 @@ services:
       - transcendence-net
     restart: unless-stopped
     depends_on:
-      - user-service
+      user-service:
+        condition: service_started
+      twofa-service:
+        condition: service_healthy
     volumes:
       - match_db:/usr/src/app
 #    command: npm run dev
@@ -62,14 +89,18 @@ services:
     build: ./04_tournaments
     container_name: tournament-service
     expose:
-      - "3003"
+      - "3000"
     working_dir: /usr/src/app
     networks:
       - transcendence-net
     restart: unless-stopped
     depends_on:
-      - user-service
-      - match-service
+      user-service:
+        condition: service_started
+      match-service:
+        condition: service_started
+      twofa-service:
+        condition: service_healthy
     volumes:
     - tournament_db:/usr/src/app/data/
 #    command: npm run dev
@@ -85,24 +116,12 @@ services:
       - transcendence-net
     restart: unless-stopped
     depends_on:
-      - user-service
+      user-service:
+        condition: service_started
+      twofa-service:
+        condition: service_healthy
     volumes:
       - session_db:/usr/src/app/
-
-  twofa-service:
-
-    build: ./06_twofa
-    container_name: twofa-service
-    expose:
-      - "3000"
-    working_dir: /usr/src/app
-    networks:
-      - transcendence-net
-    restart: unless-stopped
-    depends_on:
-      - user-service
-    volumes:
-      - twofa_db:/usr/src/app/
 
 networks:
   transcendence-net:
