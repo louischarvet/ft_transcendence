@@ -2,9 +2,7 @@
 
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-//import { insert, get, erase } from '../models/models.js'
 
-// Chemin vers le fichier de base de données SQLite
 const dbFile = '/usr/src/app/data/session_db';
 
 async function getDB() {
@@ -15,7 +13,6 @@ async function getDB() {
 }
 
 export async function initDB(fastify) {
-	console.log("######### SESSION: opening db...");
 	const db = await getDB();
 	// a modifier en fonction des necessites
 	await db.exec(`

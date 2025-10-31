@@ -25,7 +25,7 @@ export const registerInput = {
 				format: 'email',
 				pattern: '^[^<>{}"\'`]*$'
 			},
-			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
+			tmp : { type: 'boolean' }
 		},
 		additionalProperties: false
 	}
@@ -49,13 +49,12 @@ export const loginInput = {
 				maxLength: 128,
 				pattern: '^[^<>{}"\'`]*$'
 			},
-			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
+			tmp : { type: 'boolean' }
 		},
 		additionalProperties: false
 	}
 }
 
-// modifier le 18/09/2025
 export const updateSchema = {
 	$id: 'updateSchema',
 	body: {
@@ -88,13 +87,12 @@ export const guestTmp = {
 	body: {
 		type: 'object',
 		properties: {
-			tmp : { type: 'boolean' } // facultatif, true si user est P2 pour un match
+			tmp : { type: 'boolean' }
 		},
 		additionalProperties: false
 	}
 }
 
-// modifier le 18/09/2025
 export const deleteSchema = {
 	$id: 'deleteSchema',
 	body: {
@@ -128,36 +126,3 @@ export const deleteFriendSchema = {
 		additionalProperties: false
 	}
 }
-
-
-// export const userInput = {
-// 	$id: 'userInput',
-// 	body: {
-// 		type: 'object',
-// 		required: ['name', 'password', 'email'],
-// 		properties: {
-// 			name: { type: 'string', minLength: 1 },// TODO parsing mail // pattern: '^[^<>&]*$' pour parser les infos //! peutre maxLenght aussi
-// 			password: { type: 'string', minLength: 8 },
-// 			email: { type: 'string', minLength: 8 } // TODO parsing mail // pattern: '^[^<>&]*$' pour parser les infos //! peutre maxLenght aussi
-// 		},
-// 		additionalProperties: false
-// 	}
-// }
-
-// export const updateSchema = {
-// 	$id: 'updateSchema',
-// 	body: {
-// 		type: 'object',
-// 		required: [ 'name', 'password' , 'toUpdate', 'newValue' ],
-// 		properties: {
-// 			name: { type: 'string', minLength: 1 },// TODO parsing mail // pattern: '^[^<>&]*$' pour parser les infos //! peutre maxLenght aussi
-// 			password: { type: 'string', minLength: 8 },
-// 			toUpdate: {
-// 				type: 'string',
-// 				enum: [ 'picture', 'password', 'email', 'telephone' ]// TODO parsing mail // pattern: '^[^<>&]*$' pour parser les infos //! peutre maxLenght aussi
-// 			},
-// 			newValue: { type: 'string' }// TODO parsing mail // pattern: '^[^<>&]*$' pour parser les infos //! peutre maxLenght aussi
-// 		},
-// 		additionalProperties: false
-// 	}
-// }

@@ -1,11 +1,17 @@
 //app.js
 
 import Fastify from 'fastify';
+import fp from 'fastify-plugin';
 import cookie from '@fastify/cookie';
-import twoFARoutes from './routes/routes.js';
-import { initDB } from './database/database.js';
-import shutdown from './common_tools/shutdown.js';
 import fastifyCors from '@fastify/cors';
+import nodemailer from 'nodemailer';
+import { config } from 'dotenv';
+
+import twoFARoutes from './routes/routes.js';
+import { initDB } from './database/db.js';
+import shutdown from './common_tools/shutdown.js';
+
+await config();
 
 const fastify = Fastify({ logger: true });
 
@@ -13,13 +19,33 @@ fastify.register(cookie);
 
 // CORS configuration
 fastify.register(fastifyCors, {
-	origin: true, // Réfléchit le domaine de la requête
-	methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
+	origin: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	allowedHeaders: ["Content-Type", "Authorization"],
 	credentials: true
 });
 
-fastify.register(initDB);
+fastify.register(fp(initDB));
+
+// check SMTP connexion
+fastify.register( async () => {
+	const transporter = await nodemailer.createTransport({
+		service: 'gmail',
+		auth: {
+			user: process.env.USR_ADDR,
+			pass: process.env.APP_PASS
+		}
+	});
+	
+	await transporter.verify((error, success) => {
+		if (error) {
+			console.error('Connexion error:', error.message);
+			process.exit(1);
+		} else
+			transporter.close();
+	});
+});
+	
 fastify.register(twoFARoutes);
 fastify.register(shutdown);
 

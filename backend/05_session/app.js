@@ -6,6 +6,7 @@ import fp from 'fastify-plugin';
 import fCron from 'fastify-cron';
 import cookie from '@fastify/cookie';
 import fastifyJWT from '@fastify/jwt';
+import speakeasy from 'speakeasy';
 import { initDB } from './database/db.js';
 import { sessionRoutes } from './routes/routes.js';
 import { generateSchema } from './schema/generateSchema.js';
@@ -13,7 +14,8 @@ import { pruneRevokedAccess } from './cron/cron.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
 // generer secret-key !!!
-const secretKey = "secret-key"
+const secretKey = (speakeasy.generateSecret({ length: 20 })).base32;
+
 
 const fastify = Fastify({ logger: true });
 

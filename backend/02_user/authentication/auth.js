@@ -1,5 +1,4 @@
 // ./authentification.auth.js
-import { getUserByName } from "../models/models.js";
 
 export async function generateJWT(user) {
 	if (!user)
@@ -11,13 +10,10 @@ export async function generateJWT(user) {
 		body: JSON.stringify(user)
 	});
 	const data = await res.json();
-//	console.log("######## genRes\n", genRes, "#######\n");
 	return data;
 }
 
 export async function authenticateJWT(request, reply) {
-//	console.log("################# AUTH COOKIES\n", request.cookies,
-//				"\n##############################\n");
 	const { accessToken } = request.cookies;
 	if (accessToken === undefined)
 		return reply.code(401).send({
@@ -44,7 +40,6 @@ export async function authenticateJWT(request, reply) {
 
 
 export async function revokeJWT(cookies) {
-	console.log("##### revokeJWT token =", cookies);
 	const { accessToken } = cookies;
 	if (!accessToken)
 		return { status: 400, error: 'Unauthorized: No token provided' };

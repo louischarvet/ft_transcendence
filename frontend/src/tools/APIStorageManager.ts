@@ -308,7 +308,7 @@ export async function verifyTwoFactorCode(code: string) {
 			name: user?.name,
 			email: user?.email,
 			type: user?.type,
-			code,
+			code
 		}),
 	});
 	const json = await response.json();

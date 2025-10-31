@@ -2,82 +2,66 @@
 
 import Fastify from 'fastify';
 import fastifyCron from 'fastify-cron';
-import jwt from '@fastify/jwt'
+import fp from 'fastify-plugin';
+import path from 'path';
 import cookie from '@fastify/cookie'
-// Pour le upload les images
 import fastifyMultipart from '@fastify/multipart';
 import fastifyCors from '@fastify/cors';
-//!ajout le 18/09/2025
-//permet de gerer les attaques XSS
 import helmet from '@fastify/helmet';
+import fastifyStatic from '@fastify/static';
+
 import userRoutes from './routes/routes.js';
 import { registerInput, loginInput, updateSchema } from './schema/userInput.js';
 import { userSchema } from './schema/userSchema.js';
-//! ajout le 16/09/2025
 import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
-
-import fastifyStatic from '@fastify/static';
-import path from 'path';
 import shutdownPlugin from './common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
 fastify.register(cookie);
-//fastify.register(cookie, {
-	//secret: "secret-key",
-	//hook: 'onRequest',
-//});
 
 // CORS configuration
 fastify.register(fastifyCors, {
-    origin: true, // Réfléchit le domaine de la requête
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	allowedHeaders: ["Content-Type", "Authorization"],
 	credentials: true
 });
 
+// DB
+await fastify.register(fp(initDB));
+
 fastify.register(fastifyStatic, {
 	root: path.join(process.cwd(), 'pictures'),
-	prefix: '/pictures/', // toutes les images seront accessibles via /pictures/nom_fichier
+	prefix: '/pictures/',
 });
 
-// Authentification par token
-fastify.register(jwt, {
-	secret: 'secret-key' //! A modifier -- >.env
-});
-
-//!ajout le 18/09/2025
-//permet de gerer les attaques XSS
 await fastify.register(helmet, {
 	global: true
 });
 
-// supprimer toutes les 15 minutes les registered pending qui n'ont pas fait le 2fa
 fastify.register(fastifyCron, {
 	jobs: [
 		{
 			cronTime: '*/10 * * * *',
-			onTick: prunePendingRegistered,
+			onTick: () => prunePendingRegistered(fastify.db.registered.deletePending),
 			start: true,
 			timeZone: 'Europe/Paris'
 		}
 	]
 });
 
-// On instencie les Schemas de JSONs
+fastify.register(fastifyMultipart);
+
 fastify.addSchema(registerInput);
 fastify.addSchema(loginInput);
 
 fastify.addSchema(updateSchema);
 fastify.addSchema(userSchema);
 
-fastify.register(fastifyMultipart);
 fastify.register(userRoutes);
 fastify.register(shutdownPlugin);
-
-//! ajout le 16/09/2025
-await initDB();
 
 async function start() {
 	try {
