@@ -21,5 +21,6 @@ COPY . .
 EXPOSE 5173
 
 # CMD en forme exec JSON correcte pour Alpine et Vite
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host"]
 

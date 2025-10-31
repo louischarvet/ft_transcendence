@@ -2,6 +2,44 @@ function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
 }
 
+export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
+	
+	let response = await fetch(input, { ...init, credentials: 'include' });
+
+	// Si token expiré ou invalide
+	if (response.status === 401 || response.status === 403) {
+		console.warn("Access token expiré, tentative de refresh...");
+
+		const refreshed = await fetchRefreshToken();
+		if (!refreshed) {
+			console.error("Refresh token invalide. Déconnexion...");
+			await Logout();
+			return response;
+		}
+
+		// Relance une seule fois la requête initiale
+		response = await fetch(input, { ...init, credentials: 'include' });
+	}
+
+	return response;
+}
+
+//exemple dutilisation
+// export async function getFriendsList() {
+// 	const response = await apiFetch('/api/user/getfriendsprofiles', {
+// 		method: 'GET',
+// 	});
+
+// 	if (response.status === 204)
+// 		return { friends: [] };
+
+// 	if (!response.ok)
+// 		return null;
+
+// 	const data = await response.json();
+// 	return data;
+// }
+
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
@@ -364,7 +402,7 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 		return { error: data.error };
  	console.log("joinTournamentAsGuest data -> ", data);
     return { 
-        id: data.user.id, 
+        id: data.user.id,
         name: data.user.name, 
         message: data.message
     };
