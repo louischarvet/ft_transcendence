@@ -568,7 +568,7 @@ export async function getUsersTournament(request, reply) {
 
 
 	return reply.code(200).send({
-		users: JSON.stringify(usersInfos),
+		users: usersInfos,
 		message: 'Users found'
 	});
 }

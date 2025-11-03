@@ -17,7 +17,7 @@ function buildFinishPayload(scoreP1: number, scoreP2: number, match: any) {
     p2_type: match.player2?.type ?? match.p2_type ?? 'guest',
     scoreP1: Number(scoreP1),
     scoreP2: Number(scoreP2),
-    // created_at demandé par ton schéma : on génère une date lisible similaire à ta DB
+    // created_at demande par ton schema : GENERATION de la date a voir avec louis
     created_at: match.created_at ?? new Date().toLocaleString('fr-FR').split(' GMT')[0],
     tournament_id: match.tournament_id ?? 0
   };
@@ -92,6 +92,11 @@ export default class PgGui {
     play: Button,
     visibility(visible: boolean, player1?: string, player2?: string): void
   };
+
+	lastMatchInfo: {
+		player2Type: string,
+		player2Name: string 
+	} | null = null;
 
   pause: {
     title: TextBlock,
@@ -1186,10 +1191,18 @@ export default class PgGui {
         playAgainButton.alpha = 0.5;
       });
       playAgainButton.onPointerClickObservable.add(() => {
-        if (this.currentMatch == null) return;
+		const last = this.lastMatchInfo;
+
+		if (!last) {
+			console.warn("Aucun match précédent trouvé — impossible de rejouer.");
+			return;
+		}
         
-        createMatch(this.currentMatch?.player2.type, this.panel.players.player2.text).then((match) => {
-          if (match == null) return;
+        createMatch(last.player2Type, last.player2Name).then((match) => {
+          if (!match) return;
+		  // pour le visuelle
+		  this.score.left.text = "0";
+		  this.score.right.text = "0";
           this.result.visibility(false);
           this.currentMatch = match;
           this.startedType = { type: "restart" };
@@ -1291,6 +1304,11 @@ export default class PgGui {
           }
         });
       } else if (this.currentMatch) {
+		//! cest pour pouvoir relancer la game
+		this.lastMatchInfo = {
+			player2Type: this.currentMatch.player2.type,
+			player2Name: this.panel.players.player2.text,
+		};
         updateMatchResult(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch);
       }
 

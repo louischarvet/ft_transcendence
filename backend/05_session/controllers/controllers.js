@@ -40,11 +40,11 @@ async function generateRefresh(sign, name, type, id, jwti) {
 
 // POST /generate
 export async function generate(request, reply) {
-	await clearCookies(reply);
-    const { server } = request;
+	const { server } = request;
 	const { name, type, id, verified } = request.body;
     const jwti = crypto.randomUUID();
-
+	
+	await clearCookies(reply);
     // Access token
     const accessToken = await generateAccess(server.jwt.sign, name, type, id, jwti, verified);
 
@@ -101,14 +101,13 @@ export async function authenticate(db, request, reply) {
 
 // POST /refresh
 export async function refresh(db, request, reply) {
-	await clearCookies(reply);
 	const { refreshToken } = request.cookies;
     if (refreshToken === undefined)
         return reply.code(403).send({ error: 'Missing token' });
 	
-	// a l'arrache
-	request.headers.authorization = 'Bearer ' + refreshToken;
+	//await clearCookies(reply);
     const { server } = request;
+	request.headers.authorization = 'Bearer ' + refreshToken;
 
 	console.log("##### REFRESH TOKEN =", refreshToken);
 
@@ -130,6 +129,7 @@ export async function refresh(db, request, reply) {
         db.refresh.erase(jwti, id);
         db.refresh.insert(newJwti, id);
 		
+		await clearCookies(reply);
 
         return reply
             .code(200)
@@ -155,7 +155,6 @@ export async function refresh(db, request, reply) {
 
 // DELETE /delete
 export async function deleteToken(db, request, reply) {
-	await clearCookies(reply);
     const rawToken = request.headers.authorization;
     if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
         return reply.code(400).send({ error: 'Missing Bearer' });
@@ -176,6 +175,8 @@ export async function deleteToken(db, request, reply) {
         await db.refresh.erase(jwti, id);
         // revoke access !
         await db.revokedAccess.insert(jwti, exp);
+		
+		await clearCookies(reply);
 
         return reply.code(200).send({ message: 'Deleted refresh token.' })
     } catch (err) {

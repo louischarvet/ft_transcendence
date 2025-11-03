@@ -119,6 +119,15 @@ export async function addDataRoundTable(tournamentId, roundNumber, matchsString,
 	return await getRoundTable(tournamentId, roundNumber);
 }
 
+export async function updateRoundData(tournamentId, roundNumber, matchsString, playersString) {
+	await db.run(
+		`UPDATE round SET matchs = ?, players = ? WHERE tournament_id = ? AND round = ?`,
+		[matchsString, playersString, tournamentId, roundNumber]
+	);
+	return await getRoundTable(tournamentId, roundNumber);
+}
+
+
 export async function finishRound(tournamentId, roundNumber) {
 	const newRound = roundNumber + 1;
 	await db.run(`

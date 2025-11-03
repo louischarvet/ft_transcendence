@@ -27,6 +27,7 @@ export async function fetchHistoryMatchForTournament(tournamentId){
 		method: 'GET',
 		headers: { 'Content-Type': 'application/json' }
 	});
+	console.log("fetchHistoryMatchForTournament res:", res);
 	if(!res.ok)
 		return { error : 'Match history retrieval failed' };
 	const matchHistory = await res.json();
