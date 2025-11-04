@@ -78,8 +78,10 @@ export default function Register(): HTMLElement {
 			console.error('User creation failed:', res.message);
 			alert(res.message);
 		}
-		else
+		else{
 			navigate('/2fa-verification');
+      return;
+    }
     })
   };
   buttonsWrapper.appendChild(registerButton);
@@ -90,6 +92,7 @@ export default function Register(): HTMLElement {
   loginButton.onclick = () => {
     console.log('Login Form:', form);
     navigate('/login');
+    return;
   };
   buttonsWrapper.appendChild(loginButton);
 

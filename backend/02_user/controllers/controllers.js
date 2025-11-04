@@ -494,16 +494,16 @@ export async function updateStats(request, reply) {
 
 	if (winner_id > 0) {
         if (winner_type == 'guest')
-            await db.guest.updateStatsW(winner_type, winner_id);
+            await db.guest.updateStatsW(winner_id);
         else if (winner_type == 'registered')
-            await db.registered.updateStatsW(winner_type, winner_id);
+            await db.registered.updateStatsW(winner_id);
     }
 
 	if (loser_id > 0) {
        if (loser_type == 'guest')
-            await db.guest.updateStatsL(loser_type, loser_id);
+            await db.guest.updateStatsL(loser_id);
         else if (loser_type == 'registered')
-            await db.registered.updateStatsL(loser_type, loser_id);
+            await db.registered.updateStatsL(loser_id);
     }
 
     let user1, user2;
@@ -519,7 +519,7 @@ export async function updateStats(request, reply) {
     }
 
     if (p2_type == 'guest')
-        user1 = await db.guest.getById(p2_id);
+        user2 = await db.guest.getById(p2_id);
     else if (p2_type == 'registered')
         user2 = await db.registered.getById(p2_id);
     else {

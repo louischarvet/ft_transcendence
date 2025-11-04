@@ -159,6 +159,7 @@ export default function DropDownMenu() {
 
 					addFriendInput.value = '';
 					navigate('/');
+        			return;
 				})
 				.catch((err) => {
 					alert("Erreur de connexion au serveur");

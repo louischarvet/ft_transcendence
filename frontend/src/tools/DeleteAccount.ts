@@ -153,8 +153,10 @@ function FinalConfirmation(email: string, password: string) {
         history.back();
         return;
       }
-      else
+      else{
         navigate('/');
+        return;
+      }
     });
   };
 

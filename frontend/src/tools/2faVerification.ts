@@ -1,18 +1,14 @@
 import { navigate } from "../router";
-import { checkConnection, verifyTwoFactorCode, getUser, getTokenAcces} from "./APIStorageManager";
+import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
   checkConnection().then((connected) => {
     if (connected){
       console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
       navigate('/select-game');
+			return;
     }
   });
-
-  if (!getUser() || !getTokenAcces()){
-    console.log("sort ici car par d'user en localstorage || pas de token access");
-    navigate('/');
-  }
 
   let code: string = '';
   
@@ -52,8 +48,10 @@ export default function TwofaVerification(): HTMLElement {
 				history.back();
 				return;
 			}
-			else
-				navigate('/select-game');
+			else{
+        navigate('/select-game');
+        return;
+      }
 		});
 	};
   wrapper.appendChild(verifyButton);

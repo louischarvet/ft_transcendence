@@ -2,7 +2,7 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { getUserByToken, updateInfo, getUser, Logout, updateAvatar} from '../tools/APIStorageManager';
+import { updateInfo, getUser, Logout, updateAvatar, checkConnection} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   
@@ -150,6 +150,7 @@ export default function Profile(): HTMLElement {
             alert('Email updated successfully!');
             console.log('Update response:', res);
             navigate('/profil');
+			      return;
           })
           .catch(err => {
             alert('Error changing email.');
@@ -203,6 +204,7 @@ export default function Profile(): HTMLElement {
           
         console.log('Account deleted successfully!');
         navigate('/'); // Retour à la home
+			  return;
       } catch (err) {
         console.error(err);
         alert('Error deleting account.');
@@ -240,13 +242,13 @@ export default function Profile(): HTMLElement {
   profileCard.appendChild(userSection);
   container.appendChild(profileCard);
 
-  getUserByToken().then((response) => {
-	console.log("response =\n", response, "#####################");
-    if(!response || !response.user) {
-        navigate('/');
-		return ;
+  checkConnection().then((response) => {
+    console.log("response =\n", response, "#####################");
+      if(!response) {
+          navigate('/');
+      return ;
 	}
-	const user = response.user;
+	const user = getUser();
     username.textContent = user.name;
     email.textContent = user.email;
 	

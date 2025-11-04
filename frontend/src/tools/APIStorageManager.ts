@@ -1,3 +1,5 @@
+import { navigate } from "../router";
+
 function setUser(user: { [name: string]: string }) {
 	localStorage.setItem('user', JSON.stringify(user));
 }
@@ -10,8 +12,10 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
     id: Number(match.id),
     p1_id: Number(match.player1?.id ?? match.p1_id ?? 0),
     p1_type: match.player1?.type ?? match.p1_type ?? 'guest',
+	// p1_name: match.player1?.name,
     p2_id: Number(match.player2?.id ?? match.p2_id ?? 0),
     p2_type: match.player2?.type ?? match.p2_type ?? 'guest',
+	// p2_name: match.player2?.name,
     scoreP1: Number(scoreP1),
     scoreP2: Number(scoreP2),
     created_at: createdAt,
@@ -31,16 +35,14 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 		const refreshed = await fetchRefreshToken();
 		if (!refreshed) {
 			console.error("Refresh token invalide. Déconnexion...");
-			await Logout();
-			// delete user from local storage
+			// await Logout();
 			localStorage.removeItem('user');
+			navigate("/");
 			return response;
 		}
-
 		// Relance une seule fois la requête initiale
 		response = await fetch(input, { ...init, credentials: 'include' });
 	}
-
 	return response;
 }
 
@@ -65,29 +67,30 @@ export function getUser() {
 	return jsonUser ? JSON.parse(jsonUser) : null;
 }
 
-export async function getRefreshToken() {
-	const cookie = await cookieStore.get("refreshToken");
-	console.log("cookie getRefreshToken => ", cookie?.value);
-	console.log("cookie getRefreshToken => ", cookie);
-	return 	cookie?.value;
-}
+// export async function getRefreshToken() {
+// 	const cookie = await cookieStore.get("refreshToken");
+// 	console.log("cookie getRefreshToken => ", cookie?.value);
+// 	console.log("cookie getRefreshToken => ", cookie);
+// 	return 	cookie?.value;
+// }
 
-export async function getTokenAcces() {
-	const cookie = await cookieStore.get("accessToken");
-	console.log("cookie accessToken => ", cookie?.value);
-	return 	cookie?.value;
-}
+// export async function getTokenAcces() {
+// 	const cookie = await cookieStore.get("accessToken");
+// 	console.log("cookie accessToken => ", cookie?.value);
+// 	return 	cookie?.value;
+// }
 
 export async function getUserByToken(){
-	const response = await apiFetch('/api/user/id', {
+	const response = await fetch('/api/user/id', {
 		method: 'GET',
+		credentials: 'include',
 	});
 	const json = await response.json();
-	if (json.user) {
+	if (json.user){
 		setUser(json.user);
+		return true;
 	}
-
-	return json;
+	return false;
 }
 
 export async function getUserById(id: number){
@@ -224,28 +227,10 @@ export async function removeFriend(friendId: string){
 }
 
 export async function checkConnection() {
-	const tmp = getUser();
-	if (!tmp)
+	if (!(await getUserByToken())){
+		localStorage.removeItem('user');
 		return false;
-
-	//const response = await apiFetch('/api/user/id', {
-	//	method: 'GET',
-	//});
-	//if (response.status === 401){
-	//	if (await fetchRefreshToken() === false)
-	//		return false;
-	//	return true;
-	//}
-	//if (!response.ok)
-	//	return false;
-	//const data = await response.json();
-	//console.log("data request -> ", data);
-	//if (data.user) {
-	//	if (data.user.type === 'guest' && data.user.status !== 'available')
-	//		return false;
-	//	setUser(data.user);
-	//	return true;
-	//}
+	}
 	return true;
 }
 

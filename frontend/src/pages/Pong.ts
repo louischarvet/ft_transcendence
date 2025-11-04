@@ -7,6 +7,7 @@ export default function Pong(): HTMLElement {
   checkConnection().then((connected) => {
     if (!connected) {
       navigate('/');
+			return;
     }
   });
   const container = document.createElement('div');

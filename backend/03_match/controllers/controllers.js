@@ -127,8 +127,8 @@ export async function finish(request, reply) {
 
 	let { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
 	
-	user1 = await fetchChangeStatus(user1, 'available');
-	user2 = await fetchChangeStatus(user2, 'available');
+	// user1 = await fetchChangeStatus(user1, 'available');
+	// user2 = await fetchChangeStatus(user2, 'available');
 	
 	return reply.code(200).send({
 		user1: user1,
