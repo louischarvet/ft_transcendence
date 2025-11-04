@@ -834,11 +834,11 @@ export default class PgGui {
           this.currentMatch = this.currentTournament.matches[0];
           this.tournament.visibility(false);
           this.goBackButton.isVisible = false;
-          if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
+          if (this.currentMatch.player1.type === "ia" && this.currentMatch.player2.type === "ia")
             this.startedType = { type: "watchAI", aiMode1: "normal", aiMode2: "normal" };
-          else if (this.currentMatch.player1.type === "ai")
+          else if (this.currentMatch.player1.type === "ia")
             this.startedType = { type: "vsAI", aiMode1: "normal" };
-          else if (this.currentMatch.player2.type === "ai")
+          else if (this.currentMatch.player2.type === "ia")
             this.startedType = { type: "vsAI", aiMode2: "normal" };
           else
             this.startedType = { type: "local" };
@@ -961,7 +961,7 @@ export default class PgGui {
       });
       playButton.onPointerClickObservable.add(() => {
         // Start match
-        if (this.currentMatch == null) return;
+        if (this.currentMatch == null && this.startedType?.type !== "watchAI") return;
         this.match.visibility(false);
         this.started = true;
       });
@@ -1175,23 +1175,23 @@ export default class PgGui {
         playAgainButton.alpha = 0.5;
       });
       playAgainButton.onPointerClickObservable.add(() => {
-		const last = this.lastMatchInfo;
-
-		if (!last) {
-			console.warn("Aucun match précédent trouvé — impossible de rejouer.");
-			return;
-		}
-        
-        createMatch(last.player2Type, last.player2Name).then((match) => {
-          if (!match) return;
-		  // pour le visuelle
-		  this.score.left.text = "0";
-		  this.score.right.text = "0";
+        if (!this.startedType) return;
+        if (this.startedType.type !== "watchAI") {
+          createMatch(this.startedType.type === "vsAI" ? "ia" : this.startedType.type).then((match) => {
+            if (!match) return;
+            this.score.left.text = "0";
+            this.score.right.text = "0";
+            this.result.visibility(false);
+            this.currentMatch = match;
+            this.startedType = { type: "restart" };
+            this.match.visibility(true);
+          });
+        } else {
+          this.score.left.text = "0";
+          this.score.right.text = "0";
           this.result.visibility(false);
-          this.currentMatch = match;
-          this.startedType = { type: "restart" };
-          this.match.visibility(true, this.panel.players.player1.text, this.panel.players.player2.text);
-        });
+          this.match.visibility(true);
+        }
       });
       this.ui.addControl(playAgainButton);
     }
@@ -1220,11 +1220,11 @@ export default class PgGui {
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
         if (this.currentMatch == null) return;
             this.result.visibility(false);
-        if (this.currentMatch.player1.type === "ai" && this.currentMatch.player2.type === "ai")
+        if (this.currentMatch.player1.type === "ia" && this.currentMatch.player2.type === "ia")
           this.startedType = { type: "watchAI", aiMode1: "normal", aiMode2: "normal" };
-        else if (this.currentMatch.player1.type === "ai")
+        else if (this.currentMatch.player1.type === "ia")
           this.startedType = { type: "vsAI", aiMode1: "normal" };
-        else if (this.currentMatch.player2.type === "ai")
+        else if (this.currentMatch.player2.type === "ia")
           this.startedType = { type: "vsAI", aiMode2: "normal" };
         else
           this.startedType = { type: "local" };
@@ -1288,11 +1288,6 @@ export default class PgGui {
           }
         });
       } else if (this.currentMatch) {
-		//! cest pour pouvoir relancer la game
-		this.lastMatchInfo = {
-			player2Type: this.currentMatch.player2.type,
-			player2Name: this.panel.players.player2.text,
-		};
         updateMatchResult(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch);
       }
 
@@ -1302,7 +1297,6 @@ export default class PgGui {
       this.score.update("left", 0);
       this.score.update("right", 0);
 
-      this.startedType = null;
       this.result.visibility(true);
       return;
     };
@@ -1315,7 +1309,7 @@ export default class PgGui {
       });
       this.font.isVisible = visible;
       if (visible) {
-        if (this.currentTournament) {
+        if (this.currentTournament || this.startedType?.type === "registered") {
           this.result.playAgain.isVisible = false;
         } else{
           this.result.nextMatch.isVisible = false;
@@ -1469,7 +1463,7 @@ export default class PgGui {
           }
         });
         if (AIMode.selectedAIMode === "") return;
-        createMatch("ai").then((match) => {
+        createMatch("ia").then((match) => {
           if (match == null) return;
           this.currentMatch = match;
           this.vsAI.visibility(false);
@@ -1534,20 +1528,43 @@ export default class PgGui {
       });
       startButton.onPointerClickObservable.add(() => {
         // Start match vs AI // Without Backend
-        Object.values(leftAIMode).forEach((obj) => {
+        this.watchAI.left.selectedAIMode = "";
+        this.watchAI.right.selectedAIMode = "";
+        Object.values(this.watchAI.left).forEach((obj) => {
           if (obj.alpha === 1) {
-            leftAIMode.selectedAIMode = obj === leftAIMode.restless ? "restless" : obj === leftAIMode.normal ? "normal" : "smart";
+            switch (obj) {
+              case this.watchAI.left.restless:
+                this.watchAI.left.selectedAIMode = "restless";
+                break;
+              case this.watchAI.left.normal:
+                this.watchAI.left.selectedAIMode = "normal";
+                break;
+              case this.watchAI.left.smart:
+                this.watchAI.left.selectedAIMode = "smart";
+                break;
+            }
           }
         });
-        Object.values(rightAIMode).forEach((obj) => {
+        Object.values(this.watchAI.right).forEach((obj) => {
           if (obj.alpha === 1) {
-            rightAIMode.selectedAIMode = obj === rightAIMode.restless ? "restless" : obj === rightAIMode.normal ? "normal" : "smart";
+            switch (obj) {
+              case this.watchAI.right.restless:
+                this.watchAI.right.selectedAIMode = "restless";
+                break;
+              case this.watchAI.right.normal:
+                this.watchAI.right.selectedAIMode = "normal";
+                break;
+              case this.watchAI.right.smart:
+                this.watchAI.right.selectedAIMode = "smart";
+                break;
+            }
           }
         });
-        if (leftAIMode.selectedAIMode === "" || rightAIMode.selectedAIMode === "") return;
+        console.log("Selected AI Modes:", this.watchAI.left.selectedAIMode, this.watchAI.right.selectedAIMode);
+        if (this.watchAI.left.selectedAIMode === "" || this.watchAI.right.selectedAIMode === "") return;
         this.watchAI.visibility(false);
-        this.startedType = { type: "watchAI", aiMode1: leftAIMode.selectedAIMode, aiMode2: rightAIMode.selectedAIMode };
-        this.match.visibility(true, leftAIMode.selectedAIMode + "AI", rightAIMode.selectedAIMode + "AI");
+        this.startedType = { type: "watchAI", aiMode1: this.watchAI.left.selectedAIMode, aiMode2: this.watchAI.right.selectedAIMode };
+        this.match.visibility(true, this.startedType.aiMode1 + "AI", this.startedType.aiMode2 + "AI");
       });
       this.ui.addControl(startButton);
     }
@@ -1560,26 +1577,26 @@ export default class PgGui {
         }
       });
       Object.values(this.watchAI.left).forEach((obj) => {
-        if (obj && "isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
       Object.values(this.watchAI.right).forEach((obj) => {
-        if (obj && "isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
       this.font.isVisible = visible;
       if (visible) {
         // Reset AI mode selection
-        leftAIMode.selectedAIMode = "";
-        leftAIMode.restless.alpha = 0.5;
-        leftAIMode.normal.alpha = 0.5;
-        leftAIMode.smart.alpha = 0.5;
-        rightAIMode.selectedAIMode = "";
-        rightAIMode.restless.alpha = 0.5;
-        rightAIMode.normal.alpha = 0.5;
-        rightAIMode.smart.alpha = 0.5;
+        this.watchAI.left.selectedAIMode = "";
+        this.watchAI.left.restless.alpha = 0.5;
+        this.watchAI.left.normal.alpha = 0.5;
+        this.watchAI.left.smart.alpha = 0.5;
+        this.watchAI.right.selectedAIMode = "";
+        this.watchAI.right.restless.alpha = 0.5;
+        this.watchAI.right.normal.alpha = 0.5;
+        this.watchAI.right.smart.alpha = 0.5;
       } else
         this.goBackButton.isVisible = false;
     };
