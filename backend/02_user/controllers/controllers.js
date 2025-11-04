@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
-import { generateJWT, revokeJWT } from '../authentication/auth.js';
-import { sendCode } from '../authentication/twofa.js';
-import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
+import { fetchAbortMatch } from './fetchFunctions.js';
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 
 const secureCookieOptions = {
 	httpOnly: true,
@@ -12,7 +13,6 @@ const secureCookieOptions = {
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
@@ -116,8 +116,9 @@ export async function logIn(request, reply) {
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	if (exists.status !== 'logged_out')
-		return reply.code(409).send({ error: 'User already logged in.' });
+
+//	if (exists.status === 'in_game')
+	await fetchAbortMatch(exists);
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
         await db.registered.updateCol('status', name, 'available');

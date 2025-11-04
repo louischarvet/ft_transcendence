@@ -119,11 +119,11 @@ export async function finish(request, reply) {
 	match.winner_id = winner_id;
 	match.loser_id = loser_id;
 
-	if (await db.matches.getByID(match.id) === undefined)
+	if (await db.matches.get('id', match.id) === undefined)
 		return reply.code(400).send({ error: 'There is no match with this ID.' });
 
 	const historyMatch = db.history.insert(match);
-	await db.matches.delete(match.id);
+	await db.matches.delete('id', match.id);
 
 	const { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
 
@@ -132,6 +132,18 @@ export async function finish(request, reply) {
 		user2: user2,
 		match: historyMatch,
 		message: 'Finished match.'
+	});
+}
+
+export async function abort(request, reply) {
+	const { db } = request.server;
+	const { user_id } = request.body;
+
+	db.matches.delete('p1_id', user_id);
+	db.matches.delete('p2_id', user_id);
+
+	return reply.code(200).send({
+		ok: true
 	});
 }
 
