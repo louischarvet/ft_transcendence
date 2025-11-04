@@ -77,11 +77,6 @@ export default class PgGui {
     visibility(visible: boolean, player1?: string, player2?: string): void
   };
 
-	lastMatchInfo: {
-		player2Type: string,
-		player2Name: string 
-	} | null = null;
-
   pause: {
     title: TextBlock,
     resume: Button,
