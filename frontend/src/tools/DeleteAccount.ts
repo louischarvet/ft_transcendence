@@ -1,6 +1,6 @@
 // src/tools/DeletePopup.ts
 import { navigate } from '../router';
-import { getUserByToken , deleteUser} from './APIStorageManager'
+import { getUserByToken , deleteUser, checkConnection, getUser} from './APIStorageManager'
 export function createDeleteAccount(onConfirm: (email: string, password: string) => void): HTMLElement {
   const overlay = document.createElement('div');
   overlay.className = `
@@ -63,11 +63,11 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
 
   let currentEmail = '';
 
-  getUserByToken().then((response) =>{
-    if (!response || !response.user){
+  checkConnection().then((response) =>{
+    if (!response){
       return;
     }
-    const user = response.user;
+    const user = getUser();
     currentEmail = user.email;
   });
 
@@ -153,10 +153,8 @@ function FinalConfirmation(email: string, password: string) {
         history.back();
         return;
       }
-      else{
+      else
         navigate('/');
-        return;
-      }
     });
   };
 

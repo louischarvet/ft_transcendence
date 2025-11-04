@@ -99,7 +99,6 @@ export default function FriendProfil(id: string): HTMLElement {
 			//const response = await removeFriend(Number(id));
 			alert('Ami supprimé avec succès !');
 			navigate('/select-game'); // Retour au profil principal
-			return ;
 		} catch (err) {
 			console.error(err);
 			alert('Erreur lors de la suppression de l’ami.');

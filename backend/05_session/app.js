@@ -14,6 +14,7 @@ import { pruneRevokedAccess } from './cron/cron.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
 // generer secret-key !!!
+//! il faut un secret key static pour eviter davoir deux differente ( make up une deuxieme fois recreer un secret key) ---> invalid JWT
 const secretKey = (speakeasy.generateSecret({ length: 20 })).base32;
 
 

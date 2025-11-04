@@ -150,7 +150,6 @@ export default function Profile(): HTMLElement {
             alert('Email updated successfully!');
             console.log('Update response:', res);
             navigate('/profil');
-			      return;
           })
           .catch(err => {
             alert('Error changing email.');
@@ -204,7 +203,6 @@ export default function Profile(): HTMLElement {
           
         console.log('Account deleted successfully!');
         navigate('/'); // Retour à la home
-			  return;
       } catch (err) {
         console.error(err);
         alert('Error deleting account.');

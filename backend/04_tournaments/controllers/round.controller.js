@@ -16,7 +16,7 @@ export async function nextRound(request, reply) {
 	const matchBody = request.body || {};
 	const user = request.user;
 
-
+	console.log("matchbody -> ", matchBody);
 	// Validation basic
 	if (!matchBody || !matchBody.tournamentID || matchBody.tournamentID <= 0)
 		return reply.code(400).send({ error: 'TournamentId is required' });
@@ -40,6 +40,11 @@ export async function nextRound(request, reply) {
 		return reply.code(404).send({ error: 'Impossible to get data round' });
 
 	console.log("round:", round);
+
+	/***********************/
+	/******** MATCH ********/
+	/***********************/	
+
 	// Récupérer l'historique des matchs du tournoi
 	let matchHistory = await fetchHistoryMatchForTournament(tournament.id);
 	if (matchHistory.error)
@@ -47,9 +52,12 @@ export async function nextRound(request, reply) {
 	const matchesArray = Array.isArray(matchHistory.tournamentData) ? matchHistory.tournamentData : [];
 
 
+	console.log("###\nFonction nextRound : matchHistory --> ", matchHistory, "\n###\n");
+	console.log("###\nFonction nextRound : matchesArray --> ", matchesArray, "\n###\n");
+	console.log("###\nFonction nextRound : round --> ", round, "\n###\n");
 	// Vérifier que le match appartient bien au round
 	//const roundMatchIds = String(round.matchs || '').split(';').filter(Boolean);
-	const roundMatchIds = String(round.matchs || '').split(';');
+	const roundMatchIds = String(round.matchs || '').split(';').filter(Boolean);;
 	if (!roundMatchIds.includes(String(matchBody.id)))
 		return reply.code(404).send({ error: 'Does not found match in round' });
 
@@ -107,23 +115,24 @@ export async function nextRound(request, reply) {
 	// Construire les paires du prochain round
 	const arrayMatchesNextRound = [];
 	for (let i = 0; i < users.length; i += 2) {
-	const p1 = users[i];
-	const p2 = users[i + 1];
-	if (!p1) continue;
-	if (!p2) {
-		// Cas où il n'y a qu'un gagnant -> tournoi fini
-		const finalWinnerId = p1.id;
-		const finishedTournament = await setTournamentWinner(tournament.id, finalWinnerId);
-		return reply.code(200).send({ tournament: finishedTournament, message: 'Tournament finished' });
-	}
-	arrayMatchesNextRound.push({
-			player1: { id: Number(p1.id), type: p1.type },
-			player2: { id: Number(p2.id), type: p2.type },
-			tournamentID: tournament.id
-		});
+		const p1 = users[i];
+		const p2 = users[i + 1];
+		if (!p1) continue;
+		if (!p2) {
+			// Cas où il n'y a qu'un gagnant -> tournoi fini
+			const finalWinnerId = p1.id;
+			const finishedTournament = await setTournamentWinner(tournament.id, finalWinnerId);
+			return reply.code(200).send({ tournament: finishedTournament, message: 'Tournament finished' });
+		}
+		arrayMatchesNextRound.push({
+				player1: { id: Number(p1.id), type: p1.type },
+				player2: { id: Number(p2.id), type: p2.type },
+				tournamentID: tournament.id
+			});
 	}
 
 
+	console.log("arrayMatchesNextRound",arrayMatchesNextRound);
 	// Créer les matchs via match service
 	const matchsNextRound = [];
 	for (const nextM of arrayMatchesNextRound) {

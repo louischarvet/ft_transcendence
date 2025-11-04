@@ -3,11 +3,8 @@ import { asGuest , checkConnection } from "./APIStorageManager";
 
 export default function ContinueAs() {
 	checkConnection().then((connected) => {
-		if (connected){
+		if (connected)
 			navigate('/select-game');
-            return;
-        }
-        
 	});
     const wrapper = document.createElement('div');
     wrapper.className =
@@ -30,7 +27,6 @@ export default function ContinueAs() {
 			.then( res => {
 				alert('Connecting guest successfully!');
 				navigate('/select-game');
-                return;
 			})
 			.catch( (err) => {
 				alert('Error connecting guest.');

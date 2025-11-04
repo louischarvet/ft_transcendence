@@ -48,10 +48,8 @@ export default function TwofaVerification(): HTMLElement {
 				history.back();
 				return;
 			}
-			else{
-        navigate('/select-game');
-        return;
-      }
+			else
+				navigate('/select-game');
 		});
 	};
   wrapper.appendChild(verifyButton);

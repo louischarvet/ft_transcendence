@@ -23,7 +23,7 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
   };
 }
 
-
+// let isRefreshing = false;
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
@@ -32,10 +32,9 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	if (response.status === 401 || response.status === 403) {
 		console.warn("Access token expiré, tentative de refresh...");
 
-		const refreshed = await fetchRefreshToken();
-		if (!refreshed) {
+		let refreshToken = await fetchRefreshToken();
+		if (!refreshToken) {
 			console.error("Refresh token invalide. Déconnexion...");
-			// await Logout();
 			localStorage.removeItem('user');
 			navigate("/");
 			return response;
@@ -195,7 +194,7 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 export async function fetchRefreshToken(){
 
 	// <-- Do NOT change this to apiFetch (sinon boucle potentielle)
-	const response = await fetch ("/api/refresh", {
+	const response = await fetch("/api/refresh", {
 		method: 'POST',
 		credentials: 'include',
 	});
@@ -430,7 +429,7 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	const data = await res.json();
 	if (data.error)
 		return null;
-	console.log("data tournament: ", data.tournament);
+	// console.log("data tournament: ", data.tournament);
 	console.log("data tournament as Type: ", data.tournament as Tournament);
 	return data.tournament as Tournament;
 }
