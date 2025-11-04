@@ -8,22 +8,6 @@ import { type Match, createMatch, updateMatchResult,
   joinTournamentAsLogged, startTournament, nextTournamentMatch
 } from "../APIStorageManager";
 
-function buildFinishPayload(scoreP1: number, scoreP2: number, match: any) {
-  return {
-    id: Number(match.id),
-    p1_id: Number(match.player1.id ?? match.p1_id ?? 0),
-    p1_type: match.player1?.type ?? match.p1_type ?? 'guest',
-    p2_id: Number(match.player2.id ?? match.p2_id ?? 0),
-    p2_type: match.player2?.type ?? match.p2_type ?? 'guest',
-    scoreP1: Number(scoreP1),
-    scoreP2: Number(scoreP2),
-    // created_at demande par ton schema : GENERATION de la date a voir avec louis
-    created_at: match.created_at ?? new Date().toLocaleString('fr-FR').split(' GMT')[0],
-    tournament_id: match.tournament_id ?? 0
-  };
-}
-
-
 export default class PgGui {
   hostPlayer: string;
 

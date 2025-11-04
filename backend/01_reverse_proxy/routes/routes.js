@@ -25,6 +25,15 @@ async function routesPlugin(fastify, options) {
 		upstream: "http://user-service:3000",
 		prefix: '/user',
 		rewritePrefix: '/',
+		//preHandler: async (request, reply) => {
+		//	if (request.headers.cookie)
+		//		request.headers.cookie = request.headers.cookie;
+		//},
+		//replyOptions: {
+		//	onResponse (res) {
+		//		res.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+		//	}
+		//}
 	});
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://match-service:3000",

@@ -247,9 +247,15 @@ export async function updateInfo(request, reply) {
 
 // Route PUT /updateAvatar
 export async function updateAvatar(request, reply) {
-    const { db } = request.server;
-    const { name } = request.user;
-    const user = await db.registered.getByName(name);
+	const { db } = request.server;
+	const { name } = request.user;
+
+	let user;
+	if (request.user.type == 'guest')
+		user = await db.guest.getByName(name);
+	else if (request.user.type == 'registered')
+		user = await db.registered.getByName(name);
+	//const user = await db.registered.getByName(name);
 
 	if (!user)
 		return reply.code(400).send({ error: 'Unauthorized' });
@@ -266,18 +272,22 @@ export async function updateAvatar(request, reply) {
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
-	const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
-	const filePath = path.join(uploadDir, fileName);
+    const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
+    const filePath = path.join(uploadDir, fileName);
 
-	const buffer = await data.toBuffer();
-	fs.writeFileSync(filePath, buffer);
+    const buffer = await data.toBuffer();
+    fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `/pictures/${fileName}`;
+    const relativePath = `/pictures/${fileName}`;
     await db.registered.updateCol('picture', name, relativePath);
+
+    // Creation de  l'URL complete
+    const host = 'https://' + request.hostname + '4343';
+    const fullUrl = `/user/${host}${relativePath}`;
 	
 	return reply.code(200).send({
 		message: 'Avatar updated successfully',
-		picture: relativePath
+		picture: fullUrl
 	});
 }
 

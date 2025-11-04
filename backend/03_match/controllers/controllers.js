@@ -125,8 +125,11 @@ export async function finish(request, reply) {
 	const historyMatch = await db.history.insert(match);
 	await db.matches.delete(match.id);
 
-	const { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
-
+	let { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+	
+	user1 = await fetchChangeStatus(user1, 'available');
+	user2 = await fetchChangeStatus(user2, 'available');
+	
 	return reply.code(200).send({
 		user1: user1,
 		user2: user2,
@@ -147,6 +150,9 @@ export async function tournamentMatch(request, reply) {
 		p2_type: player2.type,
 		tournament_id: tournamentID
 	});
+
+	// change status to in_game
+
 
 	return reply.code(200).send({
 		match: match,

@@ -2,7 +2,7 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { getUserByToken, updateInfo, getUser, Logout} from '../tools/APIStorageManager';
+import { getUserByToken, updateInfo, getUser, Logout, updateAvatar} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   
@@ -73,12 +73,63 @@ export default function Profile(): HTMLElement {
 
   // Avatar
   const avatar = document.createElement('div');
-  avatar.className = 'flex items-center justify-center bg-black rounded-full w-[120px] h-[120px]';
-  const icon = document.createElement('span');
-  icon.textContent = '👤';
-  icon.className = 'text-3xl';
-  avatar.appendChild(icon);
+  avatar.className = 'relative flex items-center justify-center bg-black rounded-full w-[120px] h-[120px] overflow-hidden cursor-pointer group transition hover:scale-105 hover:shadow-xl';
   userSection.appendChild(avatar);
+//  avatar.className = 'flex items-center justify-center bg-black rounded-full w-[120px] h-[120px]';
+//  const icon = document.createElement('span');
+//  icon.textContent = '👤';
+//  icon.className = 'text-3xl';
+//  avatar.appendChild(icon);
+//  userSection.appendChild(avatar);
+
+	const currentUser = getUser();
+  // Image reelle de l’avatar
+	const avatarImg = document.createElement('img');
+	//avatarImg.src = currentUser.picture.toString();
+	avatarImg.src = "https://localhost:4343/user/pictures/BG.webp";
+	console.log("currentUser.picture.toString()", currentUser.picture.toString());
+	avatarImg.alt = 'Avatar';
+	avatarImg.className = 'object-cover w-full h-full bg-red';
+	avatar.appendChild(avatarImg);
+
+	// Overlay de changement
+	const overlay = document.createElement('div');
+	overlay.textContent = 'Change';
+	overlay.className = `
+	absolute inset-0 bg-black/60 text-white text-sm font-semibold
+	flex items-center justify-center opacity-0 group-hover:opacity-100
+	transition-opacity duration-200
+	`;
+	avatar.appendChild(overlay);
+
+	// Input file caché
+	const fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.accept = 'image/*';
+	fileInput.className = 'hidden';
+	userSection.appendChild(fileInput);
+
+	// Au clique sur l'avatar --> ouvre le selecteur de fichier
+	avatar.onclick = () => fileInput.click();
+
+	// Quand un fichier est delectionné
+	fileInput.onchange = async (e) => {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (!file)
+			return;
+
+		try {
+			const res = await updateAvatar(file);
+			console.log("res", res);
+
+			// MAJ de l'image
+			//avatarImg.src = res.picture + '?t=' + Date.now(); // éviter le cache navigateur
+			alert('Avatar updated successfully!');
+		} catch (err) {
+			console.error('Erreur upload avatar :', err);
+			alert('Error uploading avatar.');
+		}
+	};
 
   // Pseudo et email du player
   const username = document.createElement('h3');
@@ -198,7 +249,9 @@ export default function Profile(): HTMLElement {
 	const user = response.user;
     username.textContent = user.name;
     email.textContent = user.email;
-    avatar.className = user.picture || './pictures/default.webp';
+	
+    //avatar.className = user.picture || './pictures/default.webp';
+	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
     // --- Stats ---
     ratio.querySelector('p:nth-child(2)')!.textContent =

@@ -25,7 +25,7 @@ fastify.register(cookie);
 fastify.register(fastifyCors, {
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-	allowedHeaders: ["Content-Type", "Authorization"],
+	allowedHeaders: ["Content-Type", "Authorization", "Cross-Origin-Resource-Policy"],
 	credentials: true
 });
 
@@ -33,8 +33,11 @@ fastify.register(fastifyCors, {
 await fastify.register(fp(initDB));
 
 fastify.register(fastifyStatic, {
-	root: path.join(process.cwd(), 'pictures'),
+	root: path.join(import.meta.dirname, 'pictures'),
 	prefix: '/pictures/',
+	setHeaders: (res) => {
+    	res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  	}
 });
 
 await fastify.register(helmet, {

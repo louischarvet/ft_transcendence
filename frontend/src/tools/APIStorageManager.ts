@@ -32,6 +32,8 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 		if (!refreshed) {
 			console.error("Refresh token invalide. Déconnexion...");
 			await Logout();
+			// delete user from local storage
+			localStorage.removeItem('user');
 			return response;
 		}
 
@@ -104,13 +106,10 @@ export async function getUserById(id: number){
 }
 
 export async function Logout(): Promise<Response | null> {
-
-	// <-- Do NOT change this to apiFetch (used by apiFetch on token refresh failure)
 	const response = await fetch('/api/user/logout', {
 		method: 'PUT',
 		credentials: 'include',
 	});
-
 	return response;
 }
 
@@ -135,6 +134,30 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 	}
 
 	return data;
+}
+
+export async function updateAvatar(file: File) {
+	const formData = new FormData();
+	formData.append('file', file);
+
+	const response = await apiFetch('/api/user/updateAvatar', {
+		method: 'PUT',
+		body: formData,
+	});
+
+	const json = await response.json();
+	if (!response.ok) {
+		console.error('Erreur updateAvatar:', json.error);
+		throw new Error(json.error || 'Erreur lors de la mise à jour de l’avatar');
+	}
+
+	// MAJ du localStorage pour refleter le nouveau chemin
+	const user = getUser();
+	if (user) {
+		user.picture = json.picture;
+		localStorage.setItem('user', JSON.stringify(user));
+	}
+	return json;
 }
 
 export async function addNewFriend(friendName: string){
@@ -205,25 +228,25 @@ export async function checkConnection() {
 	if (!tmp)
 		return false;
 
-	const response = await apiFetch('/api/user/id', {
-		method: 'GET',
-	});
-	if (response.status === 401){
-		if (await fetchRefreshToken() === false)
-			return false;
-		return true;
-	}
-	if (!response.ok)
-		return false;
-	const data = await response.json();
-	console.log("data request -> ", data);
-	if (data.user) {
-		if (data.user.type === 'guest' && data.user.status !== 'available')
-			return false;
-		setUser(data.user);
-		return true;
-	}
-	return false;
+	//const response = await apiFetch('/api/user/id', {
+	//	method: 'GET',
+	//});
+	//if (response.status === 401){
+	//	if (await fetchRefreshToken() === false)
+	//		return false;
+	//	return true;
+	//}
+	//if (!response.ok)
+	//	return false;
+	//const data = await response.json();
+	//console.log("data request -> ", data);
+	//if (data.user) {
+	//	if (data.user.type === 'guest' && data.user.status !== 'available')
+	//		return false;
+	//	setUser(data.user);
+	//	return true;
+	//}
+	return true;
 }
 
 export async function register(name: string, email: string, password: string) {
