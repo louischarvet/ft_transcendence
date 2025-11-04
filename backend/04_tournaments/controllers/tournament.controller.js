@@ -129,12 +129,15 @@ export async function startTournament(request, reply){
 	}
 
 	let tournamentMatchData = [];
-	for(const m of matches){
+	for(let m of matches){
 		const res = await fetchMatchForTournament(m);
 		if(res.error)
 			return reply.code(500).send({ error: 'Could not create matches for tournament' });
 		tournamentMatchData.push(res.match);
+		m.id = res.match.id;
+		console.log("Created match for tournament:", m);
 	}
+	console.log("matches for tournament created:", matches);
 
 	// Mettre à jour l'historique
 	let matchesString = tournamentMatchData.map(m => m.id).join(';');

@@ -1210,7 +1210,7 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
-        if (this.currentTournament == null) return;
+        if (this.currentTournament == null || !this.currentTournament.matches.length) return;
         
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
         if (this.currentMatch == null) return;
@@ -1272,11 +1272,14 @@ export default class PgGui {
       if (this.currentTournament && this.currentMatch) {
 		    console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((data) => {
-        	if (!data || !this.currentTournament) return;
+        	if (!data) {
+            this.currentTournament!.matches = [];
+            return;
+          }
           if (data.message !== "next round")
             this.currentMatchIndex++;
           else if (data.message === "next round") {
-            this.currentTournament.matches = data.matches;
+            this.currentTournament!.matches = data.matches;
             this.currentMatchIndex = 0;
           } else {
             this.currentTournament = null;

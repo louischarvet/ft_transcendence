@@ -186,12 +186,13 @@ export async function getHistoryByTournamentID(request, reply) {
 // 	return reply.code(200).send({ matches });
 // }
 
-// // Route GET pour récupérer un match par son ID
-// // route /matches/:id
-// export async function getMatchById(request, reply) {
-// 	const match = await getMatch(request.params.id);
-// 	return reply.code(200).send({ match });
-// }
+// Route GET pour récupérer un match par son ID
+// route /matches/:id
+export async function getMatchById(request, reply) {
+	const { db } = request.server;
+	const match = await db.matches.getByID(request.params.id);
+	return reply.code(200).send({ match });
+}
 
 // // Route PUT pour mettre à jour le résultat d'un match
 // // route /matches/:id/result

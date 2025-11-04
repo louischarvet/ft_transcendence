@@ -62,6 +62,7 @@ export async function nextRound(request, reply) {
 
 	// Récupérer le match complet depuis le service match (si nécessaire)
 	const matchFromDbRes = await getMatchTournament(matchBody.id);
+	console.log("matchFromDbRes:", matchFromDbRes);
 	const matchFromDb = matchFromDbRes?.match || {};
 	const finishPayload = { ...matchFromDb, scoreP1: matchBody.scoreP1, scoreP2: matchBody.scoreP2 };
 
