@@ -5,7 +5,7 @@ import {
 	getTournament,
 	getTournamentsWonByUser,
 	startTournamentInternal,
-	setTournamentWinner,
+	setTournamentWinner, ///////// pas a jour?
 	addMatchesStringToTournament,
 	addMatchesAndPlayersToHistory,
 	addDataRoundTable,
@@ -55,6 +55,8 @@ export async function launchTournament(request, reply){
 }
 
 export async function endTournament(request, reply){
+	// insert in history
+	// delete in tournament
 	const { tournamentId, winnerId } = request.body;
 	if (!tournamentId || !winnerId)
 		return reply.code(400).send({ error: 'Invalid body' });

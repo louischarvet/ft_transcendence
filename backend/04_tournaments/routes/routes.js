@@ -31,6 +31,7 @@ export default async function routesPlugin(fastify, options) {
 
 	//! ajout le 19/19/2025
 	//route pour recuperer les tournois(pour participer aux tournois)
+//? sert a quelque chose ?
 	fastify.get('/winnertournament/:id', /*shcema de tournoi a determiner*/ getTournamentWinUserId);
 
 	//! ajout le 19/09/2025
