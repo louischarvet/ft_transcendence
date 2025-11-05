@@ -1,5 +1,5 @@
 import { navigate } from '../router';
-import { checkConnection } from '../tools/APIStorageManager';
+import { checkConnection, getUser} from '../tools/APIStorageManager';
 import ContinueAs from '../tools/ContinueAs';
 import Login from '../tools/Login';
 import Register from '../tools/Register';
@@ -16,19 +16,18 @@ export default function Home(subPage?: string): HTMLElement {
 	const title = document.createElement('h1');
 	title.textContent = 'BlackPong';
 	title.className = 'inline-block font-extrabold text-green-400 drop-shadow-[0_0_30px_#535bf2] text-6xl sm:text-8xl md:text-9xl lg:text-[12rem] cursor-pointer';
-	title.onclick = () => navigate('/'); // Retour à la home
+	if(getUser())
+		title.onclick = () => navigate('/select-game'); // Retour à select game dans le cas ou user log
+	else
+		title.onclick = () => navigate('/'); // Retour à la home
 	container.appendChild(title);
 
 	const separator = document.createElement('hr'); // Ligne de séparation
 	separator.className = 'w-3/4 border-t border-white/20 my-5';
 	container.appendChild(separator);
 	
-	if (subPage) {
-		checkConnection().then((connected) => {
-			if (connected)
-				container.appendChild(DropDownMenu());
-		});
-	}
+	// if (subPage && getUser())
+	// 	container.appendChild(DropDownMenu());
 	if (subPage === 'login') {
 		container.appendChild(Login());
 	} else if (subPage === 'register') {

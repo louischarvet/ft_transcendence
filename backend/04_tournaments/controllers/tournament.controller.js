@@ -149,11 +149,13 @@ export async function startTournament(request, reply){
 	await addDataRoundTable(tournamentId, tournament.rounds, matchesString, tournament.players);
 	let updatedTournament = await startTournamentInternal(tournamentId);
 
-	console.log("######################################## STARTTOURNAMENT\n",
-				"######### updatedTournament\n", ...updatedTournament,
-				"\n#########\n######### matches\n", matches,
-				"\n#########\n",
-				"########################################################\n");
+	console.log(
+	"######################################## STARTTOURNAMENT\n",
+	"######### updatedTournament\n", updatedTournament,
+	"\n#########\n######### matches\n", matches,
+	"\n#########\n",
+	"########################################################\n"
+	);
 
 	return reply.code(200).send({ tournament: { ...updatedTournament, matches }, message: 'Tournament started' });
 }

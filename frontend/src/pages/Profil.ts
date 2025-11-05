@@ -240,12 +240,12 @@ export default function Profile(): HTMLElement {
   profileCard.appendChild(userSection);
   container.appendChild(profileCard);
 
-  checkConnection().then((response) => {
-    console.log("response =\n", response, "#####################");
-      if(!response) {
-          navigate('/');
-      return ;
-	}
+  // checkConnection().then((response) => {
+  //   console.log("response =\n", response, "#####################");
+  //     if(!response) {
+  //         navigate('/');
+  //     return ;
+	// }
 	const user = getUser();
     username.textContent = user.name;
     email.textContent = user.email;
@@ -266,7 +266,7 @@ export default function Profile(): HTMLElement {
       user.currentStreak ?? '0';
     wallet.querySelector('p:nth-child(2)')!.textContent =
       `${user.wallet ?? 0} 🪙`;
-  })
+  // })
 
   return container;
 }

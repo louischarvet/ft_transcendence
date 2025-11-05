@@ -63,13 +63,13 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
 
   let currentEmail = '';
 
-  checkConnection().then((response) =>{
-    if (!response){
-      return;
-    }
+  // checkConnection().then((response) =>{
+  //   if (!response){
+  //     return;
+  //   }
     const user = getUser();
     currentEmail = user.email;
-  });
+  // });
 
   confirmBtn.onclick = () => {
     const email = emailInput.value.trim();

@@ -2,13 +2,13 @@ import { navigate } from "../router";
 import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
-  checkConnection().then((connected) => {
-    if (connected){
-      console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
-      navigate('/select-game');
-			return;
-    }
-  });
+  // checkConnection().then((connected) => {
+  //   if (connected){
+  //     console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
+  //     navigate('/select-game');
+	// 		return;
+  //   }
+  // });
 
   let code: string = '';
   
