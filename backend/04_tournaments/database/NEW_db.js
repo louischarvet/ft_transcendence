@@ -34,7 +34,7 @@ export async function initDB(fastify) {
 			matchs TEXT,
 			players TEXT,
 			ranking TEXT,
-			winnerId INTEGER default NULL,
+			winnerID INTEGER default NULL,
 			ended_at TEXT,
 			created_at TEXT NOT NULL
 		);
@@ -130,7 +130,17 @@ export async function initDB(fastify) {
             );
             return await this.get('id', id);
         },
+        // setTournamentWinner(column = 'winnerID', value = winnerID, id = id)
+        async update(column, value, id) {
+            const tournament = await this.get('id', id); // utile ?
+            if (!tournament || tournament.status !== 'waiting')
+		        return null;
 
+            await db.run(
+                `UPDATE ${this.table} SET ${column} = ? WHERE id = ?`,
+                [ value, id ]);
+            return await this.get('id', id);
+        },
     }
 
     db.round = {

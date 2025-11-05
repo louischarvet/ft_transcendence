@@ -55,6 +55,7 @@ export async function launchTournament(request, reply){
 }
 
 export async function endTournament(request, reply){
+	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
 	const { tournamentId, winnerId } = request.body;
@@ -144,6 +145,12 @@ export async function startTournament(request, reply){
 	await addMatchesStringToTournament(tournamentId, matchesString);
 	await addDataRoundTable(tournamentId, tournament.rounds, matchesString, tournament.players);
 	let updatedTournament = await startTournamentInternal(tournamentId);
+
+	console.log("######################################## STARTTOURNAMENT\n",
+				"######### updatedTournament\n", ...updatedTournament,
+				"\n#########\n######### matches\n", matches,
+				"\n#########\n",
+				"########################################################\n");
 
 	return reply.code(200).send({ tournament: { ...updatedTournament, matches }, message: 'Tournament started' });
 }

@@ -1,6 +1,7 @@
 FROM node:24
 
 WORKDIR /usr/src/app
+RUN mkdir -p /usr/src/app/data
 
 COPY ./package.json ./package-lock.json* ./
 
