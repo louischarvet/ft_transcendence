@@ -13,7 +13,7 @@ import shutdown from './common_tools/shutdown.js';
 
 await config();
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
