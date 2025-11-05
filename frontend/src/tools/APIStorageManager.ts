@@ -80,7 +80,7 @@ export function getUser() {
 // }
 
 export async function getUserByToken(){
-	const response = await fetch('/api/user/id', {
+	const response = await apiFetch('/api/user/id', {
 		method: 'GET',
 		credentials: 'include',
 	});
@@ -226,8 +226,8 @@ export async function removeFriend(friendId: string){
 }
 
 export async function checkConnection() {
-	if (!(await getUserByToken())){
-		localStorage.removeItem('user');
+	if (!(getUser())){
+	//	localStorage.removeItem('user');
 		return false;
 	}
 	return true;
