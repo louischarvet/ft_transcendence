@@ -25,20 +25,26 @@ export const nextSchema = {
 			tournamentID: { type: 'integer' },
 			matchID: { type: 'integer' },
 			player1: {
-				id: { type: 'integer'},
-				type: {
-					type: 'string',
-					enum: [ 'registered', 'guest', 'ia' ],
+				type: 'object',
+				properties: {
+					id: { type: 'integer'},
+					type: {
+						type: 'string',
+						enum: [ 'registered', 'guest', 'ia' ],
+					},
+					name: { type: 'string' },
 				},
-				name: 'string',
 			},
 			player2: {
-				id: { type: 'integer'},
-				type: {
-					type: 'string',
-					enum: [ 'registered', 'guest', 'ia' ],
+				type: 'object',
+				properties: {
+					id: { type: 'integer'},
+					type: {
+						type: 'string',
+						enum: [ 'registered', 'guest', 'ia' ],
+					},
+					name: { type: 'string' },
 				},
-				name: 'string',
 			},
 			scoreP1: { type: 'integer' },
 			scoreP2: { type: 'integer' },
