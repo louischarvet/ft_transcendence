@@ -43,7 +43,7 @@ export default function Register(): HTMLElement {
 
   const registerButton = document.createElement('button');
   registerButton.textContent = 'Register';
-  registerButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
+  registerButton.className = 'bg-[#646cff] text-xl text-whaddite rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   registerButton.onclick = () => {
     console.log('Register Form:', form);
 

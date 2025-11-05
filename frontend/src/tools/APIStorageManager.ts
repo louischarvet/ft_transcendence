@@ -107,10 +107,10 @@ export async function getUserById(id: number){
 	return data;
 }
 
-export async function Logout(): Promise<Response | null> {
-	const response = await fetch('/api/user/logout', {
+// export async function Logout(): Promise<Response | null> {
+export async function Logout(){
+	const response = await apiFetch('/api/user/logout', {
 		method: 'PUT',
-		credentials: 'include',
 	});
 	return response;
 }

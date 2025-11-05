@@ -45,7 +45,8 @@ export default function TwofaVerification(): HTMLElement {
 		verifyTwoFactorCode(code).then( (res) => {
 			if (!res){
 				console.error('2FA verification failed');
-				history.back();
+				// history.back();
+        navigate("/2fa-verification");
 				return;
 			}
 			else
