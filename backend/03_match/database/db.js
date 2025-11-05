@@ -68,16 +68,16 @@ export async function initDB(fastify) {
 				[ p1_id, p2_id, shortDate, tournament_id ]
 			));
 		},
-		async delete(matchID) {
+		async delete(column, value) {
 			await db.run(
-				`DELETE FROM ${this.table} WHERE id = ?`,
-				[ matchID ]
+				`DELETE FROM ${this.table} WHERE ${column} = ?`,
+				[ value ]
 			);
 		},
-		async getByID(matchID) {
+		async get(column, value) {
 			return (await db.get(
-				`SELECT * FROM ${this.table} WHERE id = ?`,
-				[ matchID ]));
+				`SELECT * FROM ${this.table} WHERE ${column} = ?`,
+				[ value ]));
 		}
 	}
 

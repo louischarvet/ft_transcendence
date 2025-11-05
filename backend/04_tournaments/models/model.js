@@ -59,7 +59,7 @@ export async function setMatchesForTournament(id, matchesString) {
 	return await getTournament(id);
 }
 
-//pour matchsevice ?!!
+//pour matchsevice ?!! // adapter
 export async function setTournamentWinner(id, winnerId) {
 	await db.run(`UPDATE tournament SET winnerId = ?, status = 'finished' WHERE id = ?`, [winnerId, id]);
 	return await getTournament(id);

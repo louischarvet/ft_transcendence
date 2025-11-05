@@ -1,7 +1,7 @@
-import { registeredMatch, guestMatch, iaMatch, getHistory, finish, tournamentMatch, getMatchById,
-//	getAllMatchesController, updateMatchResultController,
+import { registeredMatch, guestMatch, iaMatch, getHistory, finish, abort, tournamentMatch, getMatchById, 
+//	getAllMatchesController, getMatchById, updateMatchResultController,
 	getHistoryByTournamentID} from '../controllers/controllers.js';
-import { registeredMatchSchema, matchSchema, tournamentMatchSchema } from '../schema/matchSchema.js'
+import { registeredMatchSchema, matchSchema, abortSchema, tournamentMatchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 //import { isAvailable } from '../common_tools/isAvailable.js';
 
@@ -16,7 +16,7 @@ export default async function matchRoutes(fastify, opts) {
 	
 	fastify.put('/finish', { preHandler: authenticateJWT, schema: matchSchema }, finish);
 	
-
+	fastify.post('/abort', { schema: abortSchema }, abort);
 
 
 
@@ -31,5 +31,5 @@ export default async function matchRoutes(fastify, opts) {
 	fastify.get('/:id', getMatchById);
 
 	// // Route PUT pour mettre à jour le résultat d'un match
-	// fastify.put('/matches/:id/result', { preHandler: authenticateJWT, schema: matchSchema }, updateMatchResultController);
+	// fastify.put('/:id/result', { preHandler: authenticateJWT, schema: matchSchema }, updateMatchResultController);
 }

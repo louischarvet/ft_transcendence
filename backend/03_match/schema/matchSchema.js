@@ -40,6 +40,18 @@ export const matchSchema = {
   	}
 }
 
+export const abortSchema = {
+	$id: 'abortSchema',
+	body: {
+		type: 'object',
+		required: [ 'user_id' ],
+		properties: {
+			user_id: { type: 'integer' }
+		},
+		additionalProperties: false
+	}
+}
+
 export const tournamentMatchSchema = {
 	$id: 'tournamentMatchSchema',
 	body: {
