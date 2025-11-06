@@ -150,7 +150,7 @@ export async function startTournament(request, reply){
 	let updatedTournament = await startTournamentInternal(tournamentId);
 
 	console.log("######################################## STARTTOURNAMENT\n",
-				"######### updatedTournament\n", ...updatedTournament,
+				"######### updatedTournament\n", updatedTournament,
 				"\n#########\n######### matches\n", matches,
 				"\n#########\n",
 				"########################################################\n");

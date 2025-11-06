@@ -1218,9 +1218,11 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
+        console.log("currentTournament:", this.currentTournament);
         if (this.currentTournament == null || !this.currentTournament.matches.length) return;
         
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
+        console.log("currentMatch:", this.currentMatch);
         if (this.currentMatch == null) return;
         this.result.visibility(false);
         this.panel.winParts.player1.text = "0";

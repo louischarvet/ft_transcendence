@@ -66,6 +66,7 @@ export async function nextRound(request, reply) {
 	const currentMatchHistory = matchesArray.find(m => String(m.id) === String(matchBody.id));
 	if (currentMatchHistory && currentMatchHistory.winner_id !== null && currentMatchHistory.winner_id !== undefined)
 		return reply.code(400).send({ error: 'Match already finish' });
+	console.log("matchBody:", matchBody);
 
 
 	// Récupérer le match complet depuis le service match (si nécessaire)
@@ -85,19 +86,18 @@ export async function nextRound(request, reply) {
 	matchHistory = await fetchHistoryMatchForTournament(tournament.id);
 	if (matchHistory.error)
 		return reply.code(500).send({ error: 'Could not fetch match history' });
+	console.log("###\nAprès finishMatch, matchHistory --> ", matchHistory, "\n###\n");
 	const matchesInRound = (matchHistory.tournamentData || []).filter(m => roundMatchIds.includes(String(m.id)));
 
 
 	// Si tous les matchs du round ne sont pas terminés -> réponse informative
-	const unfinished = matchesInRound.find(m => m.winner_id === null || m.winner_id === undefined);
-	if (unfinished) {
+	if (roundMatchIds.length !== matchesInRound.length) {
 		return reply.code(200).send({
 			tournament,
 			matchFinish: matchHistory,
 			matchmessage: 'All matchs round not finished'
 		});
 	}
-
 
 	// Tous les matchs de ce round sont terminés -> on prépare le prochain round
 	// Récupérer les gagnants
@@ -107,8 +107,9 @@ export async function nextRound(request, reply) {
 		let winnerType = m.p1_type || m.p2_type || 'guest';
 		if (m.p1_id && winnerId === Number(m.p1_id))
 			winnerType = m.p1_type;
-		else if (m.p2_id && winnerId === Number(m.p2_id)) winnerType = m.p2_type;
-			users.push({ id: winnerId, type: winnerType });
+		else if (m.p2_id && winnerId === Number(m.p2_id))
+			winnerType = m.p2_type;
+		users.push({ id: winnerId, type: winnerType });
 	}
 
 
@@ -125,8 +126,8 @@ export async function nextRound(request, reply) {
 			return reply.code(200).send({ tournament: finishedTournament, message: 'Tournament finished' });
 		}
 		arrayMatchesNextRound.push({
-				player1: { id: Number(p1.id), type: p1.type },
-				player2: { id: Number(p2.id), type: p2.type },
+				player1: { id: p1.id, type: p1.type },
+				player2: { id: p2.id, type: p2.type },
 				tournamentID: tournament.id
 			});
 	}

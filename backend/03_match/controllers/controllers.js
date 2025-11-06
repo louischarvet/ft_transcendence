@@ -202,7 +202,7 @@ export async function getHistoryByTournamentID(request, reply) {
 // route /matches/:id
 export async function getMatchById(request, reply) {
 	const { db } = request.server;
-	const match = await db.matches.getByID(request.params.id);
+	const match = await db.matches.get('id', request.params.id);
 	return reply.code(200).send({ match });
 }
 
