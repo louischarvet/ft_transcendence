@@ -108,9 +108,8 @@ export async function getUserById(id: number){
 }
 
 export async function Logout(): Promise<Response | null> {
-	const response = await fetch('/api/user/logout', {
+	const response = await apiFetch('/api/user/logout', {
 		method: 'PUT',
-		credentials: 'include',
 	});
 	return response;
 }
@@ -134,7 +133,7 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 		console.error("Erreur updateInfo:", data.error);
 		throw new Error(data.error || "Erreur lors de la mise à jour");
 	}
-
+	setUser(data.user);
 	return data;
 }
 

@@ -1,8 +1,12 @@
 import {navigate} from '../router';
-import { checkConnection, asGuest} from './APIStorageManager';
+import { checkConnection, asGuest, getUser} from './APIStorageManager';
 import DropDownMenu from '../tools/DropDownMenu';
 
 export default function GameSelection(): HTMLElement {
+	if ( !getUser()){
+		navigate('/');
+		return document.createElement('div');
+	}
 	const wrapper = document.createElement('div');
 	// checkConnection().then((connected) => {
 	// 	console.log("checkConnection : ", connected);

@@ -5,7 +5,10 @@ import { createChangeEmail } from '../tools/ChangeEmail';
 import { updateInfo, getUser, Logout, updateAvatar, checkConnection} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
-  
+  if (!getUser()) {
+	navigate('/');
+	return document.createElement('div');
+  }
   const container = document.createElement('div');
   container.className = 'flex items-center justify-center h-screen bg-gray-300 text-black';
   
@@ -121,10 +124,8 @@ export default function Profile(): HTMLElement {
 		try {
 			const res = await updateAvatar(file);
 			console.log("res", res);
-
-			// MAJ de l'image
-			//avatarImg.src = res.picture + '?t=' + Date.now(); // éviter le cache navigateur
 			alert('Avatar updated successfully!');
+			navigate('/profil');
 		} catch (err) {
 			console.error('Erreur upload avatar :', err);
 			alert('Error uploading avatar.');

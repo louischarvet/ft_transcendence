@@ -82,6 +82,7 @@ export async function initDB(fastify) {
 			));
 		},
 		async updateCol(col, name, value) {
+
 			await db.run(
 				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
 				[ value, name ]
