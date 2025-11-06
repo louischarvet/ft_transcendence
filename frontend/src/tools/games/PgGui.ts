@@ -1186,8 +1186,7 @@ export default class PgGui {
             this.score.right.text = "0";
             this.result.visibility(false);
             this.currentMatch = match;
-            this.startedType = { type: "restart" };
-            this.match.visibility(true);
+            this.match.visibility(true, match.player1.name!, match.player2.name!);
           });
         } else {
           this.score.left.text = "0";

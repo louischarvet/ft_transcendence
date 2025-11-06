@@ -23,7 +23,7 @@ fastify.register(cookie);
 
 // CORS configuration
 fastify.register(fastifyCors, {
-    origin: true,
+    origin: 'https://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	allowedHeaders: ["Content-Type", "Authorization", "Cross-Origin-Resource-Policy"],
 	credentials: true

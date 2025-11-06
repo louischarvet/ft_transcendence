@@ -68,7 +68,7 @@ export function createChangeEmail(onConfirm: (password: string, newEmailConfirm:
     }
     if (newEmail !== newEmailConfirm){
         errorMsg.textContent = 'Email do not match.'
-		return
+		return;
     }
     // Appelle le callback depuis Profile.ts
     onConfirm(password, newEmail);

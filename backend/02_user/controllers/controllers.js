@@ -80,7 +80,7 @@ export async function register(request, reply) {
 
     const user = await db.registered.getByName(name);
 	delete user.hashedPassword;
-	//delete user.email;
+	delete user.email;
 	delete user.telephone;
 
 	const { accessToken } = await sendCode({
@@ -125,7 +125,7 @@ export async function logIn(request, reply) {
 
         const user = await db.registered.getByName(name);
 		delete user.hashedPassword;
-		//delete user.email;
+		delete user.email;
 		
 		user.verified = true;
 
@@ -209,7 +209,6 @@ export async function updateInfo(request, reply) {
 		return reply.code(401).send( { error : 'User not Authentified'});
 		
 	const { password, toUpdate, newValue } = request.body;
-	console.log("toUpdate =", toUpdate, " newValue =", newValue);
 	if (!password || !toUpdate || !newValue)
 		return reply.code(401).send( { error : 'Need all infos in body'});
 
@@ -257,7 +256,6 @@ export async function updateAvatar(request, reply) {
 		user = await db.guest.getByName(name);
 	else if (request.user.type == 'registered')
 		user = await db.registered.getByName(name);
-	//const user = await db.registered.getByName(name);
 
 	if (!user)
 		return reply.code(400).send({ error: 'Unauthorized' });
@@ -266,14 +264,11 @@ export async function updateAvatar(request, reply) {
 	if (!data)
 		return reply.code(400).send({ error: 'No file uploaded' });
 
-	if (data.filename.toLowerCase() === 'bg.webp')
-		return reply.code(400).send({ error: 'Invalid file name: BG.webp is reserved.' });
-
 	const uploadDir = path.join(process.cwd(), 'pictures');
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
-	if (user.picture && fs.existsSync(user.picture) && !user.picture.endsWith('BG.webp'))
+	if (user.picture && fs.existsSync(user.picture) && user.picture ==! '/pictures/BG.webp')
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
@@ -286,6 +281,7 @@ export async function updateAvatar(request, reply) {
     const relativePath = `pictures/${fileName}`;
     await db.registered.updateCol('picture', name, relativePath);
 
+	
 	return reply.code(200).send({
 		message: 'Avatar updated successfully',
 		picture: relativePath
@@ -324,10 +320,10 @@ export	async function getUserById(request, reply){
 		return reply.code(400).send({ error : 'Id of user required'});
 
     let userInfos;
-    if (type == 'guest')
-        userInfos = await db.guest.getById(id);
-    else if (type == 'registered')
-        userInfos = await db.registered.getById(id);
+    //if (type == 'guest')
+	userInfos = await db.guest.getById(userId);
+    //else if (type == 'registered')
+        //userInfos = await db.registered.getById(id);
 
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
@@ -471,7 +467,7 @@ export async function changeStatus(request, reply) {
 
 	delete user.hashedPassword;
 	delete user.telephone;
-	//delete user.email;
+	delete user.email;
 	return reply.code(201).send({
 		user: user,
 		message : 'Status updated!',

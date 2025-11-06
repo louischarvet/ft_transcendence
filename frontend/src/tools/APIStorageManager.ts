@@ -45,58 +45,17 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	return response;
 }
 
-// exemple dutilisation
-// export async function getFriendsList() {
-// 	const response = await apiFetch('/api/user/getfriendsprofiles', {
-// 		method: 'GET',
-// 	});
-
-// 	if (response.status === 204)
-// 		return { friends: [] };
-
-// 	if (!response.ok)
-// 		return null;
-
-// 	const data = await response.json();
-// 	return data;
-// }
 
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
 }
 
-// export async function getRefreshToken() {
-// 	const cookie = await cookieStore.get("refreshToken");
-// 	console.log("cookie getRefreshToken => ", cookie?.value);
-// 	console.log("cookie getRefreshToken => ", cookie);
-// 	return 	cookie?.value;
-// }
-
-// export async function getTokenAcces() {
-// 	const cookie = await cookieStore.get("accessToken");
-// 	console.log("cookie accessToken => ", cookie?.value);
-// 	return 	cookie?.value;
-// }
-
-export async function getUserByToken(){
-	const response = await apiFetch('/api/user/id', {
-		method: 'GET',
-		credentials: 'include',
-	});
-	const json = await response.json();
-	if (json.user){
-		setUser(json.user);
-		return true;
-	}
-	return false;
-}
 
 export async function getUserById(id: number){
 
 	const response = await apiFetch(`/api/user/${id}`, {
-		method: 'GET',
-		headers: {'Content-Type': 'application/json'},
+		method: 'GET'
 	});
 	if (!response.ok) {
 		console.warn("Erreur backend :", response.status);
@@ -104,7 +63,8 @@ export async function getUserById(id: number){
 	}
 
 	const data = await response.json();
-	return data;
+	setUser(data.user);
+	return data.user;
 }
 
 export async function Logout(): Promise<Response | null> {

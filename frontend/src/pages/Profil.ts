@@ -2,13 +2,14 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { updateInfo, getUser, Logout, updateAvatar, checkConnection} from '../tools/APIStorageManager';
+import { updateInfo, getUser, Logout, updateAvatar, setUser, getUserById} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   if (!getUser()) {
-	navigate('/');
-	return document.createElement('div');
+		navigate('/');
+		return document.createElement('div');
   }
+  
   const container = document.createElement('div');
   container.className = 'flex items-center justify-center h-screen bg-gray-300 text-black';
   
@@ -78,17 +79,10 @@ export default function Profile(): HTMLElement {
   const avatar = document.createElement('div');
   avatar.className = 'relative flex items-center justify-center bg-black rounded-full w-[120px] h-[120px] overflow-hidden cursor-pointer group transition hover:scale-105 hover:shadow-xl';
   userSection.appendChild(avatar);
-//  avatar.className = 'flex items-center justify-center bg-black rounded-full w-[120px] h-[120px]';
-//  const icon = document.createElement('span');
-//  icon.textContent = '👤';
-//  icon.className = 'text-3xl';
-//  avatar.appendChild(icon);
-//  userSection.appendChild(avatar);
 
 	const currentUser = getUser();
   // Image reelle de l’avatar
 	const avatarImg = document.createElement('img');
-	//avatarImg.src = currentUser.picture.toString();
 	avatarImg.src = "https://localhost:4343/user/pictures/BG.webp";
 	console.log("currentUser.picture.toString()", currentUser.picture.toString());
 	avatarImg.alt = 'Avatar';
@@ -124,6 +118,7 @@ export default function Profile(): HTMLElement {
 		try {
 			const res = await updateAvatar(file);
 			console.log("res", res);
+			//avatarImg.src = `https://localhost:4343/user/${res.picture}`;
 			alert('Avatar updated successfully!');
 			navigate('/profil');
 		} catch (err) {
@@ -241,33 +236,30 @@ export default function Profile(): HTMLElement {
   profileCard.appendChild(userSection);
   container.appendChild(profileCard);
 
-  // checkConnection().then((response) => {
-  //   console.log("response =\n", response, "#####################");
-  //     if(!response) {
-  //         navigate('/');
-  //     return ;
-	// }
-	const user = getUser();
-    username.textContent = user.name;
-    email.textContent = user.email;
-	
-    //avatar.className = user.picture || './pictures/default.webp';
-	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
+	let user = getUser();
+	getUserById(user.id).then(res => {
+		user = res;
+		username.textContent = user.name;
+		email.textContent = user.email;
+		
+		//avatar.className = user.picture || './pictures/default.webp';
 
-    // --- Stats ---
-    ratio.querySelector('p:nth-child(2)')!.textContent =
-      user.win_rate?.toFixed(2) ?? '0.00';
-    gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
-      user.played_matches ?? '0';
-    wins.querySelector('p:nth-child(2)')!.textContent =
-      user.match_wins ?? '0';
-    bestStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.wins_streak ?? '0';
-    currentStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.currentStreak ?? '0';
-    wallet.querySelector('p:nth-child(2)')!.textContent =
-      `${user.wallet ?? 0} 🪙`;
-  // })
+		// --- Stats ---
+		ratio.querySelector('p:nth-child(2)')!.textContent =
+		user.win_rate?.toFixed(2) ?? '0.00';
+		gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
+		user.played_matches ?? '0';
+		wins.querySelector('p:nth-child(2)')!.textContent =
+		user.match_wins ?? '0';
+		bestStreak.querySelector('p:nth-child(2)')!.textContent =
+		user.wins_streak ?? '0';
+		currentStreak.querySelector('p:nth-child(2)')!.textContent =
+		user.currentStreak ?? '0';
+		wallet.querySelector('p:nth-child(2)')!.textContent =
+		`${user.wallet ?? 0} 🪙`;
+	});
+
+	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
   return container;
 }
