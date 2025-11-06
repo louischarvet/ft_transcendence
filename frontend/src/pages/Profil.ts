@@ -83,7 +83,7 @@ export default function Profile(): HTMLElement {
 	const currentUser = getUser();
   // Image reelle de l’avatar
 	const avatarImg = document.createElement('img');
-	avatarImg.src = "https://localhost:4343/user/pictures/BG.webp";
+  	avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
 	console.log("currentUser.picture.toString()", currentUser.picture.toString());
 	avatarImg.alt = 'Avatar';
 	avatarImg.className = 'object-cover w-full h-full bg-red';

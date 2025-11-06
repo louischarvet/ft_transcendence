@@ -40,7 +40,7 @@ export async function createGuest(request, reply) {
 			...secureCookieOptions,
 			path :'/',
 			path :'/',
-			maxAge: 1800
+			maxAge: 60 * 15
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
@@ -137,7 +137,7 @@ export async function logIn(request, reply) {
 		return reply.code(201)
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
-				maxAge: 60,
+				maxAge: 60 * 15,
 				path: '/'
 			})
 			.setCookie('refreshToken', refreshToken, {

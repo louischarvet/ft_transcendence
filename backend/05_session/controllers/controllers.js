@@ -23,7 +23,7 @@ async function generateAccess(sign, name, type, id, jwti, verified) {
         jwti: jwti,
         verified: verified
     }, {
-        expiresIn : '1m'
+        expiresIn : '15m'
     });
 }
 
@@ -135,7 +135,7 @@ export async function refresh(db, request, reply) {
             .code(200)
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
-                maxAge: 60,
+                maxAge: 60 * 15,
                 path: '/'
             })
             .setCookie('refreshToken', newRefresh, {

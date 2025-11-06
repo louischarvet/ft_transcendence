@@ -113,7 +113,7 @@ export async function verifyCode(request, reply) {
 
 	reply.setCookie('accessToken', accessToken, {
 		...secureCookieOptions,
-		maxAge: 1800,
+		maxAge: 60 * 15,
 		path: '/'
 	})
 	.setCookie('refreshToken', refreshToken, {
