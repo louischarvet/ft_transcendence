@@ -219,7 +219,10 @@ export default class PgGui {
     this.pause = this.initPause();
     this.result = this.initResult();
     this.vsAI = this.initVsAI();
+    this.initAIModeEvents(this.vsAI);
     this.watchAI = this.initWatchAI();
+    this.initAIModeEvents(this.watchAI.left);
+    this.initAIModeEvents(this.watchAI.right);
 
     const font2 = new Rectangle("font2"); {
       font2.background = "black";
@@ -969,10 +972,15 @@ export default class PgGui {
           obj.isVisible = visible;
         }
       });
-      if (visible && player1 && player2) {
-        player1Text.text = player1;
-        player2Text.text = player2;
-		    this.panel.visibility(true);
+      if (visible) {
+        // reset score
+        this.score.update("left", 0);
+        this.score.update("right", 0);
+        if (player1 && player2) {
+          player1Text.text = player1;
+          player2Text.text = player2;
+          this.panel.visibility(true);
+        }
       }
     };
 
@@ -1172,7 +1180,7 @@ export default class PgGui {
       playAgainButton.onPointerClickObservable.add(() => {
         if (!this.startedType) return;
         if (this.startedType.type !== "watchAI") {
-          createMatch(this.startedType.type === "vsAI" ? "ia" : this.startedType.type).then((match) => {
+          createMatch(this.startedType.type === "vsAI" ? "ia" : "guest").then((match) => {
             if (!match) return;
             this.score.left.text = "0";
             this.score.right.text = "0";
@@ -1210,11 +1218,15 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
+        console.log("currentTournament:", this.currentTournament);
         if (this.currentTournament == null || !this.currentTournament.matches.length) return;
         
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
+        console.log("currentMatch:", this.currentMatch);
         if (this.currentMatch == null) return;
-            this.result.visibility(false);
+        this.result.visibility(false);
+        this.panel.winParts.player1.text = "0";
+        this.panel.winParts.player2.text = "0";
         if (this.currentMatch.player1.type === "ia" && this.currentMatch.player2.type === "ia")
           this.startedType = { type: "watchAI", aiMode1: "normal", aiMode2: "normal" };
         else if (this.currentMatch.player1.type === "ia")
@@ -1249,9 +1261,9 @@ export default class PgGui {
         menuButton.alpha = 0.5;
       });
       menuButton.onPointerClickObservable.add(() => {
+        this.panel.winParts.player1.text = "0";
+        this.panel.winParts.player2.text = "0";
         this.result.visibility(false);
-
-        this.goBackUI = "result";
         this.menu.visibility(true);
 
       });
@@ -1290,11 +1302,6 @@ export default class PgGui {
       }
 
       this.currentMatch = null;
-
-      // reset score
-      this.score.update("left", 0);
-      this.score.update("right", 0);
-
       this.result.visibility(true);
       return;
     };
@@ -1343,8 +1350,6 @@ export default class PgGui {
       this.ui.addControl(AIModeTitle);
     }
 
-    let selectedAIMode = "";
-
     const normalButton = Button.CreateSimpleButton("normalButton", "Normal"); {
       normalButton.width = 200 + "px";
       normalButton.height = 60 + "px";
@@ -1355,20 +1360,6 @@ export default class PgGui {
       normalButton.thickness = 0;
       normalButton.background = "transparent";
       normalButton.alpha = 0.5;
-      normalButton.onPointerEnterObservable.add(() => {
-        normalButton.alpha = 1;
-      });
-      normalButton.onPointerOutObservable.add(() => {
-        if (selectedAIMode !== "normal")
-          normalButton.alpha = 0.5;
-      });
-      normalButton.onPointerClickObservable.add(() => {
-        if (selectedAIMode !== "normal") {
-          restlessButton.alpha = 0.5;
-          smartButton.alpha = 0.5;
-          selectedAIMode = "normal";
-        }
-      });
       this.ui.addControl(normalButton);
     }
 
@@ -1382,20 +1373,6 @@ export default class PgGui {
       restlessButton.thickness = 0;
       restlessButton.background = "transparent";
       restlessButton.alpha = 0.5;
-      restlessButton.onPointerEnterObservable.add(() => {
-        restlessButton.alpha = 1;
-      });
-      restlessButton.onPointerOutObservable.add(() => {
-        if (selectedAIMode !== "restless")
-          restlessButton.alpha = 0.5;
-      });
-      restlessButton.onPointerClickObservable.add(() => {
-        if (selectedAIMode !== "restless") {
-          normalButton.alpha = 0.5;
-          smartButton.alpha = 0.5;
-          selectedAIMode = "restless";
-        }
-      });
       this.ui.addControl(restlessButton);
     }
 
@@ -1409,30 +1386,63 @@ export default class PgGui {
       smartButton.thickness = 0;
       smartButton.background = "transparent";
       smartButton.alpha = 0.5;
-      smartButton.onPointerEnterObservable.add(() => {
-        smartButton.alpha = 1;
-      });
-      smartButton.onPointerOutObservable.add(() => {
-        if (selectedAIMode !== "smart")
-          smartButton.alpha = 0.5;
-      });
-      smartButton.onPointerClickObservable.add(() => {
-        if (selectedAIMode !== "smart") {
-          restlessButton.alpha = 0.5;
-          normalButton.alpha = 0.5;
-          selectedAIMode = "smart";
-        }
-      });
       this.ui.addControl(smartButton);
     }
 
     return {
       title: AIModeTitle,
-      selectedAIMode,
+      selectedAIMode: "",
       restless: restlessButton,
       normal: normalButton,
       smart: smartButton
     };
+  }
+
+  private initAIModeEvents(obj: any) {
+    obj.normal.onPointerEnterObservable.add(() => {
+      obj.normal.alpha = 1;
+    });
+    obj.normal.onPointerOutObservable.add(() => {
+      if (obj.selectedAIMode !== "normal")
+        obj.normal.alpha = 0.5;
+    });
+    obj.normal.onPointerClickObservable.add(() => {
+      if (obj.selectedAIMode !== "normal") {
+        obj.restless.alpha = 0.5;
+        obj.smart.alpha = 0.5;
+        obj.selectedAIMode = "normal";
+      }
+    });
+
+    obj.restless.onPointerEnterObservable.add(() => {
+      obj.restless.alpha = 1;
+    });
+    obj.restless.onPointerOutObservable.add(() => {
+      if (obj.selectedAIMode !== "restless")
+        obj.restless.alpha = 0.5;
+    });
+    obj.restless.onPointerClickObservable.add(() => {
+      if (obj.selectedAIMode !== "restless") {
+        obj.normal.alpha = 0.5;
+        obj.smart.alpha = 0.5;
+        obj.selectedAIMode = "restless";
+      }
+    });
+
+    obj.smart.onPointerEnterObservable.add(() => {
+      obj.smart.alpha = 1;
+    });
+    obj.smart.onPointerOutObservable.add(() => {
+      if (obj.selectedAIMode !== "smart")
+        obj.smart.alpha = 0.5;
+    });
+    obj.smart.onPointerClickObservable.add(() => {
+      if (obj.selectedAIMode !== "smart") {
+        obj.restless.alpha = 0.5;
+        obj.normal.alpha = 0.5;
+        obj.selectedAIMode = "smart";
+      }
+    });
   }
 
   private initVsAI() {
@@ -1442,8 +1452,8 @@ export default class PgGui {
       startButton.width = 200 + "px";
       startButton.height = 60 + "px";
       startButton.top = "200px";
-      startButton.fontSize = 38 + "px";
-      startButton.color = "white";
+      startButton.fontSize = 42 + "px";
+      startButton.color = "green";
       startButton.thickness = 0;
       startButton.background = "transparent";
       startButton.alpha = 0.7;
@@ -1481,10 +1491,10 @@ export default class PgGui {
       this.font.isVisible = visible;
       if (visible) {
         // Reset AI mode selection
-        AIMode.selectedAIMode = "";
-        AIMode.restless.alpha = 0.5;
-        AIMode.normal.alpha = 0.5;
-        AIMode.smart.alpha = 0.5;
+        this.vsAI.selectedAIMode = "";
+        this.vsAI.restless.alpha = 0.5;
+        this.vsAI.normal.alpha = 0.5;
+        this.vsAI.smart.alpha = 0.5;
       } else
         this.goBackButton.isVisible = false;
     };
@@ -1513,8 +1523,8 @@ export default class PgGui {
       startButton.width = 200 + "px";
       startButton.height = 60 + "px";
       startButton.top = "200px";
-      startButton.fontSize = 38 + "px";
-      startButton.color = "white";
+      startButton.fontSize = 42 + "px";
+      startButton.color = "green";
       startButton.thickness = 0;
       startButton.background = "transparent";
       startButton.alpha = 0.7;

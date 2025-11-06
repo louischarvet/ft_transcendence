@@ -80,6 +80,6 @@ export const tournamentMatchSchema = {
 			},
 			tournamentID: { type: 'integer' }
 		},
-		additionalProperties: false,
+		additionalProperties: true,
 	}
 }
