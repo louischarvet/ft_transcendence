@@ -268,7 +268,7 @@ export async function updateAvatar(request, reply) {
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
-	if (user.picture && fs.existsSync(user.picture) && user.picture ==! '/pictures/BG.webp')
+	if (user.picture && fs.existsSync(user.picture) && user.picture !== '/pictures/BG.webp')
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
@@ -279,7 +279,7 @@ export async function updateAvatar(request, reply) {
     fs.writeFileSync(filePath, buffer);
 
     const relativePath = `pictures/${fileName}`;
-    await db.registered.updateCol('picture', name, relativePath);
+    await db[request.user.type].updateCol('picture', name, relativePath);
 
 	
 	return reply.code(200).send({
