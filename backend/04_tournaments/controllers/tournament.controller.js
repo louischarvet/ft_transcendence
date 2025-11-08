@@ -1,17 +1,17 @@
 // tournament.controller.js
 
-import {
-	createTournamentRow,
-	getTournament,
-	getTournamentsWonByUser,
-	startTournamentInternal,
-	setTournamentWinner, ///////// pas a jour?
-	addMatchesStringToTournament,
-	addMatchesAndPlayersToHistory,
-	addDataRoundTable,
-	addPlayerToTournament,
+// import {
+// 	createTournamentRow,
+// 	getTournament,
+// 	getTournamentsWonByUser,
+// 	startTournamentInternal,
+// 	setTournamentWinner, ///////// pas a jour?
+// 	addMatchesStringToTournament,
+// 	addMatchesAndPlayersToHistory,
+// 	addDataRoundTable,
+// 	addPlayerToTournament,
 	
-} from '../models/model.js';
+// } from '../models/model.js';
 
 import { addNewPlayerToTournament } from './player.controller.js';
 import { fetchUserTournament } from './user.controller.js';
@@ -19,12 +19,14 @@ import { fetchMatchForTournament, fetchHistoryMatchForTournament, fetchFinishMat
 
 // Recupere tout les tournoie gagnes par un user
 export async function getTournamentWinUserId(request, reply){
+	const { db } = request.server;
 	const id = request.params.id;
 	const userId = Number(id);
 	if (!userId)
 		return reply.code(400).send({ error : 'UserId is required' });
 
-	const tournaments = await getTournamentsWonByUser(userId);
+	// const tournaments = await getTournamentsWonByUser(userId);
+	const tournaments = await db.history.get('winnerID', userId);
 	if (!tournaments)
 		return reply.code(200).send({ tournaments: [], message: 'No tournament wins' });
 
@@ -33,6 +35,7 @@ export async function getTournamentWinUserId(request, reply){
 }
 
 export async function launchTournament(request, reply){
+	const { db } = request.server;
 	const user = request.user;
 	// if (!user)
 	// 	return reply.code(400).send({ error: 'Only logged-in users can create a tournament' });
@@ -44,17 +47,25 @@ export async function launchTournament(request, reply){
 	// if (![4,8,16].includes(nbPlayers))
 	// 	return reply.code(400).send({ error: 'nbPlayers invalid' });
 
-	const tmpTournament = await createTournamentRow(body.nbPlayers, user.id);
+//	const tmpTournament = await createTournamentRow(body.nbPlayers, user.id);
+	const tmpTournament = await db.tournament.insert(body.nbPlayers, user.id);
+	console.log("################## tmpTournament\n", tmpTournament,
+				"\n#################################\n");
+
 	if (!tmpTournament)
 		return reply.code(500).send({ error: 'Could not create tournament' });
 
-	let Tournament = await getTournament(tmpTournament.id);
-	Tournament = await addPlayerToTournament(Tournament.id, user.id + ':' + user.type + ';');
-
+	// let Tournament = await getTournament(tmpTournament.id);
+	let Tournament = await db.tournament.get('id', tmpTournament.id);
+	console.log("################### TOURNAMENT\n", Tournament,
+				"\n###########################\n");
+	// Tournament = await addPlayerToTournament(Tournament.id, user.id + ':' + user.type + ';');
+	Tournament = await db.tournament.addPlayer(Tournament.id, user.id + ':' + user.type + ';');
 	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
 }
 
 export async function endTournament(request, reply){
+	const { db } = request.server;
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
@@ -62,11 +73,13 @@ export async function endTournament(request, reply){
 	if (!tournamentId || !winnerId)
 		return reply.code(400).send({ error: 'Invalid body' });
 
-	const tournament = await getTournament(tournamentId);
+	// const tournament = await getTournament(tournamentId);
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
-	const updatedTournament = await setTournamentWinner(tournamentId, winnerId);
+	// const updatedTournament = await setTournamentWinner(tournamentId, winnerId);
+	const updatedTournament = await db.history.update('winnerID', winnerId, tournamentId);
 	if (!updatedTournament)
 		return reply.code(500).send({ error: 'Could not set tournament winner' });
 
@@ -74,21 +87,27 @@ export async function endTournament(request, reply){
 }
 
 export async function startTournament(request, reply){
+	const { db } = request.server;
 	const user = request.user;
 	const tournamentId = request.params.id;
-	let tournament = await getTournament(tournamentId);
+	// let tournament = await getTournament(tournamentId);
+	let tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
-	if (tournament.status !== 'waiting')
+	if (tournament.status !== 'waiting') {
+		console.log("Not waiting\n");
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
-	if (tournament.creatorId != user.id)
+	}
+	if (tournament.creatorId != user.id) {
+		console.log("creatorId not good\n");
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
+	}
 	console.log("tournament -> ",tournament);
 	// Ajout IA si nécessaire
 	let countIa = 0;
 	for(; tournament.remainingPlaces > 0;){
 		countIa++;
-		tournament = await addNewPlayerToTournament(tournamentId, '0', 'ia');
+		tournament = await addNewPlayerToTournament(db, tournamentId, '0', 'ia');
 	}
 	
 	const playersArray = tournament.players.split(';');
@@ -144,23 +163,29 @@ export async function startTournament(request, reply){
 
 	// Mettre à jour l'historique
 	let matchesString = tournamentMatchData.map(m => m.id).join(';');
-	await addMatchesAndPlayersToHistory(tournamentId, matchesString, tournament.players);
-	await addMatchesStringToTournament(tournamentId, matchesString);
-	await addDataRoundTable(tournamentId, tournament.rounds, matchesString, tournament.players);
-	let updatedTournament = await startTournamentInternal(tournamentId);
+	// await addMatchesAndPlayersToHistory(tournamentId, matchesString, tournament.players);
+	await db.history.insert(tournamentId, matchesString, tournament.players);
+	// await addMatchesStringToTournament(tournamentId, matchesString);
+	await db.tournament.update('matchs', matchesString, tournamentId);
+	// await addDataRoundTable(tournamentId, tournament.rounds, matchesString, tournament.players);
+	await db.round.insert(tournamentId, tournament.rounds, matchesString, tournament.players);
+	// let updatedTournament = await startTournamentInternal(tournamentId);
+	let updatedTournament = await db.tournament.update('status', 'started', tournamentId);
 
-	console.log("######################################## STARTTOURNAMENT\n",
-				"######### updatedTournament\n", ...updatedTournament,
-				"\n#########\n######### matches\n", matches,
-				"\n#########\n",
-				"########################################################\n");
+//	console.log("######################################## STARTTOURNAMENT\n",
+//				"######### updatedTournament\n", updatedTournament,
+//				"\n#########\n######### matches\n", matches,
+//				"\n#########\n",
+//				"########################################################\n");
 
 	return reply.code(200).send({ tournament: { ...updatedTournament, matches }, message: 'Tournament started' });
 }
 
 export async function getTournamentById(request, reply){
+	const { db } = request.server;
 	const tournamentId = Number(request.params.id);
-	const tournament = await getTournament(tournamentId);
+	// const tournament = await getTournament(tournamentId);
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error : 'Tournament not found' });
 

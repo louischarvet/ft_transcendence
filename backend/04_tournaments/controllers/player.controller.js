@@ -4,9 +4,15 @@ import { fetchGetUserById, fetchCreateGuest, fetchUserLogin, fetchChangeStatusUs
 import { getTournament, addPlayerToTournament} from '../models/model.js';
 
 
-export async function addNewPlayerToTournament(tournamentId, playerId, playerType){
-	let tournament = await getTournament(tournamentId);
-	tournament = await addPlayerToTournament(tournamentId, `${playerId}:${playerType};`);
+export async function addNewPlayerToTournament(db, tournamentId, playerId, playerType){
+
+//	console.log("#################### DB\n", db,
+//				"\n#######################\n");
+	//	const { db } = request.server;
+//	let tournament = await getTournament(tournamentId);
+	let tournament = await db.tournament.get('id', tournamentId); /// .get not found
+//	tournament = await addPlayerToTournament(tournamentId, `${playerId}:${playerType};`);
+	tournament = await db.tournament.addPlayer(tournamentId, `${playerId}:${playerType};`);
 	return tournament;
 }
 
@@ -18,11 +24,12 @@ export async function joinTournamentSession(request, reply){
 	if (guest.error)
 		return reply.code(500).send({ error: 'Could not create guest' });
 
-	const tournament = await addNewPlayerToTournament(tournamentId, guest.id, guest.type);
+	const tournament = await addNewPlayerToTournament(request.server.db, tournamentId, guest.id, guest.type);
 	return reply.code(200).send({ tournament, user: guest });
 }
 
 export async function joinTournamentRegistered(request, reply){
+	const { db } = request.server;
 	const { name, password } = request.body;
 	if (!name || !password)
 		return reply.code(400).send({ error: 'Name and password are required' });
@@ -38,7 +45,8 @@ export async function joinTournamentRegistered(request, reply){
 		return reply.code(400).send({ error: 'TournamentId is required' });
 
 	// Verifie que le tournoi existe et places dispo
-	const tournament = await getTournament(tournamentId);
+//	const tournament = await getTournament(tournamentId);
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.remainingPlaces < 1)
@@ -53,7 +61,7 @@ export async function joinTournamentRegistered(request, reply){
 
 	// Ajoute le joueur au tournoi
 	const addPlayer = player2.id.toString() + ':' + currentUser.type + ';';
-	await addNewPlayerToTournament(tournamentId, addPlayer);
+	await addNewPlayerToTournament(request.server.db, tournamentId, addPlayer);
 
 	// Met à jour le statut du joueur
 	await fetchChangeStatusUser(currentUser, "in_game");
@@ -63,7 +71,7 @@ export async function joinTournamentRegistered(request, reply){
 
 // rejoindre un tournoi en guest temporaire
 export async function joinTournamentGuest(request, reply){
-
+	const { db } = request.server;
 	const tournamentId = request.params.id;
 	if (!tournamentId || tournamentId <= 0)
 		return reply.code(400).send({ error: 'TournamentId is required' });
@@ -74,7 +82,8 @@ export async function joinTournamentGuest(request, reply){
             return reply.code(400).send({ error: 'Guest creation failed' });
 
 	// Verifier que tournoi existe et places dispo
-	const tournament = await getTournament(tournamentId);
+	// const tournament = await getTournament(tournamentId);
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.remainingPlaces < 1)
@@ -82,7 +91,7 @@ export async function joinTournamentGuest(request, reply){
 
 	// Ajoute le guest au tournoi
 	// const addPlayer = guest.id.toString() + ':' + guest.type + ';';
-	await addNewPlayerToTournament(tournamentId, guest.id.toString(),  guest.type);
+	await addNewPlayerToTournament(request.server.db, tournamentId, guest.id.toString(),  guest.type);
 	await fetchChangeStatusUser(guest, "in_game");
 	return reply.code(200).send({ user: guest, message: 'Joined tournament' });
 }
