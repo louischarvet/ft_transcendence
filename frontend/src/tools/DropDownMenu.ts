@@ -6,6 +6,10 @@ import { navigate } from '../router';
 export default function DropDownMenu() {
 	const wrapper = document.createElement('div');
 	let UserCurrent = getUser();
+	if (!UserCurrent){
+		navigate('/');
+		return wrapper;
+	}
 	wrapper.className = 'absolute top-5 right-0';
 
 	// BUTTON PRINCIPAL

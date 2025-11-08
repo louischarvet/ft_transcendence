@@ -35,11 +35,6 @@ export default async function routesPlugin(fastify, options) {
 	//? sert a quelque chose ? // a supprimer
 	fastify.get('/winnertournament/:id', /*shcema de tournoi a determiner*/ getTournamentWinUserId);
 
-
-
-
-
-
 	//! ajout le 19/09/2025
 	// Si un joueur veux creer un tournois(remplie automatiquement avec ia, attente de 2 min pour qu'un autre user se connecte au tournoie)
 	 fastify.post('/launchtournament',{preHandler: authenticateJWT , schema: tournamentSchema }, launchTournament);
