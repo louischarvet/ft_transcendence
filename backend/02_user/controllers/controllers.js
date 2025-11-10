@@ -80,8 +80,6 @@ export async function register(request, reply) {
 
     const user = await db.registered.getByName(name);
 	delete user.hashedPassword;
-	delete user.email;
-	delete user.telephone;
 
 	const { accessToken } = await sendCode({
 		name: name,
@@ -125,7 +123,6 @@ export async function logIn(request, reply) {
 
         const user = await db.registered.getByName(name);
 		delete user.hashedPassword;
-		delete user.email;
 		
 		user.verified = true;
 

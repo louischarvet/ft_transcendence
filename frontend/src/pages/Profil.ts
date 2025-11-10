@@ -129,10 +129,10 @@ export default function Profile(): HTMLElement {
 
   // Pseudo et email du player
   const username = document.createElement('h3');
-  username.textContent = 'Pseudo';
+  username.textContent = getUser().name;
   username.className = 'text-xl font-bold drop-shadow-[0_0_10px_rgba(0,0,0,0.9)]';
   const email = document.createElement('button');
-  email.textContent = 'email@example.com';
+  email.textContent = getUser().email;
   email.className = 'text-sm font-bold bg-green-500 rounded-lg w-[200px] hover:bg-green-600 py-2';
   userSection.appendChild(username);
   if (getUser().type !== 'guest'){

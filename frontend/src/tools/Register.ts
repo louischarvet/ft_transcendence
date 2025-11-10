@@ -78,8 +78,11 @@ export default function Register(): HTMLElement {
 			console.error('User creation failed:', res.message);
 			alert(res.message);
 		}
-		else
+		else{
+			console.log('User created successfully : ', res	);
+			//localStorage.setItem('user', res.user);
 			navigate('/2fa-verification');
+		}
     })
   };
   buttonsWrapper.appendChild(registerButton);

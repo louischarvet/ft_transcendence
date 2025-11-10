@@ -289,6 +289,8 @@ export async function verifyTwoFactorCode(code: string) {
 		}),
 	});
 	const json = await response.json();
+	if (json.error)
+		return false;
 	console.log("verify2fa -> ", json);
 	return true;
 }

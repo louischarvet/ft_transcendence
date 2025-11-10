@@ -7,6 +7,8 @@ export default function DropDownMenu() {
 	const wrapper = document.createElement('div');
 	let UserCurrent = getUser();
 	if (!UserCurrent){
+		if (UserCurrent.status === 'pending')
+			return wrapper;
 		navigate('/');
 		return wrapper;
 	}
