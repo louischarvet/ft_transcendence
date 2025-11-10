@@ -185,12 +185,6 @@ export async function getHistoryByTournamentID(request, reply) {
 	return reply.code(200).send({ tournamentData });
 }
 
-
-
-
-
-// ?
-
 // Route GET pour récupérer tous les matches
 // route /matches
 // export async function getAllMatchesController(request, reply) {

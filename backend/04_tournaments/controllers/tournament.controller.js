@@ -6,6 +6,7 @@ import {
 	fetchFinishMatchForTournament
 } from './match.controller.js';
 
+import { fetchGetUserById } from './user.controller.js';
 // Recupere tout les tournoie gagnes par un user
 export async function getTournamentWinUserId(request, reply) {
 	const { db } = request.server;
@@ -55,9 +56,15 @@ export async function endTournament(request, reply, tournamentId, winnerId) {
 		return reply.code(404).send({ error: 'Tournament not found' });
 
 	await db.tournament.update('status', 'finished', tournamentId);
-	tournament = await db.history.update('winnerID', winnerId, tournamentId);
 
-	return reply.code(200).send({ tournament, message: 'Tournament ended' });
+	tournament = await db.history.update('winnerID', winnerId, tournamentId);
+	console.log("Ending tournament:", tournamentId, "with winner:", winnerId);
+	console.log("Tournament ended:", tournament);
+
+	const winner = await fetchGetUserById(winnerId);
+	if (!winner || winner.error)
+		return reply.code(500).send({ error: 'Could not fetch winner info' });
+	return reply.code(200).send({ tournament, winner,  message: 'Tournament ended' });
 }
 
 export async function startTournament(request, reply) {

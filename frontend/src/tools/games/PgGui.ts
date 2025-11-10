@@ -435,7 +435,7 @@ export default class PgGui {
 
     const visibility = (value: boolean) => {
       Object.values(this.menu).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = value;
         }
       });
@@ -521,7 +521,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean) => {
       Object.values(this.vsFriend).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -857,7 +857,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean) => {
       Object.values(this.tournament).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -974,7 +974,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean, player1?: string, player2?: string) => {
       Object.values(this.match).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -1114,7 +1114,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean) => {
       Object.values(this.pause).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -1300,11 +1300,6 @@ export default class PgGui {
 		  }
           else if (data.message === "next round") {
 			console.log("before this.currentTournament value:", this.currentTournament);
-            //this.currentTournament!.matches = data.matches;
-			//this.currentTournament = {
-			//  ...this.currentTournament,
-			//  matches: data.matches,
-			//} as Tournament;
 
 			this.currentTournament?.matches.splice(0, this.currentTournament?.matches.length, ...data.matches);
 			console.log("backend matches:", data.matches || data.matchs);
@@ -1312,8 +1307,14 @@ export default class PgGui {
             console.log("Nouveau round lancé !");
 			console.log("After this.currentTournament value :", this.currentTournament);
 			return;
-          } else {
+          } else if (data.message === "Tournament ended") {
+			const winner = data.winner;
+			alert(`Tournoi terminé ! Le gagnant est : ${winner.name}`);
+			console.log("Tournoi terminé ! Le gagnant est :", winner);
             this.currentTournament = null;
+      		this.result.visibility(false);
+			this.menu.visibility(true);
+			return;
           }
         });
       } else if (this.currentMatch) {
@@ -1327,7 +1328,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean) => {
       Object.values(this.result).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -1503,7 +1504,7 @@ export default class PgGui {
 
     const visibility = (visible: boolean) => {
       Object.values(this.vsAI).forEach((obj) => {
-        if (obj && "isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });
@@ -1599,7 +1600,7 @@ export default class PgGui {
     const visibility = (visible: boolean) => {
       console.log("watchAI visibility:", visible);
       Object.values(this.watchAI).forEach((obj) => {
-        if ("isVisible" in obj) {
+        if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;
         }
       });

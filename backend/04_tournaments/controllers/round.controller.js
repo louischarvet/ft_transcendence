@@ -7,6 +7,7 @@ import {
 
 import { endTournament } from './tournament.controller.js';
 import { formatMatchForFront } from './utils.js';
+import { fetchGetUserById } from './user.controller.js';
 
 /**
  * finishMatch wrapper — appelle le match-service pour finir un match
@@ -241,6 +242,22 @@ async function updateTournamentAfterRound(request, reply, tournament, round, arr
     return { matches: formattedMatches };
 }
 
+async function addUserNames(matches) {
+	const matchesWithNames = [];
+	for (const m of matches) {
+		const p1Res = await fetchGetUserById(m.player1.id);
+		const p2Res = await fetchGetUserById(m.player2.id);
+		const p1Name = p1Res && !p1Res.error ? p1Res.name : 'Unknown';
+		const p2Name = p2Res && !p2Res.error ? p2Res.name : 'Unknown';
+		matchesWithNames.push({
+			...m,
+			player1: { ...m.player1, name: p1Name },
+			player2: { ...m.player2, name: p2Name }
+		});
+	}
+	return matchesWithNames;
+}
+
 /**
  * Route principale : nextRound
  */
@@ -316,7 +333,11 @@ export async function nextRound(request, reply) {
     if (!updateResult)
 		return; // updateTournamentAfterRound a déjà envoyé la réponse en cas d'erreur
 
-    return reply.code(200).send({
+	// 9 : recupérer le nom de joueur pour yan
+	// mon objet : {"matches":[{"id":3,"player1":{"id":2,"type":"guest"},"player2":{"id":4,"type":"guest"},"tournamentID":1,"created_at":"Mon Nov 10 2025 17:44:58"}],"matchFinish":{"tournamentData":[{"id":1,"p1_id":1,"p1_type":"guest","scoreP1":0,"p2_id":2,"p2_type":"guest","scoreP2":1,"tournament_id":1,"winner_id":2,"loser_id":1,"created_at":"Mon Nov 10 2025 17:44:06","ended_at":"Mon Nov 10 2025 17:44:16"},{"id":2,"p1_id":3,"p1_type":"guest","scoreP1":0,"p2_id":4,"p2_type":"guest","scoreP2":1,"tournament_id":1,"winner_id":4,"loser_id":3,"created_at":"Mon Nov 10 2025 17:44:06","ended_at":"Mon Nov 10 2025 17:44:58"}]},"message":"next round"}
+	updateResult.matches = await addUserNames(updateResult.matches);
+
+	return reply.code(200).send({
         matches: updateResult.matches,
         matchFinish: matchHistory,
         message: 'next round'

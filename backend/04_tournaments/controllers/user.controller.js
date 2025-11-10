@@ -21,7 +21,9 @@ export async function fetchUserTournament(ArrayIdAndType){
 
 // recupere user par Id
 export async function fetchGetUserById(id){
-	const user = await fetch(`http://user-service:3000/${id}`, { method: 'GET' });
+	const user = await fetch(`http://user-service:3000/${id}`,
+		{ method: 'GET' }
+	);
 	if(!user.ok)
 		return { error : 'User not found' };
 	const currentUser = await user.json();
