@@ -42,21 +42,20 @@ export async function launchTournament(request, reply) {
 	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
 }
 
-export async function endTournament(request, reply) {
+export async function endTournament(request, reply, tournamentId, winnerId) {
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
 	const { db } = request.server;
-	const { tournamentId, winnerId } = request.body;
 	if (!tournamentId || !winnerId)
 		return reply.code(400).send({ error: 'Invalid body' });
 
-	const tournament = (await db.tournament.get('id', tournamentId))[0];
+	let tournament = (await db.tournament.get('id', tournamentId))[0];
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
-	await db.history.update('winnerID', winnerId, tournamentId);
 	await db.tournament.update('status', 'finished', tournamentId);
+	tournament = await db.history.update('winnerID', winnerId, tournamentId);
 
 	return reply.code(200).send({ tournament, message: 'Tournament ended' });
 }

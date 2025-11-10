@@ -8,6 +8,7 @@ async function shutdownPlugin(fastify, options) {
 			fastify.log.error(err);
 			process.exit(1);
 		}
+		//! peutetre supprimer les cookies pour eviter les erreurs front ?
 	};
 	process.on('SIGTERM', shutdownHandler);
 	process.on('SIGINT', shutdownHandler);

@@ -23,7 +23,6 @@ fastify.register(fastifyCors, {
 //DB
 await fastify.register(fp(initDB));
 
-
 // Schemas
 fastify.addSchema(tournamentSchema);
 

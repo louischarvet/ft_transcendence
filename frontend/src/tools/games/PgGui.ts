@@ -639,9 +639,15 @@ export default class PgGui {
 
     const switchToPlayersSetting = (nbOfPlayers: number) => {
       launchTournament(nbOfPlayers).then((tournament) => {
-        console.log(tournament);
-        if (tournament == null) return;
-        this.currentTournament = tournament;
+		console.log("launchTournament data ->", tournament);
+		if (!tournament) {
+			console.error("Tournament creation failed");
+			return;
+		}
+
+		this.currentTournament = tournament;
+		console.log("Current tournament set to:", this.currentTournament);
+		console.log("Current tournament set to:", this.currentTournament);		
         // Hide size selection
         this.tournament.selectSize.isVisible = false;
         this.tournament.size4.isVisible = false;
@@ -1217,9 +1223,9 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
-        console.log("currentTournament:", this.currentTournament);
-        if (this.currentTournament == null || !this.currentTournament.matches.length) return;
-        
+        console.log("currentTournament in next button:", this.currentTournament);
+        if (this.currentTournament == null || !this.currentTournament.matches?.length) return;
+        console.log("matches inside tournament:", this.currentTournament?.matches);
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
         console.log("currentMatch:", this.currentMatch);
         if (this.currentMatch == null) return;
@@ -1283,15 +1289,29 @@ export default class PgGui {
       if (this.currentTournament && this.currentMatch) {
 		    console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((data) => {
-        	if (!data) {
+        if (!data) {
             this.currentTournament!.matches = [];
             return;
           }
-          if (data.message !== "next round")
+		  if (data.message === "All matchs round not finished"){
+			console.log("En attente des autres matchs du round...");
             this.currentMatchIndex++;
+			return;
+		  }
           else if (data.message === "next round") {
-            this.currentTournament!.matches = data.matches;
+			console.log("before this.currentTournament value:", this.currentTournament);
+            //this.currentTournament!.matches = data.matches;
+			//this.currentTournament = {
+			//  ...this.currentTournament,
+			//  matches: data.matches,
+			//} as Tournament;
+
+			this.currentTournament?.matches.splice(0, this.currentTournament?.matches.length, ...data.matches);
+			console.log("backend matches:", data.matches || data.matchs);
             this.currentMatchIndex = 0;
+            console.log("Nouveau round lancé !");
+			console.log("After this.currentTournament value :", this.currentTournament);
+			return;
           } else {
             this.currentTournament = null;
           }

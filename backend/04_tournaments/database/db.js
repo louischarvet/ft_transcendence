@@ -71,17 +71,22 @@ export async function initDB(fastify) {
 	        );
             return (await this.get('id', result.lastID));
         },
+		async  setMatches(id, matchesString) {
+			await db.run(`UPDATE tournament SET matchs = ? WHERE id = ?`, [matchesString, id]);
+			return (await this.get('id', id))[0];
+		},
         // startTournamentInternal('status', 'started', id)
         // addMatchesStringToTournament('matchs', matchesString, id)
         async update(column, value, id) {
-            const tournament = await this.get('id', id); // utile ?
-            if (!tournament || tournament.status !== 'waiting')
-		        return null;
+			const tournament = (await this.get('id', id))[0];
+			if (!tournament)
+				return null;
 
-            await db.run(
-                `UPDATE ${this.table} SET ${column} = ? WHERE id = ?`,
-                [ value, id ]);
-            return await this.get('id', id);
+			// Mettre à jour la colonne
+			await db.run(`UPDATE ${this.table} SET ${column} = ? WHERE id = ?`, [value, id]);
+
+			// Retourner le tournoi mis à jour
+			return (await this.get('id', id))[0];
         },
         // addPlayerToTournament
         async addPlayer(tournamentID, playerStr) {
@@ -119,7 +124,6 @@ export async function initDB(fastify) {
                 [ value ]
             ));
         },
-        // addMatchesAndPlayersToHistory
         async insert(id, matchesStr, playersStr) {
             const time = Math.floor(Date.now() / 1000);
 
@@ -141,6 +145,15 @@ export async function initDB(fastify) {
                 [ value, id ]);
             return await this.get('id', id);
         },
+		async addMatchesAndPlayers(tournamentId, matchesString, playersString){
+			const time = Math.floor(Date.now() / 1000);
+			await db.run(
+				`INSERT INTO history (id, matchs, players, created_at)
+				VALUES (?, ?, ?, ?)`,
+				[tournamentId, matchesString, playersString, time]
+			);
+			return await this.get('id', tournamentId);
+		}
     }
 
     db.round = {
@@ -161,7 +174,21 @@ export async function initDB(fastify) {
                 [tournamentID, roundNumber, matchesStr, playersStr]
             );
             return await this.get(tournamentID, roundNumber);
-        }
+        },
+		async updateRoundData(tournamentID, roundNumber, matchsStr, playersStr) {
+            await db.run(
+                `UPDATE ${this.table} SET matchs = ?, players = ? WHERE tournament_id = ? AND round = ?`,
+                [matchsStr, playersStr, tournamentID, roundNumber]
+            );
+            return await this.get(tournamentID, roundNumber);
+        },
+		async finishRound(tournamentID, roundNumber) {
+			await db.run(
+				`UPDATE ${this.table} SET statut = 'finished' WHERE tournament_id = ? AND round = ?`,
+				[ tournamentID, roundNumber ]
+			);
+			return await this.get(tournamentID, roundNumber);
+		}
 	}
 
 	await fastify.decorate('db', db);
