@@ -62,7 +62,6 @@ export default class PgGui {
       players: TextBlock[],
     },
     addPlayer(player: {id: string, name: string}): void,
-    resetplayers: Button,
     start: Button,
     visibility(visible: boolean): void
   };
@@ -787,31 +786,6 @@ export default class PgGui {
       this.tournament.numberOfAI.text = `Number of AI: ${this.currentTournament.nbPlayersTotal - this.tournament.playersScrollViewer.players.length - 1}`;
     };
 
-    const resetplayersButton = Button.CreateSimpleButton("resetplayersButton", "Reset Players"); {
-      resetplayersButton.width = 300 + "px";
-      resetplayersButton.height = 70 + "px";
-      resetplayersButton.top = "240px";
-      resetplayersButton.left = "110px";
-      resetplayersButton.fontSize = 24 + "px";
-      resetplayersButton.color = "white";
-      resetplayersButton.thickness = 0;
-      resetplayersButton.background = "transparent";
-      resetplayersButton.alpha = 0.7;
-      resetplayersButton.onPointerEnterObservable.add(() => {
-        resetplayersButton.alpha = 1;
-      });
-      resetplayersButton.onPointerOutObservable.add(() => {
-        resetplayersButton.alpha = 0.7;
-      });
-      resetplayersButton.onPointerClickObservable.add(() => {
-        // Reset 
-        this.tournament.playersScrollViewer.players = [];
-        this.tournament.playersScrollViewer.playersBlock.clearControls();
-        this.tournament.playersScrollViewer.playersBlock.height = "0px";
-      });
-      this.ui.addControl(resetplayersButton);
-    }
-
     const startButton = Button.CreateSimpleButton("startButton", "Start"); {
       startButton.width = 300 + "px";
       startButton.height = 70 + "px";
@@ -893,7 +867,6 @@ export default class PgGui {
         isVisible: false
       },
       addPlayer,
-      resetplayers: resetplayersButton,
       start: startButton,
       visibility
     }

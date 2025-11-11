@@ -27,6 +27,12 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
+	if (response.status === 404) {
+		console.error("User not found");
+		localStorage.removeItem('user');
+		navigate("/");
+		return response;
+	}
 
 	// Si token expiré ou invalide
 	if (response.status === 401 || response.status === 403) {
@@ -46,6 +52,18 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 }
 
 
+//export async function getUserByToken() {
+//	let response = await fetchRefreshToken();
+//	if (!response) {
+//		console.error("Refresh token invalide. Déconnexion...");
+//		localStorage.removeItem('user');
+//		navigate("/");
+//		return null;
+//	}
+//	setUser()
+//	return getUser();
+//}
+
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
@@ -61,7 +79,7 @@ export async function getUserById(id: number){
 		console.warn("Erreur backend :", response.status);
 		return null;
 	}
-
+	console.log("reponse getUserById -> ", response);
 	const data = await response.json();
 	setUser(data.user);
 	return data.user;

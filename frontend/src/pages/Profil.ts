@@ -81,6 +81,12 @@ export default function Profile(): HTMLElement {
   userSection.appendChild(avatar);
 
 	const currentUser = getUser();
+	if (!currentUser){
+		alert("User not found");
+		navigate('/');
+		localStorage.removeItem('user');
+		return container;
+	}
   // Image reelle de l’avatar
 	const avatarImg = document.createElement('img');
   	avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
@@ -239,6 +245,9 @@ export default function Profile(): HTMLElement {
 	let user = getUser();
 	getUserById(user.id).then(res => {
 		user = res;
+
+		if (!user) return;
+		
 		username.textContent = user.name;
 		email.textContent = user.email;
 		
