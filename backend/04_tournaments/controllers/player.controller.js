@@ -5,7 +5,9 @@ import { getTournament, addPlayerToTournament} from '../models/model.js';
 
 
 
-export async function addNewPlayerToTournament(tournamentId, playerId, playerType){
+export async function addNewPlayerToTournament(db, tournamentId, playerId, playerType){
+
+	// let tournament = db.
 	let tournament = await getTournament(tournamentId);
 	tournament = await addPlayerToTournament(tournamentId, `${playerId}:${playerType};`);
 	return tournament;
@@ -19,7 +21,7 @@ export async function joinTournamentSession(request, reply){
 	if (guest.error)
 		return reply.code(500).send({ error: 'Could not create guest' });
 
-	const tournament = await addNewPlayerToTournament(tournamentId, guest.id, guest.type);
+	const tournament = await addNewPlayerToTournament(request.server.db, tournamentId, guest.id, guest.type);
 	return reply.code(200).send({ tournament, user: guest });
 }
 

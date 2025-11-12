@@ -27,7 +27,8 @@ server.register(fastifyCors, {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	allowedHeaders: ["Content-Type", "Authorization", "Cross-Origin-Resource-Policy"],
     //allowedHeaders: ["Content-Type", "Authorization"],
-	credentials: true
+	credentials: true,
+    webscoket: true,
 });
 
 server.register(cookie);

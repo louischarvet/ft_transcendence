@@ -55,6 +55,12 @@ async function routesPlugin(fastify, options) {
 		prefix: '/twofa',
 		rewritePrefix: '/',
 	});
+	fastify.register(fastifyHttpProxy, {
+	upstream: "http://blackjack-service:3000",
+	prefix: '/blackjack',
+	rewritePrefix: '/',
+	websocket: true
+	});
 
 	// HTTPS ?
 	// fastify.post('/session/refresh', async (request, reply) => {
