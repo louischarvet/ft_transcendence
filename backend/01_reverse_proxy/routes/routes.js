@@ -1,7 +1,6 @@
 import fastifyHttpProxy from '@fastify/http-proxy'
 
 async function routesPlugin(fastify, options) {
-	// page d'accueil, route standard
 	fastify.get('/ping', async (request, reply) => {
         return reply.code(200).send({
 			hello: 'world',
@@ -9,16 +8,26 @@ async function routesPlugin(fastify, options) {
 		});
     });
 
-	// Routes interdites
+	// Forbidden routes
+		// user
 	fastify.put('/user/changestatus', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
 	fastify.put('/user/updatestats', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
+		// match
 	fastify.post('/match/tournament', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
+	fastify.post('/match/abort', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+		// twofa
+	fastify.post('/verifycode', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+
 
 	// Redirections
 	fastify.register(fastifyHttpProxy, {
@@ -55,37 +64,6 @@ async function routesPlugin(fastify, options) {
 		prefix: '/twofa',
 		rewritePrefix: '/',
 	});
-
-	// HTTPS ?
-	// fastify.post('/session/refresh', async (request, reply) => {
-	// 	try {
-	// 		const response = await fetch('http://session-service:3000/refresh', {
-	// 			method: 'POST',
-	// 			headers: {
-	// 				'Authorization': request.headers.authorization,
-	// 			}
-	// 		});
-	// 		const data = await response.json();
-	// 		return reply.code(200).send(data);
-	// 	} catch (error) {
-	// 		fastify.log.error(error);
-	// 		reply.status(500).send({ error: 'Internal Server Error' });
-	// 	}
-	// });
-	
-/*	fastify.get('/auth', async (request, reply) => {
-		try {
-			const response = await fetch('http://auth:3001/data');
-			const data = await response.json();
-
-			return (data); ////
-		} catch (error) {
-			fastify.log.error(error);
-			reply.status(500).send({ error: 'Internal Server Error' });
-		}
-	})
-*/
-	
 }
 
 export default routesPlugin;

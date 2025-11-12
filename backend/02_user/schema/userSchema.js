@@ -1,6 +1,5 @@
 // schema/schema.js
 
-// modifier le 18/09/2025
 export const userSchema = {
 	$id: 'userSchema',
 	body: {

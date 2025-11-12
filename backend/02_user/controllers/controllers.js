@@ -115,7 +115,6 @@ export async function logIn(request, reply) {
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
 
-//	if (exists.status === 'in_game')
 	await fetchAbortMatch(exists);
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
@@ -371,11 +370,10 @@ export async function addFriend(request, reply) {
 	delete friend.type;
 	delete friend.friends;
 
-	// renvoyer le profil user mis a jour!
     return reply.code(200).send({user: updatedUser, newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
-// Route GET pour recuperer les profiles des amis
+// Route GET /getfriendsprofiles
 export async function getFriendsProfiles(request, reply) {
     const { db } = request.server;
     const user = db.registered.getById(request.user.id);
@@ -558,7 +556,6 @@ export async function getUsersTournament(request, reply) {
 	if (!usersInfos || usersInfos.length === 0)
 		return reply.code(404).send({ error: 'Users not found' });
 
-	console.log("usersInfosin in fetchUserTournament : ", usersInfos);
 	usersInfos.registered.forEach(u => {
 		delete u.hashedPassword;
 		delete u.email;

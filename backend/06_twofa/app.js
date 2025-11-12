@@ -13,11 +13,10 @@ import shutdown from './common_tools/shutdown.js';
 
 await config();
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
-// CORS configuration
 fastify.register(fastifyCors, {
 	origin: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],

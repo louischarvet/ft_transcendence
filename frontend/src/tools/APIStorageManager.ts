@@ -203,7 +203,7 @@ export async function removeFriend(friendId: string){
 }
 
 export async function checkConnection() {
-	if (!(getUser())){
+	if (!(getUser())){ // foireux ?
 	//	localStorage.removeItem('user');
 		return false;
 	}

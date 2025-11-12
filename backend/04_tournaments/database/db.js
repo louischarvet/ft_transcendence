@@ -54,7 +54,7 @@ export async function initDB(fastify) {
 
         // getTournament('id', id)
         async get(column, value) {
-            return (await db.all(
+            return (await db.get(
                 `SELECT * FROM ${this.table} WHERE ${column} = ?`,
                 [ value ]
             ));
@@ -73,12 +73,12 @@ export async function initDB(fastify) {
         },
 		async  setMatches(id, matchesString) {
 			await db.run(`UPDATE tournament SET matchs = ? WHERE id = ?`, [matchesString, id]);
-			return (await this.get('id', id))[0];
+			return (await this.get('id', id));
 		},
         // startTournamentInternal('status', 'started', id)
         // addMatchesStringToTournament('matchs', matchesString, id)
         async update(column, value, id) {
-			const tournament = (await this.get('id', id))[0];
+			const tournament = (await this.get('id', id));
 			if (!tournament)
 				return null;
 
@@ -86,7 +86,7 @@ export async function initDB(fastify) {
 			await db.run(`UPDATE ${this.table} SET ${column} = ? WHERE id = ?`, [value, id]);
 
 			// Retourner le tournoi mis à jour
-			return (await this.get('id', id))[0];
+			return (await this.get('id', id));
         },
         // addPlayerToTournament
         async addPlayer(tournamentID, playerStr) {

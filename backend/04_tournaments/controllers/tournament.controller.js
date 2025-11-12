@@ -1,3 +1,5 @@
+// tournament.controller.js
+
 import { addNewPlayerToTournament } from './player.controller.js';
 import { fetchUserTournament } from './user.controller.js';
 import {
@@ -8,7 +10,7 @@ import {
 
 import { fetchGetUserById } from './user.controller.js';
 // Recupere tout les tournoie gagnes par un user
-export async function getTournamentWinUserId(request, reply) {
+export async function getTournamentWinUserId(request, reply){
 	const { db } = request.server;
 	const id = request.params.id;
 	const userId = Number(id);
@@ -36,22 +38,25 @@ export async function launchTournament(request, reply) {
 	if (!tmpTournament)
 		return reply.code(500).send({ error: 'Could not create tournament' });
 
-	let Tournament = tmpTournament[0];
-	// ajoute le créateur comme premier joueur
-	Tournament = await db.tournament.addPlayer(Tournament.id, `${user.id}:${user.type};`);
-
+	// let Tournament = await getTournament(tmpTournament.id);
+	let Tournament = await db.tournament.get('id', tmpTournament.id);
+	console.log("################### TOURNAMENT\n", Tournament,
+				"\n###########################\n");
+	// Tournament = await addPlayerToTournament(Tournament.id, user.id + ':' + user.type + ';');
+	Tournament = await db.tournament.addPlayer(Tournament.id, user.id + ':' + user.type + ';');
 	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
 }
 
-export async function endTournament(request, reply, tournamentId, winnerId) {
+export async function endTournament(request, reply, tournamentId, winnerId){
+	const { db } = request.server;
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
-	const { db } = request.server;
 	if (!tournamentId || !winnerId)
 		return reply.code(400).send({ error: 'Invalid body' });
 
-	let tournament = (await db.tournament.get('id', tournamentId))[0];
+	// const tournament = await getTournament(tournamentId);
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
@@ -67,25 +72,27 @@ export async function endTournament(request, reply, tournamentId, winnerId) {
 	return reply.code(200).send({ tournament, winner,  message: 'Tournament ended' });
 }
 
-export async function startTournament(request, reply) {
+export async function startTournament(request, reply){
 	const { db } = request.server;
 	const user = request.user;
 	const tournamentId = request.params.id;
-	let tournament = (await db.tournament.get('id', tournamentId))[0];
+	// let tournament = await getTournament(tournamentId);
+	let tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
-	if (tournament.status !== 'waiting')
+	if (tournament.status !== 'waiting') {
+		console.log("Not waiting\n");
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
-	if (tournament.creatorId != user.id)
+	}
+	if (tournament.creatorId != user.id) {
+		console.log("creatorId not good\n");
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
-
-	console.log("tournament -> ", tournament);
-
+	console.log("tournament -> ",tournament);
 	// Ajout IA si nécessaire
 	let countIa = 0;
 	for (; tournament.remainingPlaces > 0;) {
 		countIa++;
-		tournament = await addNewPlayerToTournament(tournamentId, '0', 'ia');
+		tournament = await addNewPlayerToTournament(db, tournamentId, '0', 'ia');
 	}
 
 	const playersArray = tournament.players.split(';');
@@ -144,23 +151,21 @@ export async function startTournament(request, reply) {
 	await db.history.insert(tournamentId, matchesString, tournament.players);
 	await db.tournament.update('matchs', matchesString, tournamentId);
 	await db.round.insert(tournamentId, tournament.rounds, matchesString, tournament.players);
-	await db.tournament.update('status', 'started', tournamentId);
+	let updatedTournament = await db.tournament.update('status', 'started', tournamentId);
 
-	let updatedTournament = (await db.tournament.get('id', tournamentId))[0];
-
-	console.log("######################################## STARTTOURNAMENT\n",
-		"######### updatedTournament\n", updatedTournament,
-		"\n#########\n######### matches\n", matches,
-		"\n#########\n",
-		"########################################################\n");
+//	console.log("######################################## STARTTOURNAMENT\n",
+//				"######### updatedTournament\n", updatedTournament,
+//				"\n#########\n######### matches\n", matches,
+//				"\n#########\n",
+//				"########################################################\n");
 
 	return reply.code(200).send({ tournament: { ...updatedTournament, matches }, message: 'Tournament started' });
 }
 
-export async function getTournamentById(request, reply) {
+export async function getTournamentById(request, reply){
 	const { db } = request.server;
 	const tournamentId = Number(request.params.id);
-	const tournament = (await db.tournament.get('id', tournamentId))[0];
+	const tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 

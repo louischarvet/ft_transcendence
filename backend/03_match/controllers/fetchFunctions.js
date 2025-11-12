@@ -4,7 +4,6 @@
 export async function fetchChangeStatus(player, status) {
     const body = JSON.stringify({
         name: player.name,
-        // id: player.id,
         status: status,
         type: player.type,
     });

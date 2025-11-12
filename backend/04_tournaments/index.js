@@ -1,14 +1,17 @@
 import Fastify from 'fastify';
-import routesPlugin from './routes/routes.js';
-import { initDB } from './database/db.js';
+import fp from 'fastify-plugin';
 import fastifyCors from '@fastify/cors';
 import cookie from '@fastify/cookie';
+
+import routesPlugin from './routes/routes.js';
+import { initDB } from './database/db.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 import fp from 'fastify-plugin';
 
 import { tournamentSchema } from './schema/tournamentSchema.js';
 
 const fastify = Fastify({ logger: true });
+
 
 // Middlewares / plugins
 fastify.register(cookie);
