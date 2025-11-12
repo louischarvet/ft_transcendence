@@ -1,5 +1,6 @@
 // match.controller.js
 
+// Recupere un match dans le service match
 export async function getMatchTournament(id){
 	const res = await fetch(`http://match-service:3000/${id}`,
 		{ method: 'GET' });
@@ -28,7 +29,6 @@ export async function fetchHistoryMatchForTournament(tournamentId){
 		method: 'GET',
 		headers: { 'Content-Type': 'application/json' }
 	});
-	console.log("fetchHistoryMatchForTournament res:", res);
 	if(!res.ok)
 		return { error : 'Match history retrieval failed' };
 	const matchHistory = await res.json();

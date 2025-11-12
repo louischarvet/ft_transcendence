@@ -55,7 +55,7 @@ export async function addPlayerToTournament(tournamentId, addPlayer) {
 //! ajout le 22/09/2025
 //pour matchsevice ?!!
 export async function setMatchesForTournament(id, matchesString) {
-	await db.run(`UPDATE tournament SET matches = ? WHERE id = ?`, [matchesString, id]);
+	await db.run(`UPDATE tournament SET matchs = ? WHERE id = ?`, [matchesString, id]);
 	return await getTournament(id);
 }
 
@@ -68,7 +68,7 @@ export async function setTournamentWinner(id, winnerId) {
 
 //pour matchsevice ?!!
 export async function updateMatchAndPlaces(tournamentId, newMatches, newPlayers) {
-	await db.run(`UPDATE tournament SET matches = ?, nbPlayersTotal = nbPlayersTotal - 1, players = ? WHERE id = ?`, [newMatches, newPlayers, tournamentId]);
+	await db.run(`UPDATE tournament SET matchs = ?, nbPlayersTotal = nbPlayersTotal - 1, players = ? WHERE id = ?`, [newMatches, newPlayers, tournamentId]);
 	return await getTournament(tournamentId);
 };
 

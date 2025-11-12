@@ -20,10 +20,10 @@ export const nextSchema = {
 	$id: 'nextSchema',
 	body: {
 		type: 'object',
-		required: [ 'tournamentID', 'matchID', 'player1', 'player2', 'scoreP1', 'scoreP2' ],
+		required: [ 'tournamentID', 'id', 'player1', 'player2', 'scoreP1', 'scoreP2' ],
 		properties: {
 			tournamentID: { type: 'integer' },
-			matchID: { type: 'integer' },
+			id: { type: 'integer' },
 			player1: {
 				type: 'object',
 				properties: {

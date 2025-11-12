@@ -4,6 +4,7 @@ import { fetchGetUserById, fetchCreateGuest, fetchUserLogin, fetchChangeStatusUs
 import { getTournament, addPlayerToTournament} from '../models/model.js';
 
 
+
 export async function addNewPlayerToTournament(tournamentId, playerId, playerType){
 	let tournament = await getTournament(tournamentId);
 	tournament = await addPlayerToTournament(tournamentId, `${playerId}:${playerType};`);

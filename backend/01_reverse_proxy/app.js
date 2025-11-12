@@ -25,7 +25,8 @@ const server = Fastify({ logger: true, https: httpsOptions });
 server.register(fastifyCors, {
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ["Content-Type", "Authorization"],
+	allowedHeaders: ["Content-Type", "Authorization", "Cross-Origin-Resource-Policy"],
+    //allowedHeaders: ["Content-Type", "Authorization"],
 	credentials: true
 });
 
@@ -34,6 +35,14 @@ server.register(cookie);
 // Enregistrer shutdown et routes
 server.register(routesPlugin);
 server.register(shutdown);
+
+server.addHook('onSend', async (request, reply, payload) => {
+    if (request.url.startsWith('/user/pictures')) {
+        reply.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+    return payload;
+});
+
 
 // Lancement du serveur
 server.listen({ port: 443, host: '0.0.0.0' }, (err) => {

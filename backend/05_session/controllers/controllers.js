@@ -23,7 +23,7 @@ async function generateAccess(sign, name, type, id, jwti, verified) {
         jwti: jwti,
         verified: verified
     }, {
-        expiresIn : '1m'
+        expiresIn : '15m'
     });
 }
 
@@ -102,6 +102,7 @@ export async function authenticate(db, request, reply) {
 // POST /refresh
 export async function refresh(db, request, reply) {
 	const { refreshToken } = request.cookies;
+	await clearCookies(reply);
     if (refreshToken === undefined)
         return reply.code(403).send({ error: 'Missing token' });
 	
@@ -115,7 +116,7 @@ export async function refresh(db, request, reply) {
 		const decoded = await request.jwtVerify(refreshToken);
 		
         if (!await db.refresh.get(decoded.jwti, decoded.id)) // must delog
-		return reply.code(403).send({ error: 'Obsolete refresh token.' });
+			return reply.code(403).send({ error: 'Obsolete refresh token.' });
 		
         const { name, type, id, jwti } = decoded;
         const newJwti = crypto.randomUUID();
@@ -129,13 +130,12 @@ export async function refresh(db, request, reply) {
         db.refresh.erase(jwti, id);
         db.refresh.insert(newJwti, id);
 		
-		await clearCookies(reply);
 
         return reply
             .code(200)
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
-                maxAge: 60,
+                maxAge: 60 * 15,
                 path: '/'
             })
             .setCookie('refreshToken', newRefresh, {

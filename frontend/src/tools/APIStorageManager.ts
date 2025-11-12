@@ -27,6 +27,12 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
+	if (response.status === 404) {
+		console.error("User not found");
+		localStorage.removeItem('user');
+		navigate("/");
+		return response;
+	}
 
 	// Si token expiré ou invalide
 	if (response.status === 401 || response.status === 403) {
@@ -45,69 +51,40 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	return response;
 }
 
-// exemple dutilisation
-// export async function getFriendsList() {
-// 	const response = await apiFetch('/api/user/getfriendsprofiles', {
-// 		method: 'GET',
-// 	});
 
-// 	if (response.status === 204)
-// 		return { friends: [] };
-
-// 	if (!response.ok)
-// 		return null;
-
-// 	const data = await response.json();
-// 	return data;
-// }
+//export async function getUserByToken() {
+//	let response = await fetchRefreshToken();
+//	if (!response) {
+//		console.error("Refresh token invalide. Déconnexion...");
+//		localStorage.removeItem('user');
+//		navigate("/");
+//		return null;
+//	}
+//	setUser()
+//	return getUser();
+//}
 
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
 }
 
-// export async function getRefreshToken() {
-// 	const cookie = await cookieStore.get("refreshToken");
-// 	console.log("cookie getRefreshToken => ", cookie?.value);
-// 	console.log("cookie getRefreshToken => ", cookie);
-// 	return 	cookie?.value;
-// }
-
-// export async function getTokenAcces() {
-// 	const cookie = await cookieStore.get("accessToken");
-// 	console.log("cookie accessToken => ", cookie?.value);
-// 	return 	cookie?.value;
-// }
-
-export async function getUserByToken(){
-	const response = await apiFetch('/api/user/id', {
-		method: 'GET',
-		credentials: 'include',
-	});
-	const json = await response.json();
-	if (json.user){
-		setUser(json.user);
-		return true;
-	}
-	return false;
-}
 
 export async function getUserById(id: number){
 
 	const response = await apiFetch(`/api/user/${id}`, {
-		method: 'GET',
-		headers: {'Content-Type': 'application/json'},
+		method: 'GET'
 	});
 	if (!response.ok) {
 		console.warn("Erreur backend :", response.status);
 		return null;
 	}
-
+	console.log("reponse getUserById -> ", response);
 	const data = await response.json();
-	return data;
+	setUser(data.user);
+	return data.user;
 }
 
-// export async function Logout(): Promise<Response | null> {
 export async function Logout(){
 	const response = await apiFetch('/api/user/logout', {
 		method: 'PUT',
@@ -134,7 +111,7 @@ export async function updateInfo(password: string, toUpdate: string, newValue: s
 		console.error("Erreur updateInfo:", data.error);
 		throw new Error(data.error || "Erreur lors de la mise à jour");
 	}
-
+	setUser(data.user);
 	return data;
 }
 
@@ -330,6 +307,8 @@ export async function verifyTwoFactorCode(code: string) {
 		}),
 	});
 	const json = await response.json();
+	if (json.error)
+		return false;
 	console.log("verify2fa -> ", json);
 	return true;
 }
@@ -383,7 +362,9 @@ export async function launchTournament(nbPlayers: number) {
 	const data = await res.json();
 	console.log("launchTournament data -> ", data);
 	if (data.error) return null;
-	return data.Tournament as Tournament;
+	//return data.Tournament as Tournament;
+	// Retourne directement le premier tournoi
+	return data.Tournament[0] as Tournament;
 }
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {

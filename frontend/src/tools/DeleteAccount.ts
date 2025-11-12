@@ -1,6 +1,6 @@
 // src/tools/DeletePopup.ts
 import { navigate } from '../router';
-import { getUserByToken , deleteUser, checkConnection, getUser} from './APIStorageManager'
+import {  deleteUser, checkConnection, getUser} from './APIStorageManager'
 export function createDeleteAccount(onConfirm: (email: string, password: string) => void): HTMLElement {
   const overlay = document.createElement('div');
   overlay.className = `
@@ -103,7 +103,7 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
   `;
   cancelBtn.onclick = () => overlay.remove();
 
-  buttonWrapper.appendChild(confirmBtn);
+  buttonWrapper.appendChild(confirmBtn);popup
   buttonWrapper.appendChild(cancelBtn);
   popup.appendChild(buttonWrapper);
 
@@ -115,7 +115,7 @@ function FinalConfirmation(email: string, password: string) {
   const overlay = document.createElement('div');
   overlay.className = `
     fixed inset-0 bg-black/70 backdrop-blur-sm
-    flex justify-center items-center z-[60]
+    flex justify-center items-center z-[60]popup
   `;
 
   const popup = document.createElement('div');

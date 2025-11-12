@@ -4,6 +4,7 @@ import { initDB } from './database/db.js';
 import fastifyCors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import shutdownPlugin from './common_tools/shutdown.js';
+import fp from 'fastify-plugin';
 
 import { tournamentSchema } from './schema/tournamentSchema.js';
 
@@ -19,6 +20,9 @@ fastify.register(fastifyCors, {
 	credentials: true
 });
 
+//DB
+await fastify.register(fp(initDB));
+
 // Schemas
 fastify.addSchema(tournamentSchema);
 
@@ -28,8 +32,7 @@ fastify.register(routesPlugin);
 // Shutdown plugin
 fastify.register(shutdownPlugin);
 
-// Init DB avant de lancer le serveur
-await initDB();
+
 
 async function start() {
 	try {
