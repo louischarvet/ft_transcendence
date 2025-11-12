@@ -21,12 +21,6 @@ fastify.register(fastifyCors, {
 	credentials: true
 });
 
-//! ne foncionne pas car 
-/*
-	tu fais await fastify.register(...), alors que fastify.register() avec un plugin async n’a pas besoin d’être awaité.
-	Ça ne casse pas forcément, mais il faut s’assurer que initDB fait bien fastify.decorate('db', db) avant que tes routes utilisent db.
-*/
-//await fastify.register(fp(initDB));
 fastify.register(fp(async (fastify, opts) => {
 	await initDB(fastify);
 }));
