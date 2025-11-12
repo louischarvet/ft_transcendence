@@ -645,7 +645,7 @@ export default class PgGui {
 		}
 
 		this.currentTournament = tournament;
-		console.log("Current tournament set to:", this.currentTournament);
+		console.log("Current tournament set to:", this.currentTournament);  
 		console.log("Current tournament set to:", this.currentTournament);		
         // Hide size selection
         this.tournament.selectSize.isVisible = false;
@@ -662,7 +662,6 @@ export default class PgGui {
         this.tournament.addGuest.isVisible = true;
         this.tournament.numberOfAI.text = `Number of AI: ${nbOfPlayers - 1}`;
         this.tournament.numberOfAI.isVisible = true;
-        this.tournament.resetplayers.isVisible = true;
         this.tournament.start.isVisible = true;
       });
     };
@@ -842,7 +841,6 @@ export default class PgGui {
         this.tournament.addGuest.isVisible = false;
         this.tournament.numberOfAI.isVisible = false;
         this.tournament.playersScrollViewer.scrollViewer.isVisible = false;
-        this.tournament.resetplayers.isVisible = false;
         this.tournament.start.isVisible = false;
       }
     };
