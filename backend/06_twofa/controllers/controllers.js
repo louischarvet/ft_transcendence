@@ -17,7 +17,6 @@ async function clearCookies(reply) {
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
-// Generation du code (one time password)
 async function generateCode() {
 	return (speakeasy.totp({
 		secret: secret.base32,
@@ -25,7 +24,6 @@ async function generateCode() {
 	}));
 }
 
-// Envoyer le mail
 async function sendMail(name, email, code) {
 	const transporter = nodemailer.createTransport({
 		service: 'gmail',
@@ -81,11 +79,9 @@ export async function verifyCode(request, reply) {
 	if (codeToCompare === undefined)
 		return reply.code(400).send({ error: 'Unauthorized (verifyCode)' });
 
-//////////////////////////// DECOMMENTER POUR ACTIVER LE 2FA !!!!!!
 	if (code !== codeToCompare.code) {
 		return reply.code(400).send({error : 'bad code. Retry !'});
 	}
-///////////////////////////////////////////////////////////////////
 
 	await clearCookies(reply);
 

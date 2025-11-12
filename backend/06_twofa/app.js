@@ -17,7 +17,6 @@ const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
-// CORS configuration
 fastify.register(fastifyCors, {
 	origin: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
