@@ -31,7 +31,7 @@ export async function launchTournament(request, reply) {
 
 	const body = request.body;
 	if (!body.nbPlayers || body.nbPlayers < 2)
-		return reply.code(400).send({ error: 'Invalid body' });
+		return reply.code(400).send({ error: 'Invalid  body' });
 
 	// crée une ligne dans la table tournament
 	const tmpTournament = await db.tournament.insert(body.nbPlayers, user.id);
@@ -52,22 +52,28 @@ export async function endTournament(request, reply, tournamentId, winnerId){
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
-	if (!tournamentId || !winnerId)
+	console.log("tournamtentId winnerId0 ", tournamentId, winnerId);
+	if (tournamentId === 'undefined' || winnerId === 'undefined'
+		|| tournamentId === null || winnerId === null	)
 		return reply.code(400).send({ error: 'Invalid body' });
 
 	// const tournament = await getTournament(tournamentId);
-	const tournament = await db.tournament.get('id', tournamentId);
+	let tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
 	await db.tournament.update('status', 'finished', tournamentId);
 
+	console.log("Tournament begin:", tournament);
 	tournament = await db.history.update('winnerID', winnerId, tournamentId);
-	console.log("Ending tournament:", tournamentId, "with winner:", winnerId);
 	console.log("Tournament ended:", tournament);
 
-	const winner = await fetchGetUserById(winnerId);
-	if (!winner || winner.error)
+	if (winnerId === 0 || winnerId === '0'){
+		const iaUser = { id: 0, type: 'ia', name: 'normalAI' };
+		return reply.code(200).send({ tournament, winner: iaUser, message: 'Tournament ended' });
+	}
+	const winner = await fetchGetUserById(winnerId, tournament.winnerType);
+	if (!winner)
 		return reply.code(500).send({ error: 'Could not fetch winner info' });
 	return reply.code(200).send({ tournament, winner,  message: 'Tournament ended' });
 }

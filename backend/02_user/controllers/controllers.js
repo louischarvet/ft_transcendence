@@ -315,16 +315,18 @@ export	async function getUserById(request, reply){
 	const userId = request.params.id;
 	if (!userId)
 		return reply.code(400).send({ error : 'Id of user required'});
-
     let userInfos;
+	console.log('type', type);
 	if (type === 'ia') {
 		userInfos = {
 			id: 0,
 			type: 'ia',
 			name: 'normalAI'
 		};
-	} else
+	} else{
 		userInfos = await db[type].getById(userId);
+		console.log('userInfos', userInfos);
+	}
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 

@@ -324,7 +324,7 @@ export async function nextRound(request, reply) {
         console.log("finalWinner", finalWinner);
         // Tournoi terminé
         let finishedTournamentArr = await endTournament(request, reply, tournament.id, finalWinner);
-        return reply.code(200).send({ tournament: finishedTournamentArr.tournament, message: 'Tournament finished' });
+		return await endTournament(request, reply, tournament.id, finalWinner);
     }
 
     // 8 : MAJ des DATA history, tournament et round

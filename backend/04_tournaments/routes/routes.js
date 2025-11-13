@@ -1,4 +1,3 @@
-//import { launchTournament, getTournamentWinUserId, joinTournamentSession, joinTournamentRegistered, joinTournamentGuest, endTournament, startTournament, getTournamentById, getAllTournaments, updateMatchAndRemainingPlaces, nextRound } from '../controllers/tournaments.js';
 import { 
 	launchTournament, 
 	getTournamentWinUserId, 

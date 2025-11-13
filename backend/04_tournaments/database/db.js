@@ -35,6 +35,7 @@ export async function initDB(fastify) {
 			players TEXT,
 			ranking TEXT,
 			winnerID INTEGER default NULL,
+			winnerType TEXT default NULL,
 			ended_at TEXT,
 			created_at TEXT NOT NULL
 		);
@@ -137,7 +138,7 @@ export async function initDB(fastify) {
         // setTournamentWinner(column = 'winnerID', value = winnerID, id = id)
         async update(column, value, id) {
             const tournament = await this.get('id', id); // utile ?
-            if (!tournament || tournament.status !== 'waiting')
+            if (!tournament /*|| tournament.status !== 'waiting'*/)
 		        return null;
 
             await db.run(
