@@ -64,6 +64,12 @@ async function routesPlugin(fastify, options) {
 		prefix: '/twofa',
 		rewritePrefix: '/',
 	});
+	fastify.register(fastifyHttpProxy, {
+		upstream: "http://pong-service:3000",
+		prefix: '/pong',
+		rewritePrefix: '/',
+		websocket: true,
+	});
 }
 
 export default routesPlugin;

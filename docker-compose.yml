@@ -28,6 +28,10 @@ services:
     extends:
       file: ./backend/docker-compose.yml
       service: twofa-service      
+  pong-service:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: pong-service
       
   # Service du frontend
   frontend:

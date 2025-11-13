@@ -20,6 +20,7 @@ export default defineConfig({
         target: 'https://proxy-service:443',
         changeOrigin: true,
         secure: false,
+        ws: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
       },
     },
