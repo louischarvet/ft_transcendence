@@ -63,14 +63,12 @@ async function createMatchesForNextRound(arrayMatchesNextRound) {
 /**
  * VALIDATION initiale de la requête / droit de l'user
  */
-async function validateRequest(matchBody, user, reply) {
+async function validateRequest(matchBody, user, reply, db) {
 	if (!matchBody || !matchBody.tournamentID || matchBody.tournamentID <= 0)
 		return reply.code(400).send({ error: 'TournamentId is required' });
 
 	const tournamentId = Number(matchBody.tournamentID);
-	const { db } = reply.server;
-	const tournamentArr = await db.tournament.get('id', tournamentId);
-	const tournament = tournamentArr && tournamentArr[0];
+	const tournament = await db.tournament.get('id', tournamentId);
 
 	if (!tournament)
 		return reply.code(404).send({ error: 'TournamentId not found' });
@@ -88,8 +86,7 @@ async function validateRequest(matchBody, user, reply) {
 /**
  * Récupère round courant + historique formaté
  */
-async function getCurrentRoundData(tournament, reply) {
-    const { db } = reply.server;
+async function getCurrentRoundData(tournament, reply, db) {
     // Récupérer le round courant
     const round = await db.round.get(tournament.id, tournament.rounds);
     if (!round)
@@ -149,12 +146,15 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
     // Recuperer les gagnants
     const winners = [];
     for (const m of matchesInRound) {
+        console.log("########################### prepare m:\n", m,
+                    "\n######################################\n");
         const winnerId = Number(m.winner_id);
-        let winnerType = m.p1_type || m.p2_type || 'guest';
-        if (m.p1_id && winnerId === Number(m.p1_id))
-            winnerType = m.p1_type;
-        else if (m.p2_id && winnerId === Number(m.p2_id))
-            winnerType = m.p2_type;
+        let winnerType = m.winner_type;
+//        let winnerType = m.p1_type || m.p2_type || 'guest';
+//        if (m.p1_id && winnerId === Number(m.p1_id))
+//            winnerType = m.p1_type;
+//        else if (m.p2_id && winnerId === Number(m.p2_id))
+//            winnerType = m.p2_type;
         winners.push({ id: winnerId, type: winnerType });
     }
 	console.log("###\nFonction prepareNextRound: winners -->", winners, "\n###\n");
@@ -267,13 +267,13 @@ export async function nextRound(request, reply) {
     console.log("###\nFonction nextRound : matchbody --> ", matchBody, "\n###\n");
 
     // 1 : validation
-    const tournament = await validateRequest(matchBody, user, reply);
+    const tournament = await validateRequest(matchBody, user, reply, request.server.db);
     if (!tournament)
 		return; // validateRequest a déjà envoyé la réponse
     console.log("###\nFonction nextRound : tournament -->", tournament, "\n###\n");
 
     // 2 : round + historique
-    const currentData = await getCurrentRoundData(tournament, reply);
+    const currentData = await getCurrentRoundData(tournament, reply, request.server.db);
     if (!currentData)
 		return; // getCurrentRoundData a déjà envoyé la réponse
     const { round, matchesArray } = currentData;
@@ -366,8 +366,7 @@ export async function updateMatchAndRemainingPlaces(request, reply) {
         return reply.code(400).send({ error: 'playerId invalid' });
 
     // Récupérer le tournoi
-    const tournamentArr = await db.tournament.get('id', tournamentId);
-    const tournament = tournamentArr[0];
+    const tournament = await db.tournament.get('id', tournamentId);
     if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
@@ -411,8 +410,7 @@ export async function updateMatchAndRemainingPlaces(request, reply) {
     const newMatchsStr = newMatchsArray.join(';');
 
     // 3) MAJ la DB via updateMatchAndPlaces
-    const updatedTournamentArr = await db.tournament.updateMatchesAndPlaces(tournamentId, newMatchsStr, newPlayersStr);
-    const updatedTournament = updatedTournamentArr[0];
+    const updatedTournament = await db.tournament.updateMatchesAndPlaces(tournamentId, newMatchsStr, newPlayersStr);
     if (!updatedTournament)
         return reply.code(500).send({ error: 'Could not update match and remaining places' });
 

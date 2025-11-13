@@ -115,8 +115,12 @@ export async function finish(request, reply) {
 
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
+	const winner_type = scoreP1 > scoreP2 ? p1_type : p2_type;
+
 	const loser_id = scoreP1 > scoreP2 ? p2_id : p1_id;
+
 	match.winner_id = winner_id;
+	match.winner_type = winner_type;
 	match.loser_id = loser_id;
 
 	if (await db.matches.get('id', match.id) === undefined)

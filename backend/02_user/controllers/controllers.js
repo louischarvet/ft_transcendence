@@ -317,7 +317,7 @@ export	async function getUserById(request, reply){
 
     let userInfos;
     //if (type == 'guest')
-	userInfos = await db.guest.getById(userId);
+	userInfos = await db[request.user.type].getById(userId);
     //else if (type == 'registered')
         //userInfos = await db.registered.getById(id);
 
@@ -507,6 +507,7 @@ export async function updateStats(request, reply) {
         user1 = {
             id: 0,
             type: 'ia'
+			// name ?
         };
     }
 
@@ -518,6 +519,7 @@ export async function updateStats(request, reply) {
         user2 = {
             id: 0,
             type: 'ia'
+			// name ?
         };
     }
 

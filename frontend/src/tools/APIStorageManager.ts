@@ -364,7 +364,7 @@ export async function launchTournament(nbPlayers: number) {
 	if (data.error) return null;
 	//return data.Tournament as Tournament;
 	// Retourne directement le premier tournoi
-	return data.Tournament[0] as Tournament;
+	return data.Tournament as Tournament;
 }
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {

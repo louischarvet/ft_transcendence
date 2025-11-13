@@ -87,6 +87,7 @@ export async function startTournament(request, reply){
 	if (tournament.creatorId != user.id) {
 		console.log("creatorId not good\n");
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
+	}
 	console.log("tournament -> ",tournament);
 	// Ajout IA si nécessaire
 	let countIa = 0;

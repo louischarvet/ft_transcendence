@@ -43,6 +43,8 @@ export async function initDB(fastify) {
 			tournament_id INTEGER NOT NULL DEFAULT 0,
 
 			winner_id INTEGER NOT NULL,
+			winner_type TEXT NOT NULL,
+
 			loser_id INTEGER NOT NULL,
 
 			created_at TEXT NOT NULL,
@@ -86,7 +88,7 @@ export async function initDB(fastify) {
 
 		async insert(match) {
 			const { id, p1_id, p1_type, scoreP1, p2_id, p2_type,
-				scoreP2, winner_id, loser_id, created_at } = match;
+				scoreP2, winner_id, winner_type, loser_id, created_at } = match;
 			let { tournament_id } = match;
 			tournament_id = tournament_id === undefined ? 0 : tournament_id;
 			const date = Date().toLocaleString('fr-FR');
@@ -94,10 +96,10 @@ export async function initDB(fastify) {
 
 			await db.run(
 				`INSERT INTO history(id, p1_id, p1_type, scoreP1, p2_id,
-				p2_type, scoreP2, winner_id, loser_id, created_at, ended_at,
-				tournament_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				p2_type, scoreP2, winner_id, winner_type, loser_id, created_at, ended_at,
+				tournament_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				[ id, p1_id, p1_type, scoreP1, p2_id, p2_type, scoreP2,
-				winner_id, loser_id, created_at, shortDate, tournament_id ]
+				winner_id, winner_type, loser_id, created_at, shortDate, tournament_id ]
 			);
 
 			return (await db.get(
