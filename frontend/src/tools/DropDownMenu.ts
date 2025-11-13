@@ -6,6 +6,12 @@ import { navigate } from '../router';
 export default function DropDownMenu() {
 	const wrapper = document.createElement('div');
 	let UserCurrent = getUser();
+	if (!UserCurrent){
+		if (UserCurrent.status === 'pending')
+			return wrapper;
+		navigate('/');
+		return wrapper;
+	}
 	wrapper.className = 'absolute top-5 right-0';
 
 	// BUTTON PRINCIPAL
@@ -158,7 +164,8 @@ export default function DropDownMenu() {
 					createFriendItem(newFriend);
 
 					addFriendInput.value = '';
-					navigate('/');
+					navigate('/select-game');
+					return;
 				})
 				.catch((err) => {
 					alert("Erreur de connexion au serveur");
@@ -207,8 +214,11 @@ export default function DropDownMenu() {
 					}
 					console.log("go to logout");
 					navigate("/");
-				} else
+				} else{
+					console.log("reponse", response);
 					alert("Erreur lors de la déconnexion");
+				}
+
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);

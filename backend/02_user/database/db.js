@@ -82,6 +82,7 @@ export async function initDB(fastify) {
 			));
 		},
 		async updateCol(col, name, value) {
+
 			await db.run(
 				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
 				[ value, name ]
@@ -206,10 +207,10 @@ export async function initDB(fastify) {
 	db.tournament = {
 		async getUsers(listLogin, listGuests) {
 			const registered = await db.all(
-				`SELECT win_rate , id , type FROM registered WHERE id IN (${listLogin.join(',')})`
+				`SELECT win_rate , id , type , name FROM registered WHERE id IN (${listLogin.join(',')})`
 			);
 			const guests = await db.all(
-				`SELECT win_rate , id , type FROM guest WHERE id IN (${listGuests.join(',')})`
+				`SELECT win_rate , id , type , name FROM guest WHERE id IN (${listGuests.join(',')})`
 			);
 			return { registered, guests };
 		},

@@ -1,7 +1,9 @@
 // match.controller.js
 
+// Recupere un match dans le service match
 export async function getMatchTournament(id){
-	const res = await fetch(`http://match-service:3000/${id}`, { method: 'GET' });
+	const res = await fetch(`http://match-service:3000/${id}`,
+		{ method: 'GET' });
 	if(!res.ok)
 		return { error : 'Match not found' };
 	const match = await res.json();

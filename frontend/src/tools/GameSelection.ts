@@ -1,13 +1,18 @@
 import {navigate} from '../router';
-import { checkConnection, asGuest} from './APIStorageManager';
+import { checkConnection, asGuest, getUser} from './APIStorageManager';
+import DropDownMenu from '../tools/DropDownMenu';
 
 export default function GameSelection(): HTMLElement {
+	if ( !getUser()){
+		navigate('/');
+		return document.createElement('div');
+	}
 	const wrapper = document.createElement('div');
-	checkConnection().then((connected) => {
-		console.log("checkConnection : ", connected);
-		if (!connected)
-			navigate("/");
-
+	// checkConnection().then((connected) => {
+	// 	console.log("checkConnection : ", connected);
+	// 	if (!connected)
+	// 		navigate("/");
+		wrapper.appendChild(DropDownMenu());
 		wrapper.className = 'flex flex-col justify-center items-center w-[60%] h-[60%] gap-8 p-16';
 
 		const createGameButton = (label: string, route: string): HTMLElement => {
@@ -26,6 +31,6 @@ export default function GameSelection(): HTMLElement {
 
 		wrapper.appendChild(createGameButton('Pong', '/pong'));
 		wrapper.appendChild(createGameButton('Blackjack', '/blackjack'));
-	});
+	// });
   	return wrapper;
 }

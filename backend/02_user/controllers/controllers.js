@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
-import { generateJWT, revokeJWT } from '../authentication/auth.js';
-import { sendCode } from '../authentication/twofa.js';
-import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
+import { fetchAbortMatch } from './fetchFunctions.js';
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 
 const secureCookieOptions = {
 	httpOnly: true,
@@ -12,7 +13,6 @@ const secureCookieOptions = {
 };
 
 async function clearCookies(reply) {
-	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
@@ -40,7 +40,7 @@ export async function createGuest(request, reply) {
 			...secureCookieOptions,
 			path :'/',
 			path :'/',
-			maxAge: 1800
+			maxAge: 60 * 15
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
@@ -80,8 +80,6 @@ export async function register(request, reply) {
 
     const user = await db.registered.getByName(name);
 	delete user.hashedPassword;
-	delete user.email;
-	delete user.telephone;
 
 	const { accessToken } = await sendCode({
 		name: name,
@@ -116,15 +114,14 @@ export async function logIn(request, reply) {
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	if (exists.status !== 'logged_out')
-		return reply.code(409).send({ error: 'User already logged in.' });
+
+	await fetchAbortMatch(exists);
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
         await db.registered.updateCol('status', name, 'available');
 
         const user = await db.registered.getByName(name);
 		delete user.hashedPassword;
-		delete user.email;
 		
 		user.verified = true;
 
@@ -136,7 +133,7 @@ export async function logIn(request, reply) {
 		return reply.code(201)
 			.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
-				maxAge: 60,
+				maxAge: 60 * 15,
 				path: '/'
 			})
 			.setCookie('refreshToken', refreshToken, {
@@ -247,9 +244,14 @@ export async function updateInfo(request, reply) {
 
 // Route PUT /updateAvatar
 export async function updateAvatar(request, reply) {
-    const { db } = request.server;
-    const { name } = request.user;
-    const user = await db.registered.getByName(name);
+	const { db } = request.server;
+	const { name } = request.user;
+
+	let user;
+	if (request.user.type == 'guest')
+		user = await db.guest.getByName(name);
+	else if (request.user.type == 'registered')
+		user = await db.registered.getByName(name);
 
 	if (!user)
 		return reply.code(400).send({ error: 'Unauthorized' });
@@ -262,18 +264,19 @@ export async function updateAvatar(request, reply) {
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
-	if (user.picture && fs.existsSync(user.picture))
+	if (user.picture && fs.existsSync(user.picture) && user.picture !== '/pictures/BG.webp')
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
-	const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
-	const filePath = path.join(uploadDir, fileName);
+    const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
+    const filePath = path.join(uploadDir, fileName);
 
-	const buffer = await data.toBuffer();
-	fs.writeFileSync(filePath, buffer);
+    const buffer = await data.toBuffer();
+    fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `/pictures/${fileName}`;
-    await db.registered.updateCol('picture', name, relativePath);
+    const relativePath = `pictures/${fileName}`;
+    await db[request.user.type].updateCol('picture', name, relativePath);
+
 	
 	return reply.code(200).send({
 		message: 'Avatar updated successfully',
@@ -313,10 +316,10 @@ export	async function getUserById(request, reply){
 		return reply.code(400).send({ error : 'Id of user required'});
 
     let userInfos;
-    if (type == 'guest')
-        userInfos = await db.guest.getById(id);
-    else if (type == 'registered')
-        userInfos = await db.registered.getById(id);
+    //if (type == 'guest')
+	userInfos = await db.guest.getById(userId);
+    //else if (type == 'registered')
+        //userInfos = await db.registered.getById(id);
 
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
@@ -367,11 +370,10 @@ export async function addFriend(request, reply) {
 	delete friend.type;
 	delete friend.friends;
 
-	// renvoyer le profil user mis a jour!
     return reply.code(200).send({user: updatedUser, newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
-// Route GET pour recuperer les profiles des amis
+// Route GET /getfriendsprofiles
 export async function getFriendsProfiles(request, reply) {
     const { db } = request.server;
     const user = db.registered.getById(request.user.id);
@@ -484,16 +486,16 @@ export async function updateStats(request, reply) {
 
 	if (winner_id > 0) {
         if (winner_type == 'guest')
-            await db.guest.updateStatsW(winner_type, winner_id);
+            await db.guest.updateStatsW(winner_id);
         else if (winner_type == 'registered')
-            await db.registered.updateStatsW(winner_type, winner_id);
+            await db.registered.updateStatsW(winner_id);
     }
 
 	if (loser_id > 0) {
        if (loser_type == 'guest')
-            await db.guest.updateStatsL(loser_type, loser_id);
+            await db.guest.updateStatsL(loser_id);
         else if (loser_type == 'registered')
-            await db.registered.updateStatsL(loser_type, loser_id);
+            await db.registered.updateStatsL(loser_id);
     }
 
     let user1, user2;
@@ -509,7 +511,7 @@ export async function updateStats(request, reply) {
     }
 
     if (p2_type == 'guest')
-        user1 = await db.guest.getById(p2_id);
+        user2 = await db.guest.getById(p2_id);
     else if (p2_type == 'registered')
         user2 = await db.registered.getById(p2_id);
     else {
@@ -554,7 +556,6 @@ export async function getUsersTournament(request, reply) {
 	if (!usersInfos || usersInfos.length === 0)
 		return reply.code(404).send({ error: 'Users not found' });
 
-	console.log("usersInfosin in fetchUserTournament : ", usersInfos);
 	usersInfos.registered.forEach(u => {
 		delete u.hashedPassword;
 		delete u.email;
@@ -568,7 +569,7 @@ export async function getUsersTournament(request, reply) {
 
 
 	return reply.code(200).send({
-		users: JSON.stringify(usersInfos),
+		users: usersInfos,
 		message: 'Users found'
 	});
 }

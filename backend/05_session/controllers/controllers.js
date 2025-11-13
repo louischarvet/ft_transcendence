@@ -1,9 +1,5 @@
 // controllers/controllers.js
 
-import { clear } from "console";
-
-//import { insertRefresh, getRefresh, deleteRefresh } from '../models/models.js'
-
 const secureCookieOptions = {
     httpOnly: true,
     secure: true,
@@ -23,7 +19,7 @@ async function generateAccess(sign, name, type, id, jwti, verified) {
         jwti: jwti,
         verified: verified
     }, {
-        expiresIn : '1m'
+        expiresIn : '15m'
     });
 }
 
@@ -40,11 +36,11 @@ async function generateRefresh(sign, name, type, id, jwti) {
 
 // POST /generate
 export async function generate(request, reply) {
-	await clearCookies(reply);
-    const { server } = request;
+	const { server } = request;
 	const { name, type, id, verified } = request.body;
     const jwti = crypto.randomUUID();
-
+	
+	await clearCookies(reply);
     // Access token
     const accessToken = await generateAccess(server.jwt.sign, name, type, id, jwti, verified);
 
@@ -53,7 +49,6 @@ export async function generate(request, reply) {
         // Refresh token
         refreshToken = await generateRefresh(server.jwt.sign, name, type, id, jwti);
 
-        // Garder en db le jwtid du refresh token
         server.db.refresh.insert(jwti, id);
         message = 'Access and refresh tokens generated.';
     } else
@@ -72,51 +67,50 @@ export async function generate(request, reply) {
 export async function authenticate(db, request, reply) {
     const rawToken = request.headers.authorization;
     if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
-        return reply.code(400).send({ error: 'Missing Bearer' });
+        return reply.code(401).send({ error: 'Missing Bearer' });
     const accessToken = rawToken.split(' ')[1];
 
     if (!accessToken) {
 		console.log('Missing token');
-		return reply.code(400).send({ error: 'Missing token' });
+		return reply.code(401).send({ error: 'Missing token' });
 	}
     try {
         const decoded = await request.jwtVerify(accessToken);
 
         const revoked = await db.revokedAccess.get(decoded.jwti);
         if (revoked !== undefined)
-            return reply.code(400).send({ error: 'Access token is revoked.' }); // 403 ?
+            return reply.code(401).send({ error: 'Access token is revoked.' });
 
         delete decoded.iat;
         delete decoded.exp;
 
-        return reply.code(200).send(decoded); /////////////
+        return reply.code(200).send(decoded);
     } catch (err) {
         console.log("authenticate ERROR: ", err);
         if (err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED')
             return reply.code(401).send({ error: 'Expired access token.' });
         else
-            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
+            return reply.code(401).send({ error: 'Invalid access token.' });
     }
 }
 
 // POST /refresh
 export async function refresh(db, request, reply) {
-	await clearCookies(reply);
 	const { refreshToken } = request.cookies;
+	await clearCookies(reply);
     if (refreshToken === undefined)
         return reply.code(403).send({ error: 'Missing token' });
 	
-	// a l'arrache
-	request.headers.authorization = 'Bearer ' + refreshToken;
     const { server } = request;
-
-	console.log("##### REFRESH TOKEN =", refreshToken);
+	request.headers.authorization = 'Bearer ' + refreshToken;
+	
+    await clearCookies(reply);
 
     try {
 		const decoded = await request.jwtVerify(refreshToken);
 		
         if (!await db.refresh.get(decoded.jwti, decoded.id)) // must delog
-		return reply.code(403).send({ error: 'Obsolete refresh token.' });
+			return reply.code(403).send({ error: 'Obsolete refresh token.' });
 		
         const { name, type, id, jwti } = decoded;
         const newJwti = crypto.randomUUID();
@@ -126,7 +120,7 @@ export async function refresh(db, request, reply) {
 		
         // New refresh token
         const newRefresh = await generateRefresh(server.jwt.sign, name, type, id, newJwti);
-        // mise a jour db
+
         db.refresh.erase(jwti, id);
         db.refresh.insert(newJwti, id);
 		
@@ -135,7 +129,7 @@ export async function refresh(db, request, reply) {
             .code(200)
             .setCookie('accessToken', newAccess, {
                 ...secureCookieOptions,
-                maxAge: 60,
+                maxAge: 60 * 15,
                 path: '/'
             })
             .setCookie('refreshToken', newRefresh, {
@@ -145,17 +139,15 @@ export async function refresh(db, request, reply) {
             })
             .send({ message: 'Tokens have been refreshed.' });
     } catch (err) {
-		console.log("################### REFRESH ERROR: ", err);
-        if (err.code === 'FST_JWT_EXPIRED') // bad code !!!
+        if (err.code === 'FST_JWT_EXPIRED')
             return reply.code(403).send({ error: 'Expired refresh token.' });
-        else // must relog
-            return reply.code(403).send({ error: 'Invalid refresh token.' }); // 403 ?
+        else
+            return reply.code(403).send({ error: 'Invalid refresh token.' });
     }
 }
 
 // DELETE /delete
 export async function deleteToken(db, request, reply) {
-	await clearCookies(reply);
     const rawToken = request.headers.authorization;
     if (rawToken === undefined || rawToken.split(' ')[0] !== 'Bearer')
         return reply.code(400).send({ error: 'Missing Bearer' });
@@ -169,20 +161,20 @@ export async function deleteToken(db, request, reply) {
 
         if (refreshRef === undefined)
             return reply.code(403).send({
-    //            ...decoded,
                 error: 'deleteToken: Obsolete refresh token.'
             });
 
         await db.refresh.erase(jwti, id);
-        // revoke access !
         await db.revokedAccess.insert(jwti, exp);
+		
+		await clearCookies(reply);
 
         return reply.code(200).send({ message: 'Deleted refresh token.' })
     } catch (err) {
         console.log("delete ERROR: ", err);
-        if (err.code === 'FST_JWT_EXPIRED') // must relog
+        if (err.code === 'FST_JWT_EXPIRED')
             return reply.code(401).send({ error: 'Expired access token.' });
-        else // must relog
-            return reply.code(401).send({ error: 'Invalid access token.' }); // 403 ?
+        else
+            return reply.code(401).send({ error: 'Invalid access token.' });
     }
 }

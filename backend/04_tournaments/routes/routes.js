@@ -20,17 +20,19 @@ import {
 } from '../controllers/round.controller.js';
 
 import { authenticateJWT } from '../authentication/auth.js';
-import { tournamentSchema } from '../schema/tournamentSchema.js';
+import { tournamentSchema, nextSchema } from '../schema/tournamentSchema.js';
 import { loginInput } from '../schema/userInput.js';
-
 
 export default async function routesPlugin(fastify, options) {
 	fastify.get('/', async (request, reply) => {
 		return { hello: 'from tournament' };
 	});
 
+	// route a supprimer // appelee dans /next
+	fastify.post('/endtournament', { preHandler: authenticateJWT }, endTournament);
 	//! ajout le 19/19/2025
 	//route pour recuperer les tournois(pour participer aux tournois)
+	//? sert a quelque chose ? // a supprimer
 	fastify.get('/winnertournament/:id', /*shcema de tournoi a determiner*/ getTournamentWinUserId);
 
 	//! ajout le 19/09/2025
@@ -42,14 +44,14 @@ export default async function routesPlugin(fastify, options) {
 	fastify.post('/jointournamentregistered/:id', { preHandler: authenticateJWT, schema: loginInput }, joinTournamentRegistered);
 	fastify.post('/jointournamentguest/:id', { preHandler: authenticateJWT }, joinTournamentGuest);
 
-	fastify.post('/endtournament', { preHandler: authenticateJWT }, endTournament);
+
 	fastify.post('/starttournament/:id', { preHandler: authenticateJWT }, startTournament);
 	fastify.get('/:id', getTournamentById);
 	fastify.get('/all', getAllTournaments);
 
 	//! ajout le 30/09/2025
 	// route PUT pour generer les matchs du prochain round, et MAJ les data de tournoi
-	fastify.put('/next', { preHandler: authenticateJWT }, nextRound);
+	fastify.put('/next', { preHandler: authenticateJWT, schema: nextSchema }, nextRound);
 
 	//! ajout le 22/09/2025
 	//pour louis

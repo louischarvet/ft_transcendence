@@ -2,9 +2,13 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { getUserByToken, updateInfo, getUser, Logout} from '../tools/APIStorageManager';
+import { updateInfo, getUser, Logout, updateAvatar, setUser, getUserById} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
+  if (!getUser()) {
+		navigate('/');
+		return document.createElement('div');
+  }
   
   const container = document.createElement('div');
   container.className = 'flex items-center justify-center h-screen bg-gray-300 text-black';
@@ -73,19 +77,68 @@ export default function Profile(): HTMLElement {
 
   // Avatar
   const avatar = document.createElement('div');
-  avatar.className = 'flex items-center justify-center bg-black rounded-full w-[120px] h-[120px]';
-  const icon = document.createElement('span');
-  icon.textContent = '👤';
-  icon.className = 'text-3xl';
-  avatar.appendChild(icon);
+  avatar.className = 'relative flex items-center justify-center bg-black rounded-full w-[120px] h-[120px] overflow-hidden cursor-pointer group transition hover:scale-105 hover:shadow-xl';
   userSection.appendChild(avatar);
+
+	const currentUser = getUser();
+	if (!currentUser){
+		alert("User not found");
+		navigate('/');
+		localStorage.removeItem('user');
+		return container;
+	}
+  // Image reelle de l’avatar
+	const avatarImg = document.createElement('img');
+  	avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+	console.log("currentUser.picture.toString()", currentUser.picture.toString());
+	avatarImg.alt = 'Avatar';
+	avatarImg.className = 'object-cover w-full h-full bg-red';
+	avatar.appendChild(avatarImg);
+
+	// Overlay de changement
+	const overlay = document.createElement('div');
+	overlay.textContent = 'Change';
+	overlay.className = `
+	absolute inset-0 bg-black/60 text-white text-sm font-semibold
+	flex items-center justify-center opacity-0 group-hover:opacity-100
+	transition-opacity duration-200
+	`;
+	avatar.appendChild(overlay);
+
+	// Input file caché
+	const fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.accept = 'image/*';
+	fileInput.className = 'hidden';
+	userSection.appendChild(fileInput);
+
+	// Au clique sur l'avatar --> ouvre le selecteur de fichier
+	avatar.onclick = () => fileInput.click();
+
+	// Quand un fichier est delectionné
+	fileInput.onchange = async (e) => {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (!file)
+			return;
+
+		try {
+			const res = await updateAvatar(file);
+			console.log("res", res);
+			//avatarImg.src = `https://localhost:4343/user/${res.picture}`;
+			alert('Avatar updated successfully!');
+			navigate('/profil');
+		} catch (err) {
+			console.error('Erreur upload avatar :', err);
+			alert('Error uploading avatar.');
+		}
+	};
 
   // Pseudo et email du player
   const username = document.createElement('h3');
-  username.textContent = 'Pseudo';
+  username.textContent = getUser().name;
   username.className = 'text-xl font-bold drop-shadow-[0_0_10px_rgba(0,0,0,0.9)]';
   const email = document.createElement('button');
-  email.textContent = 'email@example.com';
+  email.textContent = getUser().email;
   email.className = 'text-sm font-bold bg-green-500 rounded-lg w-[200px] hover:bg-green-600 py-2';
   userSection.appendChild(username);
   if (getUser().type !== 'guest'){
@@ -189,31 +242,33 @@ export default function Profile(): HTMLElement {
   profileCard.appendChild(userSection);
   container.appendChild(profileCard);
 
-  getUserByToken().then((response) => {
-	console.log("response =\n", response, "#####################");
-    if(!response || !response.user) {
-        navigate('/');
-		return ;
-	}
-	const user = response.user;
-    username.textContent = user.name;
-    email.textContent = user.email;
-    avatar.className = user.picture || './pictures/default.webp';
+	let user = getUser();
+	getUserById(user.id).then(res => {
+		user = res;
 
-    // --- Stats ---
-    ratio.querySelector('p:nth-child(2)')!.textContent =
-      user.win_rate?.toFixed(2) ?? '0.00';
-    gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
-      user.played_matches ?? '0';
-    wins.querySelector('p:nth-child(2)')!.textContent =
-      user.match_wins ?? '0';
-    bestStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.wins_streak ?? '0';
-    currentStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.currentStreak ?? '0';
-    wallet.querySelector('p:nth-child(2)')!.textContent =
-      `${user.wallet ?? 0} 🪙`;
-  })
+		if (!user) return;
+		
+		username.textContent = user.name;
+		email.textContent = user.email;
+		
+		//avatar.className = user.picture || './pictures/default.webp';
+
+		// --- Stats ---
+		ratio.querySelector('p:nth-child(2)')!.textContent =
+		user.win_rate?.toFixed(2) ?? '0.00';
+		gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
+		user.played_matches ?? '0';
+		wins.querySelector('p:nth-child(2)')!.textContent =
+		user.match_wins ?? '0';
+		bestStreak.querySelector('p:nth-child(2)')!.textContent =
+		user.wins_streak ?? '0';
+		currentStreak.querySelector('p:nth-child(2)')!.textContent =
+		user.currentStreak ?? '0';
+		wallet.querySelector('p:nth-child(2)')!.textContent =
+		`${user.wallet ?? 0} 🪙`;
+	});
+
+	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
   return container;
 }

@@ -21,7 +21,9 @@ fastify.register(fastifyCors, {
 	credentials: true
 });
 
-await fastify.register(fp(initDB));
+fastify.register(fp(async (fastify, opts) => {
+	await initDB(fastify);
+}));
 
 fastify.decorate('authentication', authenticateJWT);
 

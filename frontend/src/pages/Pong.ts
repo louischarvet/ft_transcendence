@@ -4,12 +4,17 @@ import { getUser, checkConnection } from "../tools/APIStorageManager";
 import { navigate } from "../router";
 
 export default function Pong(): HTMLElement {
-  checkConnection().then((connected) => {
-    if (!connected) {
-      navigate('/');
-    }
-  });
+  // checkConnection().then((connected) => {
+  //   if (!connected) {
+  //     navigate('/');
+  //   }
+  // });
   const container = document.createElement('div');
+  let UserCurrent = getUser();
+  if (!UserCurrent){
+	navigate('/');
+	return container;
+  }
   container.className = 'flex justify-center items-center h-screen bg-black';
   
   const canvas = document.createElement('canvas');
