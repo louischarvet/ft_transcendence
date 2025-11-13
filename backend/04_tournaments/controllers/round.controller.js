@@ -154,7 +154,7 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
         winners.push({ id: winnerId, type: winnerType });
     }
 //	console.log("###\nFonction prepareNextRound: winners -->", winners, "\n###\n");
-    console.log("matchinRound", matchesInRound);
+    console.log("winners.length", winners.length);
 
 	if (winners.length === 1) {
 		return {
@@ -204,7 +204,7 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
 
 	return {
 		arrayMatchesNextRound,
-		finalWinner: null
+		finalWinner: undefined
 	};
 }
 
@@ -292,19 +292,6 @@ export async function nextRound(request, reply) {
 //    console.log("###\nFonction nextRound : round --> ", round, "\n###\n");
 
 
-	//// 3 : determiner l'id dumatch
-	//if(!matchBody.id || matchBody.id <= 0){
-	//	const fondMatch = matchesArray.find(m => {
-	//		(m.player1.id === matchBody.player1.id && m.player2.id === matchBody.player2.id) ||
-	//		(m.player1.id === matchBody.player2.id && m.player2.id === matchBody.player1.id)
-	//	});
-	//	if(!fondMatch)
-	//		return reply.code(400).send({ error: 'Match id is required' });
-	//	matchBody.id = fondMatch.id;
-	//	console.log("###\nFonction nextRound : matchBody.id déterminé -->", matchBody.id, "\n###\n");
-	//}
-
-
     // 4 : Verifie que le match est valide
     const roundMatchIds = await checkMatchValidity(round, matchBody, matchesArray, reply);
     if (!roundMatchIds)
@@ -332,11 +319,12 @@ export async function nextRound(request, reply) {
     // 7 : Preparer le prochain round
     const { arrayMatchesNextRound, finalWinner } = await prepareNextRound(matchesInRound, tournament, reply);
 //    console.log("###\nFonction nextRound, arrayMatchesNextRound --> ", arrayMatchesNextRound, "\n###\n");
-
-    if (finalWinner) {
+    console.log("finalWinner", finalWinner);
+    if (finalWinner !== undefined) {
+        console.log("finalWinner", finalWinner);
         // Tournoi terminé
-        await endTournament(request, reply, tournament.id, finalWinner);
-        return reply.code(200).send({ tournament: finishedTournamentArr, message: 'Tournament finished' });
+        let finishedTournamentArr = await endTournament(request, reply, tournament.id, finalWinner);
+        return reply.code(200).send({ tournament: finishedTournamentArr.tournament, message: 'Tournament finished' });
     }
 
     // 8 : MAJ des DATA history, tournament et round

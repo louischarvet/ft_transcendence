@@ -321,7 +321,7 @@ export	async function getUserById(request, reply){
 		userInfos = {
 			id: 0,
 			type: 'ia',
-			name: 'normalIA'
+			name: 'normalAI'
 		};
 	} else
 		userInfos = await db[type].getById(userId);
