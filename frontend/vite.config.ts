@@ -7,6 +7,9 @@ const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ['@babylonjs/core', '@babylonjs/gui', '@babylonjs/loaders'],
+  },
   server: {
     port: 5173,
     strictPort: true,
