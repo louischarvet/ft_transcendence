@@ -17,16 +17,16 @@ async function finishMatch(matchBody, request, reply) {
         const matchFromDbRes = await getMatchTournament(matchBody.id);
         const matchFromDb = matchFromDbRes?.match || {};
         const finishPayload = { ...matchFromDb, scoreP1: matchBody.scoreP1, scoreP2: matchBody.scoreP2 };
-        console.log("###\nHelper finishMatch: matchFromDbRes -->", matchFromDbRes, "\n###\n");
-        console.log("###\nHelper finishMatch: matchFromDb -->", matchFromDb, "\n###\n");
-        console.log("###\nHelper finishMatch: finishPayload -->", finishPayload, "\n###\n");
+//        console.log("###\nHelper finishMatch: matchFromDbRes -->", matchFromDbRes, "\n###\n");
+//        console.log("###\nHelper finishMatch: matchFromDb -->", matchFromDb, "\n###\n");
+//        console.log("###\nHelper finishMatch: finishPayload -->", finishPayload, "\n###\n");
 
         const finishMatch = await fetchFinishMatchForTournament(finishPayload, request.cookies || {});
         if (!finishMatch) {
             console.log("###\nHelper finishMatch: fetchFinishMatchForTournament returned falsy\n###\n");
             return { error: 'Impossible to finish match' };
         }
-        console.log("###\nHelper finishMatch: finishMatch -->", finishMatch, "\n###\n");
+//       console.log("###\nHelper finishMatch: finishMatch -->", finishMatch, "\n###\n");
         return finishMatch;
     } catch (err) {
         console.error('Helper finishMatch error:', err);
@@ -51,7 +51,7 @@ async function createMatchesForNextRound(arrayMatchesNextRound) {
     for (const nextM of arrayMatchesNextRound) {
         const res = await fetchMatchForTournament(nextM);
         if (res.error) {
-            console.log("###\ncreateMatchesForNextRound: fetchMatchForTournament error for", nextM, "\n###\n");
+//            console.log("###\ncreateMatchesForNextRound: fetchMatchForTournament error for", nextM, "\n###\n");
             return { error: 'Match creation failed' };
         }
         // res.match : forme du match créé par match-service
@@ -91,12 +91,12 @@ async function getCurrentRoundData(tournament, reply, db) {
     const round = await db.round.get(tournament.id, tournament.rounds);
     if (!round)
         return reply.code(404).send({ error: 'Impossible to get data round' });
-    console.log("###\nFonction getCurrentRoundData: round -->", round, "\n###\n");
+//    console.log("###\nFonction getCurrentRoundData: round -->", round, "\n###\n");
 
     let matchHistory = await fetchHistoryMatchForTournament(tournament.id);
     if (matchHistory.error)
         return reply.code(500).send({ error: 'Could not fetch match history' });
-    console.log("###\nFonction getCurrentRoundData : matchHistory --> ", matchHistory, "\n###\n");
+//    console.log("###\nFonction getCurrentRoundData : matchHistory --> ", matchHistory, "\n###\n");
 
     const matchesArray = normalizeHistory(matchHistory);
     return { round, matchesArray };
@@ -128,7 +128,7 @@ async function finishMatchAndReload(matchBody, tournament, request, reply) {
 	const finish = await finishMatch(matchBody, request, reply);
     if (finish?.error)
         return reply.code(500).send({ error: 'Impossible to finish match' });
-    console.log("###\nFonction finishMatchAndReload: finish -->", finish, "\n###\n");
+//    console.log("###\nFonction finishMatchAndReload: finish -->", finish, "\n###\n");
 
     // Recharger l'historique pour vérifier l'état des matchs du round
     const matchHistory = await fetchHistoryMatchForTournament(tournament.id);
@@ -146,8 +146,8 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
     // Recuperer les gagnants
     const winners = [];
     for (const m of matchesInRound) {
-        console.log("########################### prepare m:\n", m,
-                    "\n######################################\n");
+//        console.log("########################### prepare m:\n", m,
+//                    "\n######################################\n");
         const winnerId = Number(m.winner_id);
         let winnerType = m.winner_type;
 //        let winnerType = m.p1_type || m.p2_type || 'guest';
@@ -157,7 +157,7 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
 //            winnerType = m.p2_type;
         winners.push({ id: winnerId, type: winnerType });
     }
-	console.log("###\nFonction prepareNextRound: winners -->", winners, "\n###\n");
+//	console.log("###\nFonction prepareNextRound: winners -->", winners, "\n###\n");
 
 	if (winners.length === 1) {
 		return {
@@ -172,7 +172,7 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
             const player2 = winners[i + 1];
 
 			
-			// peutetre inutile si tournoi bien formé
+	//		peutetre inutile si tournoi bien formé
             if (!player2) {
                 // Nombre impair --> dernier joueur passe automatiquement au prochain round
                 arrayMatchesNextRound.push({
@@ -183,13 +183,27 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
                 continue;
             }
 
+            const p1 = await fetchGetUserById(player1.id, player1.type);
+
+            const p2 = await fetchGetUserById(player2.id, player2.type);
+
+            console.log("####################### P1\n", p1,
+                        "\n####################### P2\n", p2);
             arrayMatchesNextRound.push({
-                player1: { id: player1.id, type: player1.type },
-                player2: { id: player2.id, type: player2.type },
+                player1: {
+                    id: p1.id,
+                    type: p1.type,
+                    name: p1.name
+                },
+                player2: {
+                    id: p2.id,
+                    type: p2.type,
+                    name: p2.name
+                },
                 tournamentID: tournament.id
             });
     }
-	console.log("###\nFonction prepareNextRound: arrayMatchesNextRound -->", arrayMatchesNextRound, "\n###\n");
+//	console.log("###\nFonction prepareNextRound: arrayMatchesNextRound -->", arrayMatchesNextRound, "\n###\n");
 
 	return {
 		arrayMatchesNextRound,
@@ -222,7 +236,7 @@ async function updateTournamentAfterRound(request, reply, tournament, round, arr
 
     // Construire le string des nouveaux matchs
     const matchesString = matchsNextRound.map(m => m.id).join(';');
-    console.log("###\nFonction updateTournamentAfterRound : tournament --> ", tournament, "\n###\n");
+//    console.log("###\nFonction updateTournamentAfterRound : tournament --> ", tournament, "\n###\n");
 
     // 1) ajouter à l'historique
     await db.history.addMatchesAndPlayers(tournament.id, matchesString, tournament.players);
@@ -245,8 +259,8 @@ async function updateTournamentAfterRound(request, reply, tournament, round, arr
 async function addUserNames(matches) {
 	const matchesWithNames = [];
 	for (const m of matches) {
-		const p1Res = await fetchGetUserById(m.player1.id);
-		const p2Res = await fetchGetUserById(m.player2.id);
+		const p1Res = await fetchGetUserById(m.player1.id, m.player1.type);
+		const p2Res = await fetchGetUserById(m.player2.id, m.player2.type);
 		const p1Name = p1Res && !p1Res.error ? p1Res.name : 'Unknown';
 		const p2Name = p2Res && !p2Res.error ? p2Res.name : 'Unknown';
 		matchesWithNames.push({
@@ -264,21 +278,21 @@ async function addUserNames(matches) {
 export async function nextRound(request, reply) {
     const matchBody = request.body || {};
     const user = request.user;
-    console.log("###\nFonction nextRound : matchbody --> ", matchBody, "\n###\n");
+//    console.log("###\nFonction nextRound : matchbody --> ", matchBody, "\n###\n");
 
     // 1 : validation
     const tournament = await validateRequest(matchBody, user, reply, request.server.db);
     if (!tournament)
 		return; // validateRequest a déjà envoyé la réponse
-    console.log("###\nFonction nextRound : tournament -->", tournament, "\n###\n");
+//    console.log("###\nFonction nextRound : tournament -->", tournament, "\n###\n");
 
     // 2 : round + historique
     const currentData = await getCurrentRoundData(tournament, reply, request.server.db);
     if (!currentData)
 		return; // getCurrentRoundData a déjà envoyé la réponse
     const { round, matchesArray } = currentData;
-    console.log("###\nFonction nextRound : matchesArray --> ", matchesArray, "\n###\n");
-    console.log("###\nFonction nextRound : round --> ", round, "\n###\n");
+//    console.log("###\nFonction nextRound : matchesArray --> ", matchesArray, "\n###\n");
+//    console.log("###\nFonction nextRound : round --> ", round, "\n###\n");
 
 
 	//// 3 : determiner l'id dumatch
@@ -298,13 +312,13 @@ export async function nextRound(request, reply) {
     const roundMatchIds = await checkMatchValidity(round, matchBody, matchesArray, reply);
     if (!roundMatchIds)
 		return; // checkMatchValidity a déjà envoyé la réponse
-    console.log("###\nFonction nextRound : roundMatchIds --> ", roundMatchIds, "\n###\n");
+//    console.log("###\nFonction nextRound : roundMatchIds --> ", roundMatchIds, "\n###\n");
 
     // 5 : terminer le match et recharger l’historique
     const matchHistory = await finishMatchAndReload(matchBody, tournament, request, reply);
     if (!matchHistory)
 		return; // finishMatchAndReload a déjà envoyé la réponse
-    console.log("###\nFonction nextRound, matchHistory --> ", matchHistory, "\n###\n");
+//    console.log("###\nFonction nextRound, matchHistory --> ", matchHistory, "\n###\n");
 
     // 6 : Verifie si tous les matchs du round sont terminés
     const matchesInRound = (matchHistory.tournamentData || [])
@@ -320,7 +334,7 @@ export async function nextRound(request, reply) {
 
     // 7 : Preparer le prochain round
     const { arrayMatchesNextRound, finalWinner } = await prepareNextRound(matchesInRound, tournament, reply);
-    console.log("###\nFonction nextRound, arrayMatchesNextRound --> ", arrayMatchesNextRound, "\n###\n");
+//    console.log("###\nFonction nextRound, arrayMatchesNextRound --> ", arrayMatchesNextRound, "\n###\n");
 
     if (finalWinner) {
         // Tournoi terminé

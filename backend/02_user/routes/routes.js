@@ -20,7 +20,7 @@ async function userRoutes(fastify, options) {
 	fastify.put('/updateAvatar',{ preHandler: authenticateJWT },  updateAvatar);
 
 	fastify.get('/id', { preHandler: authenticateJWT }, getUserByIdToken);
-	fastify.get('/:id', { preHandler: authenticateJWT }, getUserById);
+	fastify.post('/:id', getUserById);
 
 	fastify.put('/logout', {preHandler: authenticateJWT }, logOut);
 	fastify.delete('/delete',{preHandler: authenticateJWT , schema: deleteSchema },  deleteUser);

@@ -308,6 +308,8 @@ export	async function getUserByIdToken(request, reply){
 export	async function getUserById(request, reply){
     const { db } = request.server;
 	const user = request.params;
+	const { type } = request.body;
+	console.log("user = ", user);
 	if (!user)
 		return reply.code(400).send({ error : 'Need param'});
 
@@ -316,10 +318,15 @@ export	async function getUserById(request, reply){
 		return reply.code(400).send({ error : 'Id of user required'});
 
     let userInfos;
-    //if (type == 'guest')
-	userInfos = await db[request.user.type].getById(userId);
-    //else if (type == 'registered')
-        //userInfos = await db.registered.getById(id);
+	console.log("userId = ", userId);
+	if (userId === 0) {
+		userInfos = {
+			id: 0,
+			type: 'ia',
+			name: 'normalIA'
+		};
+	} else
+		userInfos = await db[type].getById(userId);
 
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});

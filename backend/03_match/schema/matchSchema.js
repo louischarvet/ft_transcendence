@@ -36,7 +36,7 @@ export const matchSchema = {
 			created_at: { type: 'string' },
 			tournament_id: { type: 'integer', minimum: 0 }
 		},
-		additionalProperties: false,
+//		additionalProperties: false,
   	}
 }
 

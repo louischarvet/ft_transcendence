@@ -46,7 +46,7 @@ export async function joinTournamentRegistered(request, reply){
 		return reply.code(400).send({ error: 'Tournament is full or already joined' });
 
 	// Récupère le joueur pour vérifier son statut
-	const currentUser = await fetchGetUserById(player2.id);
+	const currentUser = await fetchGetUserById(player2.id, player2.type);
 	if (!currentUser)
 		return reply.code(400).send({ error: 'PlayerId does not exist' });
 	if (player2.status !== 'available')

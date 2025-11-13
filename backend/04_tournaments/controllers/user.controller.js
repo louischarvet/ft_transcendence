@@ -20,10 +20,12 @@ export async function fetchUserTournament(ArrayIdAndType){
 }
 
 // recupere user par Id
-export async function fetchGetUserById(id){
-	const user = await fetch(`http://user-service:3000/${id}`,
-		{ method: 'GET' }
-	);
+export async function fetchGetUserById(id, type){
+	const user = await fetch(`http://user-service:3000/${id}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ type: type })
+	});
 	if(!user.ok)
 		return { error : 'User not found' };
 	const currentUser = await user.json();

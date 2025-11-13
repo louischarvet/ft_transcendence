@@ -19,7 +19,7 @@ export async function initDB(fastify) {
 		CREATE TABLE IF NOT EXISTS matches (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-			p1_id INTEGER NOT NULL,
+			p1_id INTEGER,
 			p1_type TEXT NOT NULL,
 
 			p2_id INTEGER,
@@ -32,7 +32,7 @@ export async function initDB(fastify) {
 		CREATE TABLE IF NOT EXISTS history (
 			id INTEGER,
 
-			p1_id INTEGER NOT NULL,
+			p1_id INTEGER,
 			p1_type TEXT NOT NULL,
 			scoreP1 INTEGER DEFAULT 0,
 
