@@ -145,19 +145,16 @@ async function finishMatchAndReload(matchBody, tournament, request, reply) {
 async function prepareNextRound(matchesInRound, tournament, reply) {
     // Recuperer les gagnants
     const winners = [];
+    console.log("matchinRound", matchesInRound);
     for (const m of matchesInRound) {
 //        console.log("########################### prepare m:\n", m,
 //                    "\n######################################\n");
         const winnerId = Number(m.winner_id);
         let winnerType = m.winner_type;
-//        let winnerType = m.p1_type || m.p2_type || 'guest';
-//        if (m.p1_id && winnerId === Number(m.p1_id))
-//            winnerType = m.p1_type;
-//        else if (m.p2_id && winnerId === Number(m.p2_id))
-//            winnerType = m.p2_type;
         winners.push({ id: winnerId, type: winnerType });
     }
 //	console.log("###\nFonction prepareNextRound: winners -->", winners, "\n###\n");
+    console.log("matchinRound", matchesInRound);
 
 	if (winners.length === 1) {
 		return {
