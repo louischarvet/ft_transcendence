@@ -3,6 +3,21 @@
 import { fetchChangeStatus, fetchUpdateStats, fetchCreateGuest }
 	from './fetchFunctions.js';
 
+export async function getUserById(userID, userType) {
+
+	const res = await fetch(`http://user-service:3000/${userID}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ type: userType }),
+	});
+	if (!res.ok)
+		return null;
+	const data = await res.json();
+	return data.user;
+}
+
 // Route POST pour creer un match contre un joueur inscrit
 export async function registeredMatch(request, reply) {
 	const { db } = request.server;
@@ -112,6 +127,7 @@ export async function getHistory(request, reply) {
 export async function finish(request, reply) {
 	const { db } = request.server;
 	const match = request.body;
+	console.log("#############Finish match:\n", match, "\n#######################\n");
 
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
@@ -179,18 +195,20 @@ export async function getHistoryByTournamentID(request, reply) {
 	if (!tournamentId)
 		return reply.code(200).send({ error : 'Need tournament Id' });
 	
-	const tournamentData = await db.history.getByTournamentID(tournamentId);
+	let tournamentData = await db.history.getByTournamentID(tournamentId);
 	if (!tournamentData) 
 		return reply.code(200).send({ error : 'No data for this tournament' });
+
+	console.log("TOURNAMENT DATA : ", tournamentData);
+    for (let match of tournamentData) {
+        const p1 = await getUserById(match.p1_id, match.p1_type);
+        const p2 = await getUserById(match.p2_id, match.p2_type);
+        match.p1_name = p1;
+        match.p2_name = p2;
+    }
+	//tournamentData.matches = matchName;
 	return reply.code(200).send({ tournamentData });
 }
-
-// Route GET pour récupérer tous les matches
-// route /matches
-// export async function getAllMatchesController(request, reply) {
-// 	const matches = await getAllMatches();
-// 	return reply.code(200).send({ matches });
-// }
 
 // Route GET pour récupérer un match par son ID
 // route /matches/:id

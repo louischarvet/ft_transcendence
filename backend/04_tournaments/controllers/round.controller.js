@@ -157,7 +157,7 @@ async function prepareNextRound(matchesInRound, tournament, reply) {
 	if (winners.length === 1) {
 		return {
 			arrayMatchesNextRound: [],
-			finalWinner: winners[0].id
+			finalWinner: winners[0],
 		};
 	}
     // Construire les paires du prochain round
@@ -322,7 +322,7 @@ export async function nextRound(request, reply) {
         console.log("finalWinner", finalWinner);
         // Tournoi terminé
         //let finishedTournamentArr = await endTournament(request, reply, tournament.id, finalWinner);
-		return await endTournament(request, reply, tournament.id, finalWinner);;
+		return await endTournament(request, reply, tournament.id, finalWinner);
     }
 
     // 8 : MAJ des DATA history, tournament et round

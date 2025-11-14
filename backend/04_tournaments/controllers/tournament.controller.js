@@ -4,8 +4,7 @@ import { addNewPlayerToTournament } from './player.controller.js';
 import { fetchUserTournament } from './user.controller.js';
 import {
 	fetchMatchForTournament,
-	fetchHistoryMatchForTournament,
-	fetchFinishMatchForTournament
+	fetchHistoryMatchForTournament
 } from './match.controller.js';
 
 import { fetchGetUserById } from './user.controller.js';
@@ -47,34 +46,39 @@ export async function launchTournament(request, reply) {
 	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
 }
 
-export async function endTournament(request, reply, tournamentId, winnerId){
+export async function endTournament(request, reply, tournamentId, user){
 	const { db } = request.server;
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
-	console.log("tournamtentId winnerId0 ", tournamentId, winnerId);
-	if (tournamentId === 'undefined' || winnerId === 'undefined'
-		|| tournamentId === null || winnerId === null	)
+	console.log("tournamtentId winnerId0 ", tournamentId, user.id);
+	if (tournamentId === 'undefined' || user.id === 'undefined'
+		|| tournamentId === null || user.id === null	)
 		return reply.code(400).send({ error: 'Invalid body' });
 
-	// const tournament = await getTournament(tournamentId);
 	let tournament = await db.tournament.get('id', tournamentId);
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 
 	await db.tournament.update('status', 'finished', tournamentId);
 
+	
 	console.log("Tournament begin:", tournament);
-	tournament = await db.history.update('winnerID', winnerId, tournamentId);
+	tournament = await db.history.update('winnerID', user.id, tournamentId);
+	tournament = await db.history.update('winnerType', user.type, tournamentId);
 	console.log("Tournament ended:", tournament);
-
-	if (winnerId === 0 || winnerId === '0'){
+	// on recupere l'historique des matchs depuis le service match
+	tournament = await fetchHistoryMatchForTournament(tournamentId);
+	if (tournament.error)
+		return reply.code(400).send({ error: 'Could not fetch tournament match history' });
+	
+	if (user.id === 0 || user.id === '0'){
 		const iaUser = { id: 0, type: 'ia', name: 'normalAI' };
 		return reply.code(200).send({ tournament, winner: iaUser, message: 'Tournament ended' });
 	}
-	const winner = await fetchGetUserById(winnerId, tournament.winnerType);
+	const winner = await fetchGetUserById(user.id, user.type);
 	if (!winner)
-		return reply.code(500).send({ error: 'Could not fetch winner info' });
+		return reply.code(400).send({ error: 'Could not fetch winner info' });
 	return reply.code(200).send({ tournament, winner,  message: 'Tournament ended' });
 }
 
