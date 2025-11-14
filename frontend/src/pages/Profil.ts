@@ -2,7 +2,7 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { updateInfo, getUser, Logout, updateAvatar, setUser, getUserById} from '../tools/APIStorageManager';
+import { updateInfo, getUser, Logout, updateAvatar, getUserById} from '../tools/APIStorageManager';
 export default function Profile(): HTMLElement {
 
   if (!getUser()) {

@@ -264,10 +264,11 @@ export async function updateAvatar(request, reply) {
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
-	if (user.picture && fs.existsSync(user.picture) && user.picture !== '/pictures/BG.webp')
+	if (user.picture && fs.existsSync(user.picture) && user.picture !== './pictures/BG.webp')
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
+
     const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
     const filePath = path.join(uploadDir, fileName);
 
