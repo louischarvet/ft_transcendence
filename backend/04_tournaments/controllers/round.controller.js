@@ -123,8 +123,6 @@ async function checkMatchValidity(round, matchBody, matchesArray, reply) {
  * Finir un match puis recharger l'historique (wrapper)
  */
 async function finishMatchAndReload(matchBody, tournament, request, reply) {
-    // Reuse du helper finishMatch
-	
 	const finish = await finishMatch(matchBody, request, reply);
     if (finish?.error)
         return reply.code(500).send({ error: 'Impossible to finish match' });
@@ -323,8 +321,8 @@ export async function nextRound(request, reply) {
     if (finalWinner !== undefined) {
         console.log("finalWinner", finalWinner);
         // Tournoi terminé
-        let finishedTournamentArr = await endTournament(request, reply, tournament.id, finalWinner);
-		return await endTournament(request, reply, tournament.id, finalWinner);
+        //let finishedTournamentArr = await endTournament(request, reply, tournament.id, finalWinner);
+		return await endTournament(request, reply, tournament.id, finalWinner);;
     }
 
     // 8 : MAJ des DATA history, tournament et round
