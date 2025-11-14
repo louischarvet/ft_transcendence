@@ -243,7 +243,7 @@ export default function Profile(): HTMLElement {
   container.appendChild(profileCard);
 
 	let user = getUser();
-	getUserById(user.id).then(res => {
+	getUserById(user.id, user.type).then(res => {
 		user = res;
 
 		if (!user) return;

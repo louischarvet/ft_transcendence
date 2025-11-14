@@ -70,10 +70,12 @@ export function getUser() {
 }
 
 
-export async function getUserById(id: number){
+export async function getUserById(id: number, type : string){
 
 	const response = await apiFetch(`/api/user/${id}`, {
-		method: 'GET'
+		method: 'POST',
+		headers: {'Content-Type': 'application/json'},
+		body: JSON.stringify({ type: type })
 	});
 	if (!response.ok) {
 		console.warn("Erreur backend :", response.status);

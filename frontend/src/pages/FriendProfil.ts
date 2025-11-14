@@ -112,7 +112,7 @@ export default function FriendProfil(id: string): HTMLElement {
 	// Récupérer les infos de l'ami
 	try {
 		let data;
-		getUserById(Number(id)).then((response) =>{
+		getUserById(Number(id), 'registered').then((response) =>{
 			data = response;
 			if (!data)
 				return;
