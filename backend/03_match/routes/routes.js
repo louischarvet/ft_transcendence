@@ -1,5 +1,5 @@
-import { registeredMatch, guestMatch, iaMatch, getHistory, finish, abort, tournamentMatch, getMatchById, 
-	getHistoryByTournamentID} from '../controllers/controllers.js';
+import { registeredMatch, guestMatch, iaMatch, getHistory, finish, deleteMatch,
+	tournamentMatch, getMatchById, getHistoryByTournamentID} from '../controllers/controllers.js';
 import { registeredMatchSchema, matchSchema, abortSchema, tournamentMatchSchema } from '../schema/matchSchema.js'
 import { authenticateJWT } from '../authentication/auth.js';
 
@@ -14,8 +14,8 @@ export default async function matchRoutes(fastify, opts) {
 	
 	fastify.put('/finish', { preHandler: authenticateJWT, schema: matchSchema }, finish);
 	
-	fastify.post('/abort', { schema: abortSchema }, abort);
-
+//	fastify.delete('/abort', { schema: abortSchema }, abort);
+	fastify.delete('/:id', { preHandler: authenticateJWT }, deleteMatch);
 
 
 

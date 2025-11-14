@@ -5,7 +5,9 @@ import {
 	endTournament, 
 	startTournament, 
 	getTournamentById, 
-	getAllTournaments 
+	getAllTournaments,
+//	abort,
+	deleteTournament
 } from '../controllers/tournament.controller.js';
 
 import { 
@@ -48,6 +50,9 @@ export default async function routesPlugin(fastify, options) {
 	fastify.post('/starttournament/:id', { preHandler: authenticateJWT }, startTournament);
 	fastify.get('/:id', getTournamentById);
 	fastify.get('/all', getAllTournaments);
+
+//	fastify.delete('/abort', abort); // schema
+	fastify.delete('/:id', { preHandler: authenticateJWT }, deleteTournament);
 
 	//! ajout le 30/09/2025
 	// route PUT pour generer les matchs du prochain round, et MAJ les data de tournoi

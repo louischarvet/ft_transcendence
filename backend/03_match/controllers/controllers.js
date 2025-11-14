@@ -139,13 +139,28 @@ export async function finish(request, reply) {
 	});
 }
 
-export async function abort(request, reply) {
+// export async function abort(request, reply) {
+// 	const { db } = request.server;
+// 	const { user_id, user_type } = request.body;
+
+// 	const matches = db.matches.allByUser(user_id, user_type);
+// 	for (let i = 0, n = matches.length; i < n; i++)
+// 		db.matches.delete('id', matches[i].id);
+
+// //	db.matches.delete('p1_id', user_id);
+// //	db.matches.delete('p2_id', user_id);
+
+// 	return reply.code(200).send({
+// 		ok: true
+// 	});
+// }
+
+export async function deleteMatch(request, reply) {
+	// supprimer match avec id en param
 	const { db } = request.server;
-	const { user_id } = request.body;
-
-	db.matches.delete('p1_id', user_id);
-	db.matches.delete('p2_id', user_id);
-
+	const { id } = request.params;
+	console.log("########## id = ", id);
+	db.matches.delete('id', id);
 	return reply.code(200).send({
 		ok: true
 	});

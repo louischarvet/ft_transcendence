@@ -111,6 +111,12 @@ export async function initDB(fastify) {
             );
             return await this.get('id', tournamentID);
         },
+        async delete(column, value) {
+            await db.run(
+                `DELETE FROM ${this.table} WHERE ${column} = ?`,
+                [ value ]
+            );
+        }
     }
 
     db.history = {
@@ -188,7 +194,13 @@ export async function initDB(fastify) {
 				[ tournamentID, roundNumber ]
 			);
 			return await this.get(tournamentID, roundNumber);
-		}
+		},
+        async delete(column, value) {
+            await db.run(
+                `DELETE FROM ${this.table} WHERE ${column} = ?`,
+                [ value ]
+            );
+        }
 	}
 
 	await fastify.decorate('db', db);

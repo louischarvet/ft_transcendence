@@ -5,7 +5,8 @@ import { fetchUserTournament } from './user.controller.js';
 import {
 	fetchMatchForTournament,
 	fetchHistoryMatchForTournament,
-	fetchFinishMatchForTournament
+	fetchFinishMatchForTournament,
+	fetchDeleteMatch
 } from './match.controller.js';
 
 import { fetchGetUserById } from './user.controller.js';
@@ -177,4 +178,31 @@ export async function getAllTournaments(request, reply) {
 	const { db } = request.server;
 	const tournaments = await db.all(`SELECT * FROM tournament`);
 	return reply.code(200).send({ tournaments, message: 'All tournaments' });
+}
+
+// export async function abort(request, reply) {
+// 	const { db } = request.server;
+// 	const { user_id } = request.body;
+// 	// delete tournois
+
+// 	// delete rounds
+// }
+
+export async function deleteTournament(request, reply) {
+	const { db } = request.server;
+	const { id } = request.params;
+	const tournament = await db.tournament.get('id', id);
+	if (tournament !== undefined) {
+		const matchs = tournament.matchs.split(';');
+		for (let i = 0, n = matchs.length; i < n; i++) {
+		//	console.log("i = ", i, "\tmatches[i] = ", matchs[i], "\n");
+			const res = await fetchDeleteMatch(matchs[i]);
+			if (!res.ok)
+				return reply.code(400).send({ error: 'deleteMatch error' });
+		}
+	}
+	// supprimer rounds
+	await db.round.delete('tournament_id', id);
+	await db.tournament.delete('id', id);
+	return reply.code(200).send({ ok: true });
 }
