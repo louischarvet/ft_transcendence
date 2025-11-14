@@ -59,16 +59,13 @@ export async function initDB(fastify) {
 			const { p1_id, p1_type, p2_id, p2_type, tournament_id } = match;
 			const date = Date().toLocaleString('fr-FR');
 			const shortDate = date.split(" GMT")[0];
-			await db.run(
-				`INSERT INTO ${this.table}(p1_id, p1_type, p2_id, p2_type,
-				tournament_id, created_at) VALUES(?, ?, ?, ?, ?, ?)`,
-				[ p1_id, p1_type, p2_id, p2_type, tournament_id, shortDate ]
-			);
-			return (await db.get(
-				`SELECT * FROM ${this.table} WHERE p1_id = ? AND p2_id = ?
-				AND created_at = ? AND tournament_id = ?`,
-				[ p1_id, p2_id, shortDate, tournament_id ]
-			));
+			const result = await db.run(`INSERT INTO ${this.table}(p1_id, p1_type, p2_id, p2_type,	tournament_id, created_at) VALUES(?, ?, ?, ?, ?, ?)`,	[ p1_id, p1_type, p2_id, p2_type, tournament_id, shortDate ]);
+			//await db.get(
+				//`SELECT * FROM ${this.table} WHERE p1_id = ? AND p2_id = ?
+				//AND created_at = ? AND tournament_id = ?`,
+				//[ p1_id, p2_id, shortDate, tournament_id ]
+			//);
+			return (await this.get('id', result.lastID));
 		},
 		async delete(column, value) {
 			await db.run(
