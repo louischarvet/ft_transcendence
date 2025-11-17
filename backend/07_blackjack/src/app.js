@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyCors from '@fastify/cors';
+import shutdown from '../common_tools/shutdown.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -12,6 +13,8 @@ fastify.register(fastifyCors, {
 
 // Enregistrer le plugin WebSocket
 fastify.register(fastifyWebsocket);
+
+fastify.register(shutdown);
 
 // Stockage des salles de jeu
 const gameRooms = new Map();
