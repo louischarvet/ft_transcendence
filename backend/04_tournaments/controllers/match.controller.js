@@ -50,3 +50,15 @@ export async function fetchFinishMatchForTournament(match, cookies){
 	const matchFinish = await res.json();
 	return matchFinish;
 }
+
+export async function fetchDeleteMatch(id) {
+	const cookieHeader = `accessToken=${cookies.accessToken}`;
+	const res = await fetch(`http://match-service:3000/${id}`, {
+		method: 'DELETE',
+		headers: { 'Cookie': cookieHeader },
+		credentials: 'include',
+	});
+	console.log("##################### RES\n", res,
+				"\n#########################\n");
+	return res;
+}

@@ -76,7 +76,20 @@ export async function initDB(fastify) {
 		async get(column, value) {
 			return (await db.get(
 				`SELECT * FROM ${this.table} WHERE ${column} = ?`,
-				[ value ]));
+				[ value ]
+			));
+		},
+		async allByUser(userID, userType) {
+			const p1 = await db.all(
+				`SELECT * FROM ${this.table} WHERE p1_id = ? AND p1_type = ?`,
+				[ userID, userType ]
+			);
+			const p2 = await db.all(
+				`SELECT * FROM ${this.table} WHERE p2_id = ? AND p2_type = ?`,
+				[ userID, userType ]
+			);
+			const all = [ ...p1, ...p2 ];
+			return all;
 		}
 	}
 

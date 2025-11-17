@@ -44,9 +44,13 @@ export const abortSchema = {
 	$id: 'abortSchema',
 	body: {
 		type: 'object',
-		required: [ 'user_id' ],
+		required: [ 'user_id', 'user_type' ],
 		properties: {
-			user_id: { type: 'integer' }
+			user_id: { type: 'integer' },
+			user_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest', 'ia' ]
+			}
 		},
 		additionalProperties: false
 	}

@@ -110,12 +110,14 @@ export async function logIn(request, reply) {
 
 	const exists = await db.registered.getByName(name);
 
-	await clearCookies(reply);
+	// await clearCookies(reply);
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
 
-	await fetchAbortMatch(exists);
+//	await fetchAbortTournament(exists);
+//	await fetchAbortMatch(exists);
+	// abort Tournament
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
 		await db.registered.updateCol('status', name, 'available');
@@ -124,14 +126,11 @@ export async function logIn(request, reply) {
 		delete user.hashedPassword;
 		
 		user.verified = true;
-
-		const { accessToken, refreshToken } = await generateJWT(user);
-		const body = {
-			user: user,
-			message: 'User ' + name + ' available.',
-		};
-		return reply.code(201)
-			.setCookie('accessToken', accessToken, {
+		if (tmp === undefined || tmp === false) {
+			await clearCookies(reply);
+			
+			const { accessToken, refreshToken } = await generateJWT(user);
+			reply.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
 				maxAge: 60 * 15,
 				path: '/'
@@ -140,8 +139,15 @@ export async function logIn(request, reply) {
 				...secureCookieOptions,
 				maxAge: 604800,
 				path: '/api/refresh'
-			})
-			.send(body);
+			});
+		}
+
+		const body = {
+			user: user,
+			message: 'User ' + name + ' available.',
+		};
+
+		return reply.code(201).send(body);
 	} else
 		return reply.code(444).send({ error: 'Bad password' });
 }
