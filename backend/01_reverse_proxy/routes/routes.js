@@ -62,10 +62,10 @@ async function routesPlugin(fastify, options) {
 		websocket: true,
 	});
 	fastify.register(fastifyHttpProxy, {
-	upstream: "http://blackjack-service:3000",
-	prefix: '/blackjack',
-	rewritePrefix: '/',
-	websocket: true
+		upstream: "http://blackjack-service:3000",
+		prefix: '/blackjack',
+		rewritePrefix: '/',
+		websocket: true
 	});
 }
 

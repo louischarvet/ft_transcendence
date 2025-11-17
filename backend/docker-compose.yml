@@ -32,7 +32,7 @@ services:
 
   blackjack-service:
     container_name: blackjack-service
-    build: ./07_blackjack
+    build: ./08_blackjack
     expose:
       - "3000"
     environment:
