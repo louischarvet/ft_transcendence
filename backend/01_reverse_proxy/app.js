@@ -31,7 +31,6 @@ server.register(cookie);
 server.register(routesPlugin);
 server.register(shutdown);
 
-// Lancement du serveur
 server.listen({ port: 443, host: '0.0.0.0' }, (err) => {
     if (err) {
         server.log.error(err);
