@@ -336,12 +336,12 @@ export async function createMatch(playerType: string, name?: string, password?: 
 // Mockup
 export async function deleteMatch(matchId: number): Promise<boolean> {
 
-	// const res = await apiFetch(`/api/match/${matchId}`, {
-	// 	method: 'DELETE',
-	// });
-	// const data = await res.json();
-	// if (data.error)
-	// 	return false;
+	const res = await apiFetch(`/api/match/${matchId}`, {
+		method: 'DELETE',
+	});
+	const data = await res.json();
+	if (data.error)
+		return false;
 	return true;
 }
 
@@ -421,12 +421,12 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 // Mockup
 export async function deleteTournament(tournamentId: number): Promise<boolean> {
 
-	// const res = await apiFetch(`/api/tournament/${tournamentId}`, {
-	// 	method: 'DELETE',
-	// });
-	// const data = await res.json();
-	// if (data.error)
-	// 	return false;
+	const res = await apiFetch(`/api/tournament/${tournamentId}`, {
+		method: 'DELETE',
+	});
+	const data = await res.json();
+	if (data.error)
+		return false;
 	return true;
 }
 

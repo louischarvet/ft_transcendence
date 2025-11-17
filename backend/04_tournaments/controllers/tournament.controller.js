@@ -207,7 +207,7 @@ export async function deleteTournament(request, reply) {
 		const matchs = tournament.matchs.split(';');
 		for (let i = 0, n = matchs.length; i < n; i++) {
 		//	console.log("i = ", i, "\tmatches[i] = ", matchs[i], "\n");
-			const res = await fetchDeleteMatch(matchs[i]);
+			const res = await fetchDeleteMatch(matchs[i], request.cookies);
 			if (!res.ok)
 				return reply.code(400).send({ error: 'deleteMatch error' });
 		}

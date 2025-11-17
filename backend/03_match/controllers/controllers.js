@@ -181,8 +181,8 @@ export async function tournamentMatch(request, reply) {
 		tournament_id: tournamentID
 	});
 
-	await fetchChangeStatus(player1, 'in_game');
-	await fetchChangeStatus(player2, 'in_game');
+//	await fetchChangeStatus(player1, 'in_game');
+//	await fetchChangeStatus(player2, 'in_game');
 
 	return reply.code(200).send({
 		match: match,
