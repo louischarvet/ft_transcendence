@@ -314,7 +314,7 @@ export async function verifyTwoFactorCode(code: string) {
 }
 
 export type Match = {
-	id: string,
+	id: number, // changed, to test
 	player1: { id: string, name?: string , type: string },
 	player2: { id: string, name?: string , type: string },
 	tournament_id: any | undefined
@@ -338,10 +338,20 @@ export async function createMatch(playerType: string, name?: string, password?: 
 	} as Match;
 }
 
+// Mockup
+export async function deleteMatch(matchId: number): Promise<boolean> {
+
+	// const res = await apiFetch(`/api/match/${matchId}`, {
+	// 	method: 'DELETE',
+	// });
+	// const data = await res.json();
+	// if (data.error)
+	// 	return false;
+	return true;
+}
+
 export async function updateMatchResult(scoreP1: number, scoreP2: number, match: Match) {
-	console.log('updateMatchResult called'); // vérif que la fn est appelée
 	const payload = buildFinishPayload(scoreP1, scoreP2, match);
-	console.log('[DEBUG] updateMatchResult payload ->', payload);
 	const res = await apiFetch(`/api/match/finish`, {
 		method: 'PUT',
 		headers: {'Content-Type': 'application/json'},
@@ -410,9 +420,19 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	const data = await res.json();
 	if (data.error)
 		return null;
-	// console.log("data tournament: ", data.tournament);
-	console.log("data tournament as Type: ", data.tournament as Tournament);
 	return data.tournament as Tournament;
+}
+
+// Mockup
+export async function deleteTournament(tournamentId: number): Promise<boolean> {
+
+	// const res = await apiFetch(`/api/tournament/${tournamentId}`, {
+	// 	method: 'DELETE',
+	// });
+	// const data = await res.json();
+	// if (data.error)
+	// 	return false;
+	return true;
 }
 
 export async function nextTournamentMatch(scoreP1: number, scoreP2: number, match: Match): Promise<any | null> {
