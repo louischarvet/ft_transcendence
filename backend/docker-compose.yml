@@ -30,6 +30,18 @@ services:
     volumes:
       - twofa_db:/usr/src/app/
 
+  blackjack-service:
+    container_name: blackjack-service
+    build: ./07_blackjack
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - transcendence-net
+    restart: unless-stopped
+
   proxy-service:
     container_name: proxy-service
     build:

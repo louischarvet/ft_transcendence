@@ -64,6 +64,43 @@ async function routesPlugin(fastify, options) {
 		prefix: '/twofa',
 		rewritePrefix: '/',
 	});
+	fastify.register(fastifyHttpProxy, {
+	upstream: "http://blackjack-service:3000",
+	prefix: '/blackjack',
+	rewritePrefix: '/',
+	websocket: true
+	});
+
+	// HTTPS ?
+	// fastify.post('/session/refresh', async (request, reply) => {
+	// 	try {
+	// 		const response = await fetch('http://session-service:3000/refresh', {
+	// 			method: 'POST',
+	// 			headers: {
+	// 				'Authorization': request.headers.authorization,
+	// 			}
+	// 		});
+	// 		const data = await response.json();
+	// 		return reply.code(200).send(data);
+	// 	} catch (error) {
+	// 		fastify.log.error(error);
+	// 		reply.status(500).send({ error: 'Internal Server Error' });
+	// 	}
+	// });
+	
+/*	fastify.get('/auth', async (request, reply) => {
+		try {
+			const response = await fetch('http://auth:3001/data');
+			const data = await response.json();
+
+			return (data); ////
+		} catch (error) {
+			fastify.log.error(error);
+			reply.status(500).send({ error: 'Internal Server Error' });
+		}
+	})
+*/
+	
 }
 
 export default routesPlugin;

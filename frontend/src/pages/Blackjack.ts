@@ -1,4 +1,5 @@
 import BjScene from '../tools/games/BjScene';
+import { connect as BjConnect } from '../tools/games/BjRequest';
 
 export default function Blackjack(): HTMLElement {
   const container = document.createElement('div');
@@ -25,8 +26,8 @@ export default function Blackjack(): HTMLElement {
     canvas.style.width = canvas.width + "px";
     canvas.style.height = canvas.height + "px";
   };
-  
-  function game() {
+
+  async function game() {
     const bjScene = new BjScene(canvas);
 
     resizeCanvas();
@@ -34,7 +35,25 @@ export default function Blackjack(): HTMLElement {
 
     window.addEventListener("resize", resizeCanvas);
     window.addEventListener("resize", () => bjScene.engine.resize());
-    
+
+    // Le gameId sera généré par le backend lors du join
+    const gameId = `game_${Date.now()}`;
+    const playerId = `player_${Date.now()}`;
+    (window as any).BJ_GAME_ID = gameId;
+    (window as any).BJ_PLAYER_ID = playerId;
+
+    try {
+      await BjConnect({
+        gameId,
+        playerId,
+        playerName: 'Player',
+        bank: 5000,
+        position: 'p1'
+      });
+    } catch (e) {
+      console.error('[Blackjack] Connection backend échouée:', e);
+    }
+
     bjScene.start();
   }
 

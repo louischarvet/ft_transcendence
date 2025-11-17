@@ -7,20 +7,34 @@ const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 export default defineConfig({
+    optimizeDeps: {
+    exclude: [
+      '@babylonjs/core',
+      '@babylonjs/gui',
+      '@babylonjs/loaders'
+    ]
+  },
   server: {
     port: 5173,
     strictPort: true,
     host: '0.0.0.0',
-	https: {
-		key: fs.readFileSync(path.join(dirname, 'ssl/proxy.key')),
-    	cert: fs.readFileSync(path.join(dirname, 'ssl/proxy.crt'))
-	},
+    https: {
+      key: fs.readFileSync(path.join(dirname, 'ssl/proxy.key')),
+      cert: fs.readFileSync(path.join(dirname, 'ssl/proxy.crt'))
+    },
     proxy: {
       '/api': {
         target: 'https://proxy-service:443',
         changeOrigin: true,
         secure: false,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
+      },
+      '/ws/blackjack': {
+        target: 'http://blackjack-service:3000',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path: string) => path.replace(/^\/ws\/blackjack/, '/blackjack'),
       },
     },
   },

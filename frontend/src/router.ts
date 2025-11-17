@@ -19,6 +19,16 @@ export function renderRoute() {
 	const path = window.location.pathname;
 	const app = document.getElementById('app');
 	if (!app) throw new Error("Element with id 'app' not found");
+
+	// Nettoyer les connexions WebSocket avant de changer de page
+	if ((window as any).__bjDisconnect) {
+		try {
+			(window as any).__bjDisconnect();
+		} catch (e) {
+			console.error('[Router] Error disconnecting Blackjack:', e);
+		}
+	}
+
 	app.innerHTML = '';
 
 	// Trouve une route exacte OU une route dynamique
