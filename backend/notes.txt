@@ -199,3 +199,11 @@ exemple pour la creation d'un tournoi :
 
 Le front envoie le nombre de joueurs et récupère le tournoi créé avec le créateur déjà ajouté.
 Afficher le tournoi dans la page “Mes tournois / En attente”
+
+
+TODO /
+
+ne plus afficher dropdownmenu dans les jeux
+MAJ des status en fonction de match ou tournoi
+empecher de jouer contre nous meme
+modifier les "alert" --- > remplacer par popup
