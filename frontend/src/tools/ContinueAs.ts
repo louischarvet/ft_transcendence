@@ -2,10 +2,6 @@ import { navigate } from '../router';
 import { asGuest , checkConnection } from "./APIStorageManager";
 
 export default function ContinueAs() {
-	// checkConnection().then((connected) => {
-	// 	if (connected)
-	// 		navigate('/select-game');
-	// });
     const wrapper = document.createElement('div');
     wrapper.className =
         'flex flex-col justify-center items-center gap-4 p-8 sm:p-16 bg-[#0000000e] rounded-xl backdrop-blur-2xl w-full max-w-md mx-auto';
@@ -25,11 +21,9 @@ export default function ContinueAs() {
         console.log('Continue as Guest');
 		asGuest(false)
 			.then( res => {
-				alert('Connecting guest successfully!');
 				navigate('/select-game');
 			})
 			.catch( (err) => {
-				alert('Error connecting guest.');
 				console.log('Guest connection:', err);
 			})
     };

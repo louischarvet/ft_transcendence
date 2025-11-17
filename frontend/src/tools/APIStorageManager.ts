@@ -333,7 +333,6 @@ export async function createMatch(playerType: string, name?: string, password?: 
 	} as Match;
 }
 
-// Mockup
 export async function deleteMatch(matchId: number): Promise<boolean> {
 
 	const res = await apiFetch(`/api/match/${matchId}`, {
@@ -367,8 +366,6 @@ export async function launchTournament(nbPlayers: number) {
 	const data = await res.json();
 	console.log("launchTournament data -> ", data);
 	if (data.error) return null;
-	//return data.Tournament as Tournament;
-	// Retourne directement le premier tournoi
 	return data.Tournament as Tournament;
 }
 
@@ -418,7 +415,6 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	return data.tournament as Tournament;
 }
 
-// Mockup
 export async function deleteTournament(tournamentId: number): Promise<boolean> {
 
 	const res = await apiFetch(`/api/tournament/${tournamentId}`, {
