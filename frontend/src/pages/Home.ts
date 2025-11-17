@@ -5,7 +5,6 @@ import Login from '../tools/Login';
 import Register from '../tools/Register';
 import GameSelection from '../tools/GameSelection';
 import TwofaVerification from '../tools/2faVerification';
-import DropDownMenu from '../tools/DropDownMenu';
 
 export default function Home(subPage?: string): HTMLElement {
 	const container = document.createElement('div');

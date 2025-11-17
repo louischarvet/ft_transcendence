@@ -51,19 +51,6 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	return response;
 }
 
-
-//export async function getUserByToken() {
-//	let response = await fetchRefreshToken();
-//	if (!response) {
-//		console.error("Refresh token invalide. Déconnexion...");
-//		localStorage.removeItem('user');
-//		navigate("/");
-//		return null;
-//	}
-//	setUser()
-//	return getUser();
-//}
-
 export function getUser() {
 	const jsonUser = localStorage.getItem('user');
 	return jsonUser ? JSON.parse(jsonUser) : null;
@@ -83,7 +70,7 @@ export async function getUserById(id: number, type : string){
 	}
 	console.log("reponse getUserById -> ", response);
 	const data = await response.json();
-	setUser(data.user);
+	//setUser(data.user);
 	return data.user;
 }
 
@@ -182,6 +169,10 @@ export async function fetchRefreshToken(){
 		console.log("Impossible de mettre a jour le refresh token", response);
 		return false;
 	}
+	
+	const user = await response.json();
+	console.log("fetchRefreshToken user -> ", user);
+	setUser(user);
 	return true;
 }
 

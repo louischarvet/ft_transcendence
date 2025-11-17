@@ -61,12 +61,13 @@ export default function DropDownMenu() {
 				return;
 
 			const friendItem = document.createElement('div');
-			friendItem.className = 'flex items-center gap-2 px-2 py-1';
+			friendItem.className = 'flex items-center justify-between px-2 py-1';
 			friendItem.style.cursor = 'pointer';
 			
 			// Photo
 			const friendPic = document.createElement('img');
-			friendPic.src = friend.picture || './pictures/avatar_1.jpg';
+			friendPic.src = friend.picture ? `https://localhost:4343/user/${friend.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';	 
+			//friendPic.src = friend.picture || './pictures/avatar_1.jpg';
 			friendPic.className = 'w-8 h-8 rounded-full object-cover';
 			friendItem.appendChild(friendPic);
 

@@ -114,17 +114,34 @@ export default function FriendProfil(id: string): HTMLElement {
 		let data;
 		getUserById(Number(id), 'registered').then((response) =>{
 			data = response;
-			if (!data)
-				return;
-			if (!data || !data.user) {
+			if (!data) {
 				alert("Utilisateur non trouvé");
 				navigate('/profil');
 				return container;
 			}
 			
-			const user = data.user;
+			const user = data;
 			username.textContent = user.name;
-			if (user.picture) avatar.innerHTML = `<img src="${user.picture}" class="w-[120px] h-[120px] rounded-full object-cover">`;
+			// jai avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+			// dans profil.ts
+
+			if(user.picture){
+				avatar.innerHTML = '';
+				const avatarImg = document.createElement('img');
+				avatarImg.src = `https://localhost:4343/user/${user.picture}`;
+				avatarImg.alt = 'Avatar';
+				avatarImg.className = 'object-cover w-full h-full bg-red';
+				avatar.appendChild(avatarImg);
+			}
+			else{
+				avatar.innerHTML = '';
+				const avatarImg = document.createElement('img');
+				avatarImg.src = 'https://localhost:4343/user/pictures/avatar_1.jpg';
+				avatarImg.alt = 'Avatar';
+				avatarImg.className = 'object-cover w-full h-full bg-red';
+				avatar.appendChild(avatarImg);
+			}
+			
 
 			ratio.querySelector('p:nth-child(2)')!.textContent = (user.win_rate?.toFixed(2)) ?? '0.00';
 			gamesPlayed.querySelector('p:nth-child(2)')!.textContent = user.played_matches ?? '0';

@@ -3,6 +3,9 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 
+//pour creer les users de base
+import bcrypt from 'bcrypt'; 
+
 const dbFile = '/usr/src/app/data/users_db';
 
 async function getDB() {
@@ -215,6 +218,30 @@ export async function initDB(fastify) {
 			return { registered, guests };
 		},
 	};
+
+	/*******************/
+	/* USER REGISTERED */
+	/*******************/
+	const defaultUsers = [
+		{ name: "Louis", email: "trijaudnathan@gmail.com" },
+		{ name: "Yan", email: "trijaudnathan@gmail.com" },
+		{ name: "Nathan", email: "trijaudnathan@gmail.com" },
+		{ name: "Baptiste", email: "trijaudnathan@gmail.com" }
+	];
+
+
+	for (const user of defaultUsers) {
+		const exists = await db.get(`SELECT id FROM registered WHERE name = ?`, [user.name]);
+
+		if (!exists) {
+			const hashedPassword = await bcrypt.hash("password123", 10);
+			await db.run(
+				`INSERT INTO registered (name, hashedPassword, email, picture)
+				VALUES (?, ?, ?, "./pictures/BG.webp")`,
+				[user.name, hashedPassword, user.email]
+			);
+		}
+	}
 
     await fastify.decorate('db', db);
 
