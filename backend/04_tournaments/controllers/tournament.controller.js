@@ -4,13 +4,9 @@ import { addNewPlayerToTournament } from './player.controller.js';
 import { fetchUserTournament } from './user.controller.js';
 import {
 	fetchMatchForTournament,
-<<<<<<< HEAD
-	fetchHistoryMatchForTournament
-=======
 	fetchHistoryMatchForTournament,
 	fetchFinishMatchForTournament,
 	fetchDeleteMatch
->>>>>>> locharve_test
 } from './match.controller.js';
 
 import { fetchGetUserById } from './user.controller.js';
