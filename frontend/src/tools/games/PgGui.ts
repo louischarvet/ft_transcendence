@@ -1,11 +1,11 @@
 import { AdvancedDynamicTexture,
-  Button, Control, Rectangle,
+  Button, Control, Rectangle, Line,
   InputText, TextBlock, ScrollViewer
 } from "@babylonjs/gui";
 import { navigate } from "../../router";
-import { type Match, createMatch, updateMatchResult,
+import { type Match, createMatch, deleteMatch, updateMatchResult,
   type Tournament, launchTournament, joinTournamentAsGuest,
-  joinTournamentAsLogged, startTournament, nextTournamentMatch
+  joinTournamentAsLogged, startTournament, deleteTournament, nextTournamentMatch
 } from "../APIStorageManager";
 
 export default class PgGui {
@@ -21,6 +21,8 @@ export default class PgGui {
 
   currentMatch: Match | null = null;
   currentTournament: Tournament | null = null;
+  rounds: { [index: number]: Match[] } = {};
+  currentRoundIndex = 0;
   currentMatchIndex = 0;
 
   started: boolean = false;
@@ -63,6 +65,7 @@ export default class PgGui {
     },
     addPlayer(player: {id: string, name: string}): void,
     start: Button,
+    showBracket(): void,
     visibility(visible: boolean): void
   };
 
@@ -79,7 +82,6 @@ export default class PgGui {
   pause: {
     title: TextBlock,
     resume: Button,
-    restart: Button,
     menu: Button,
     quit: Button,
     isPaused(): boolean
@@ -262,8 +264,6 @@ export default class PgGui {
     if (this.goBackUI == "menu") {
       this.goBackButton.isVisible = false;
       this.menu.visibility(true);
-    } else if (this.goBackUI == "tournament") {
-      this.tournament.visibility(true);
     } else if (this.goBackUI == "pause") {
       this.goBackButton.isVisible = false;
       this.pause.visibility(true);
@@ -427,18 +427,31 @@ export default class PgGui {
         quitButton.color = "white";
       });
       quitButton.onPointerClickObservable.add(() => {
+        this.menu.visibility(true);
         navigate("/select-game");
       });
       this.ui.addControl(quitButton);
     }
 
-    const visibility = (value: boolean) => {
+    const visibility = (visible: boolean) => {
       Object.values(this.menu).forEach((obj) => {
         if (obj && typeof obj === "object" && "isVisible" in obj) {
-          obj.isVisible = value;
+          obj.isVisible = visible;
         }
       });
-      this.font.isVisible = value;
+      this.font.isVisible = visible;
+      if (visible) {
+        if (this.currentTournament) {
+          deleteTournament(this.currentTournament.id);
+          this.currentTournament = null;
+          this.rounds = {};
+          this.currentRoundIndex = 0;
+          this.currentMatch = null;
+        } else if (this.currentMatch) {
+          deleteMatch(this.currentMatch.id);
+          this.currentMatch = null;
+        }
+      }
     };
 
     return {
@@ -645,8 +658,7 @@ export default class PgGui {
 		}
 
 		this.currentTournament = tournament;
-		console.log("Current tournament set to:", this.currentTournament);  
-		console.log("Current tournament set to:", this.currentTournament);		
+		console.log("Current tournament set to:", this.currentTournament);
         // Hide size selection
         this.tournament.selectSize.isVisible = false;
         this.tournament.size4.isVisible = false;
@@ -808,7 +820,8 @@ export default class PgGui {
         startTournament(this.currentTournament.id).then((tournament) => {
           if (tournament == null) return;
           this.currentTournament = tournament;
-          this.currentMatch = this.currentTournament.matches[0];
+          this.rounds[0] = this.currentTournament.matches;
+          this.currentMatch = this.rounds[0][0];
           this.tournament.visibility(false);
           this.goBackButton.isVisible = false;
           if (this.currentMatch.player1.type === "ia" && this.currentMatch.player2.type === "ia")
@@ -845,6 +858,191 @@ export default class PgGui {
       }
     };
 
+    const showBracket = () => {
+      if (!this.currentTournament) return;
+
+      const TournamentBracketTitle = new TextBlock("tournamentBracketTitle", "TOURNAMENT BRACKET"); {
+        TournamentBracketTitle.width = 450 + "px";
+        TournamentBracketTitle.height = 180 + "px";
+        TournamentBracketTitle.top = "-200px";
+        TournamentBracketTitle.fontSize = 132 + "px";
+        TournamentBracketTitle.color = "white";
+        this.ui.addControl(TournamentBracketTitle);
+      }
+
+      let roundIndex = 0;
+      const matchBlocks: Rectangle[] = [];
+      const matchBrackets: Line[] = [];
+
+      const createMatchBlock = (match: any, x: number, y: number): Rectangle => {
+        const matchBlock = new Rectangle(`tournamentMatchBlock_${match.id}`); {
+          matchBlock.width = 80 + "px";
+          matchBlock.height = 40 + "px";
+          matchBlock.left = `${x}px`;
+          matchBlock.top = `${y}px`;
+          matchBlock.color = "white";
+          this.ui.addControl(matchBlock);
+        }
+
+        const player1Text = new TextBlock(`tournamentPlayer1Text_${match.id}`, match.player1.name ? match.player1.name : "normalAI"); {
+          player1Text.parent = matchBlock;
+          player1Text.width = "100%";
+          player1Text.height = "50%";
+          player1Text.top = "-10px";
+          player1Text.fontSize = 14 + "px";
+          player1Text.color = "purple";
+          matchBlock.addControl(player1Text);
+        }
+
+        const vsText = new TextBlock(`tournamentVSText_${match.id}`, "VS"); {
+          vsText.parent = matchBlock;
+          vsText.width = "100%";
+          vsText.height = "30px";
+          vsText.fontSize = 12 + "px";
+          vsText.fontStyle = "italic";
+          vsText.color = "green";
+          matchBlock.addControl(vsText);
+        }
+
+        const player2Text = new TextBlock(`tournamentPlayer2Text_${match.id}`, match.player2.name ? match.player2.name : "normalAI"); {
+          player2Text.parent = matchBlock;
+          player2Text.width = "100%";
+          player2Text.height = "50%";
+          player2Text.top = "10px";
+          player2Text.fontSize = 14 + "px";
+          player2Text.color = "purple";
+          matchBlock.addControl(player2Text);
+        }
+
+        return matchBlock;
+      };
+
+      const createMatchBrackets = (x: number, y: number): Line[] => { // vertical lines
+        const brackets: Line[] = [];
+
+        if (x < 0) { // Left and down lines
+          const leftLine = new Line(`tournamentLeftLine_${x}_${y}`); {
+            leftLine.x1 = x + 25;
+            leftLine.y1 = y + 25;
+            leftLine.x2 = x + 75;
+            leftLine.y2 = y + 75;
+            leftLine.color = "white";
+            this.ui.addControl(leftLine);
+          }
+          brackets.push(leftLine);
+
+          const downLine = new Line(`tournamentDownLine_${x}_${y}`); {
+            downLine.x1 = x - 25;
+            downLine.y1 = y + 25;
+            downLine.x2 = x - 25;
+            downLine.y2 = y + 75;
+            downLine.color = "white";
+            this.ui.addControl(downLine);
+          }
+          brackets.push(downLine);
+        } else if (x > 0) { // Down and right lines
+          const downLine = new Line(`tournamentDownLine_${x}_${y}`); {
+            downLine.x1 = x + 25;
+            downLine.y1 = y + 25;
+            downLine.x2 = x + 25;
+            downLine.y2 = y + 75;
+            downLine.color = "white";
+            this.ui.addControl(downLine);
+          }
+          brackets.push(downLine);
+
+          const rightLine = new Line(`tournamentRightLine_${x}_${y}`); {
+            rightLine.x1 = x - 25;
+            rightLine.y1 = y + 25;
+            rightLine.x2 = x - 75;
+            rightLine.y2 = y + 75;
+            rightLine.color = "white";
+            this.ui.addControl(rightLine);
+          }
+          brackets.push(rightLine);
+        } else { // Final match, left and right lines
+          const leftLine = new Line(`tournamentLeftLine_${x}_${y}`); {
+            leftLine.x1 = x + 25;
+            leftLine.y1 = y + 25;
+            leftLine.x2 = x + 75;
+            leftLine.y2 = y + 75;
+            leftLine.color = "white";
+            this.ui.addControl(leftLine);
+          }
+          brackets.push(leftLine);
+
+          const rightLine = new Line(`tournamentRightLine_${x}_${y}`); {
+            rightLine.x1 = x - 25;
+            rightLine.y1 = y + 25;
+            rightLine.x2 = x - 75;
+            rightLine.y2 = y + 75;
+            rightLine.color = "white";
+            this.ui.addControl(rightLine);
+          }
+          brackets.push(rightLine);
+        }
+
+        return brackets;
+      };
+
+      const createRound = (roundIdx: number, roundY: number, blocks: Rectangle[], brackets: Line[]) => {
+        let roundX = this.rounds[roundIdx].length / 2 * -100 + 50;
+        for (const match of this.rounds[roundIdx]) {
+          blocks.push(createMatchBlock(match, roundX, roundY));
+          if (roundIdx)
+            brackets.push(...createMatchBrackets(roundX, roundY));
+          roundX += 100;
+        }
+      };
+
+      switch (this.currentTournament.nbPlayersTotal) { // fallthrough to create all rounds for selected size
+        case 16:
+          let roundY = 400;
+          createRound(roundIndex, roundY, matchBlocks, matchBrackets);
+          roundIndex++;
+        case 8:
+          roundY = 300;
+          createRound(roundIndex, roundY, matchBlocks, matchBrackets);
+          roundIndex++;
+        case 4:
+          roundY = 200;
+          createRound(roundIndex, roundY, matchBlocks, matchBrackets);
+          roundIndex++;
+      };
+      matchBlocks.push(createMatchBlock(this.rounds[roundIndex][0], 0, 100));
+      matchBrackets.push(...createMatchBrackets(0, 100));
+
+      const menuButton = Button.CreateSimpleButton("menuButton", "Menu"); {
+        menuButton.width = 250 + "px";
+        menuButton.height = 60 + "px";
+        menuButton.top = "35px";
+        menuButton.fontSize = 32 + "px";
+        menuButton.color = "white";
+        menuButton.thickness = 0;
+        menuButton.background = "transparent";
+        menuButton.alpha = 0.5;
+        menuButton.onPointerEnterObservable.add(() => {
+          menuButton.color = "purple";
+          menuButton.alpha = 1;
+        });
+        menuButton.onPointerOutObservable.add(() => {
+          menuButton.color = "white";
+          menuButton.alpha = 0.5;
+        });
+        menuButton.onPointerClickObservable.add(() => {
+          TournamentBracketTitle.dispose();
+          matchBlocks.forEach((block) => block.dispose());
+          matchBrackets.forEach((bracket) => bracket.dispose());
+          menuButton.dispose();
+          this.menu.visibility(true);
+        });
+        this.ui.addControl(menuButton);
+      }
+
+      this.rounds = {};
+      this.currentRoundIndex = 0;
+    }
+
     return {
       title: tournamentTitle,
       host: hostText,
@@ -866,6 +1064,7 @@ export default class PgGui {
       },
       addPlayer,
       start: startButton,
+      showBracket,
       visibility
     }
   }
@@ -985,8 +1184,8 @@ export default class PgGui {
     const resumeButton = Button.CreateSimpleButton("resumeButton", "Resume"); {
       resumeButton.width = 250 + "px";
       resumeButton.height = 60 + "px";
-      resumeButton.top = "-70px";
-      resumeButton.fontSize = 32 + "px";
+      resumeButton.top = "-50px";
+      resumeButton.fontSize = 42 + "px";
       resumeButton.color = "white";
       resumeButton.thickness = 0;
       resumeButton.background = "transparent";
@@ -1004,34 +1203,11 @@ export default class PgGui {
       });
       this.ui.addControl(resumeButton);
     }
-    
-    const restartButton = Button.CreateSimpleButton("restartButton", "Restart"); {
-      restartButton.width = 250 + "px";
-      restartButton.height = 60 + "px";
-      restartButton.fontSize = 32 + "px";
-      restartButton.color = "white";
-      restartButton.thickness = 0;
-      restartButton.background = "transparent";
-      restartButton.alpha = 0.5;
-      restartButton.onPointerEnterObservable.add(() => {
-        restartButton.color = "purple";
-        restartButton.alpha = 1;
-      });
-      restartButton.onPointerOutObservable.add(() => {
-        restartButton.color = "white";
-        restartButton.alpha = 0.5;
-      });
-      restartButton.onPointerClickObservable.add(() => {
-        this.startedType = { type: "restart" };
-        this.pause.visibility(false);
-      });
-      this.ui.addControl(restartButton);
-    }
 
     const menuButton = Button.CreateSimpleButton("menuButton", "Menu"); {
       menuButton.width = 250 + "px";
       menuButton.height = 60 + "px";
-      menuButton.top = "70px";
+      menuButton.top = "35px";
       menuButton.fontSize = 32 + "px";
       menuButton.color = "white";
       menuButton.thickness = 0;
@@ -1058,7 +1234,7 @@ export default class PgGui {
     const quitButton = Button.CreateSimpleButton("quitButton", "Quit"); {
       quitButton.width = 250 + "px";
       quitButton.height = 60 + "px";
-      quitButton.top = "150px";
+      quitButton.top = "115px";
       quitButton.fontSize = 38 + "px";
       quitButton.color = "white";
       quitButton.cornerRadius = 20;
@@ -1072,6 +1248,7 @@ export default class PgGui {
         quitButton.color = "white";
       });
       quitButton.onPointerClickObservable.add(() => {
+        this.menu.visibility(true);
         navigate("/select-game");
       });
       this.ui.addControl(quitButton);
@@ -1100,7 +1277,6 @@ export default class PgGui {
     return {
       title: pauseTitle,
       resume: resumeButton,
-      restart: restartButton,
       menu: menuButton,
       quit: quitButton,
       isPaused,
@@ -1260,32 +1436,24 @@ export default class PgGui {
       if (this.currentTournament && this.currentMatch) {
 		    console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((data) => {
-        if (!data) {
-            this.currentTournament!.matches = [];
-            return;
-          }
-		  if (data.message === "All matchs round not finished"){
-			console.log("En attente des autres matchs du round...");
-            this.currentMatchIndex++;
-			return;
-		  }
-          else if (data.message === "next round") {
-			console.log("before this.currentTournament value:", this.currentTournament);
-
-			this.currentTournament?.matches.splice(0, this.currentTournament?.matches.length, ...data.matches);
-			console.log("backend matches:", data.matches || data.matchs);
-            this.currentMatchIndex = 0;
-            console.log("Nouveau round lancé !");
-			console.log("After this.currentTournament value :", this.currentTournament);
-			return;
-          } else if (data.message === "Tournament ended") {
-			const winner = data.winner;
-			alert(`Tournoi terminé ! Le gagnant est : ${winner.name}`);
-			console.log("Tournoi terminé ! Le gagnant est :", winner);
+          if (!data || !this.currentTournament) {
             this.currentTournament = null;
-      		this.result.visibility(false);
-			this.menu.visibility(true);
-			return;
+          } else if (data.message === "All matchs round not finished"){
+            console.log("En attente des autres matchs du round...");
+            this.currentMatchIndex++;
+          } else if (data.message === "next round") {
+            console.log("before this.currentTournament value:", this.currentTournament);
+            this.currentTournament.matches = data.matches;
+            this.rounds[++this.currentRoundIndex] = this.currentTournament.matches;
+            this.currentMatchIndex = 0;
+            console.log("backend matches:", data.matches || data.matchs);
+            console.log("After this.currentTournament value :", this.currentTournament);
+          } else if (data.message === "Tournament ended") {
+            const winner = data.winner;
+            console.log("Tournoi terminé ! Le gagnant est :", winner);
+            this.currentTournament = null;
+            this.currentMatch = null;
+            this.tournament.showBracket();
           }
         });
       } else if (this.currentMatch) {

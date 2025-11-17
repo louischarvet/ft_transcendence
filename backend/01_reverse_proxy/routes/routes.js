@@ -56,6 +56,12 @@ async function routesPlugin(fastify, options) {
 		rewritePrefix: '/',
 	});
 	fastify.register(fastifyHttpProxy, {
+		upstream: "http://pong-service:3000",
+		prefix: '/pong',
+		rewritePrefix: '/',
+		websocket: true,
+	});
+	fastify.register(fastifyHttpProxy, {
 	upstream: "http://blackjack-service:3000",
 	prefix: '/blackjack',
 	rewritePrefix: '/',

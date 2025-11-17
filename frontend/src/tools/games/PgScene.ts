@@ -5,7 +5,8 @@ import { Engine, Scene, FreeCamera,
 } from "@babylonjs/core";
 import Victor from "victor";
 import PgGui from "./PgGui";
-import PgGame from "./PgGame";
+import "./PgClient";
+import GameConnection from "./PgClient";
 
 export default class PgScene {
   hostPlayer: string;
@@ -13,7 +14,7 @@ export default class PgScene {
   engine: Engine;
   scene: Scene;
   gui: PgGui;
-  game: PgGame;
+  game: GameConnection;
   gameStarted: boolean = false;
   gameMode: { type: string, aiMode1?: string, aiMode2?: string } | null = null;
   gameStartTime: number = 2000; // ms
@@ -80,28 +81,31 @@ export default class PgScene {
 
     this.gui = new PgGui(this.hostPlayer);
 
-    this.game = new PgGame(
-      this.keys,
+    this.game = new GameConnection(
       {
-        update: async (positions: { ball: Victor; paddleLeft: Victor; paddleRight: Victor },
-          speed: number, scores?: { left: number; right: number }, ballDirection?: Victor) => {
-          this.updateBallPosition(positions.ball);
-          this.updatePaddlePosition("left", positions.paddleLeft);
-          this.updatePaddlePosition("right", positions.paddleRight);
-          this.gui.panel.speed.update(speed);
-          if (scores) {
-            this.gui.score.update("left", scores.left);
-            this.gui.score.update("right", scores.right);
+        update: async (data: { positions: { ball: Victor; paddleLeft: Victor; paddleRight: Victor },
+          speed: number, scores?: { left: number; right: number }, ballDirection?: Victor }) => {
+          this.updateBallPosition(data.positions.ball);
+          this.updatePaddlePosition("left", data.positions.paddleLeft);
+          this.updatePaddlePosition("right", data.positions.paddleRight);
+          this.gui.panel.speed.update(data.speed);
+          if (data.scores) {
+            this.gui.score.update("left", data.scores.left);
+            this.gui.score.update("right", data.scores.right);
           }
-          if (ballDirection)
-            this.triggerCollisionEffect(new Vector3(ballDirection.x, 0, ballDirection.y));
+          if (data.ballDirection)
+            this.triggerCollisionEffect(new Vector3(data.ballDirection.x, 0, data.ballDirection.y));
         },
-        showResult: (leftScore: number, rightScore: number) => {
+        showResult: async (data: { left: number, right: number }) => {
           this.gameStarted = false;
           this.gameStartTime = 2000;
-          this.gui.score.update("left", leftScore);
-          this.gui.score.update("right", rightScore);
+          this.gui.score.update("left", data.left);
+          this.gui.score.update("right", data.right);
           this.gui.result.show();
+        },
+        restart: async (data: { type: string; aiMode1?: string | undefined; aiMode2?: string | undefined; }) => {
+          this.gameMode = data;
+          this.gui.startedType = this.gameMode;
         }
       },
       {
@@ -109,8 +113,10 @@ export default class PgScene {
           width: this.objects["boundUp"].width!, height: this.objects["boundUp"].height! },
         "boundDown": { position: this.objects["boundDown"].position,
           width: this.objects["boundDown"].width!, height: this.objects["boundDown"].height! },
-      }, // frontAddedObjects
+      }
     );
+
+    this.game.connect();
 
     this.render();
   }
@@ -269,7 +275,7 @@ export default class PgScene {
     this.particles["collision"].start();
   }
 
-  render() { // TODO
+  render() {
     let cinematicEndUp = false;
     let cinematicElapsedTime = 0;
     const cinematicDuration = 3000; // Durée de la cinématique en ms
@@ -298,15 +304,15 @@ export default class PgScene {
         }
         return;
       }
+      this.game.send({ type: 'input', data: this.keys });
       if (!this.gameStarted) { //! must add a gui count from 3 to 0
         this.gameStartTime -= deltaTime;
         if (this.gameStartTime <= 0) {
           this.gameStarted = true;
           if (this.gameMode.type === "restart") {
-            this.gameMode = this.game.restart();
-            this.gui.startedType = this.gameMode;
+            this.game.send({ type: 'restart' });
           } else {
-            this.game.start(this.gameMode);
+            this.game.send({ type: 'start', data: this.gameMode });
           }
         }
         return;
@@ -316,17 +322,17 @@ export default class PgScene {
       if (this.keys["Escape"] || this.keys["Space"]) {
         if (!this.gui.pause.isPaused()) {
           this.gui.pause.visibility(true);
-          this.game.pause();
+          this.game.send({ type: 'pause' });
         } else {
           this.gui.pause.visibility(false);
-          this.game.resume();
+          this.game.send({ type: 'resume' });
         }
         this.keys["Escape"] = false;
         this.keys["Space"] = false;
       }
 
       if (!this.gui.pause.isPaused()) {
-        this.game.resume();
+        this.game.send({ type: 'resume' });
       }
     });
   }

@@ -134,6 +134,19 @@ services:
         condition: service_healthy
     volumes:
       - session_db:/usr/src/app/
+  # Server-side pong
+  pong-service:
+    build: ./07_pong
+    container_name: pong-service
+    expose:
+      - "3000"
+    working_dir: /usr/src/app
+    networks:
+      - transcendence-net
+    depends_on:
+      twofa-service:
+        condition: service_healthy
+    restart: unless-stopped
 
 networks:
   transcendence-net:
