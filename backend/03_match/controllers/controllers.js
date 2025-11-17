@@ -127,7 +127,6 @@ export async function getHistory(request, reply) {
 export async function finish(request, reply) {
 	const { db } = request.server;
 	const match = request.body;
-	console.log("#############Finish match:\n", match, "\n#######################\n");
 
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
@@ -146,7 +145,12 @@ export async function finish(request, reply) {
 	await db.matches.delete('id', match.id);
 
 	let { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
-	
+
+	if (match.tournament_id !== 0) {
+		user1 = await fetchChangeStatus({ name: user1.name, type: user1.type }, 'available');
+		user2 = await fetchChangeStatus({ name: user2.name, type: user2.type }, 'available');
+	}
+
 	return reply.code(200).send({
 		user1: user1,
 		user2: user2,
@@ -155,27 +159,9 @@ export async function finish(request, reply) {
 	});
 }
 
-// export async function abort(request, reply) {
-// 	const { db } = request.server;
-// 	const { user_id, user_type } = request.body;
-
-// 	const matches = db.matches.allByUser(user_id, user_type);
-// 	for (let i = 0, n = matches.length; i < n; i++)
-// 		db.matches.delete('id', matches[i].id);
-
-// //	db.matches.delete('p1_id', user_id);
-// //	db.matches.delete('p2_id', user_id);
-
-// 	return reply.code(200).send({
-// 		ok: true
-// 	});
-// }
-
 export async function deleteMatch(request, reply) {
-	// supprimer match avec id en param
 	const { db } = request.server;
 	const { id } = request.params;
-	console.log("########## id = ", id);
 	db.matches.delete('id', id);
 	return reply.code(200).send({
 		ok: true
@@ -195,7 +181,8 @@ export async function tournamentMatch(request, reply) {
 		tournament_id: tournamentID
 	});
 
-	// change status to in_game
+	await fetchChangeStatus(player1, 'in_game');
+	await fetchChangeStatus(player2, 'in_game');
 
 	return reply.code(200).send({
 		match: match,
@@ -221,7 +208,6 @@ export async function getHistoryByTournamentID(request, reply) {
         match.p1_name = p1;
         match.p2_name = p2;
     }
-	//tournamentData.matches = matchName;
 	return reply.code(200).send({ tournamentData });
 }
 
@@ -232,10 +218,3 @@ export async function getMatchById(request, reply) {
 	const match = await db.matches.get('id', request.params.id);
 	return reply.code(200).send({ match });
 }
-
-// // Route PUT pour mettre à jour le résultat d'un match
-// // route /matches/:id/result
-// export async function updateMatchResultController(request, reply) {
-// 	const match = await updateMatchResult(request.params.id, request.body.scoreP1, request.body.scoreP2, request.body.winner_id);
-// 	return reply.code(200).send({ match });
-// }
