@@ -7,10 +7,8 @@ COPY ./package.json ./package-lock.json* ./
 
 RUN npm install && npm install -g nodemon
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
-#RUN npm install sqlite
 
 COPY . .
 
 EXPOSE 3000
-#CMD ["node", "index.js"]
-CMD ["nodemon", "index.js"]
+CMD ["node", "index.js"]
