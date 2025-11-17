@@ -361,10 +361,11 @@ export async function addFriend(request, reply) {
 	const { friendName } = request.params;
 	if (friendName === undefined)
 		return reply.code(400).send({ error: 'friendName is missing' });
+	console.log("friendName", friendName);
 
 	const friend = await db.registered.getByName(friendName);
 	if (!friend)
-		return reply.code(404).send({ error: 'Username not found' });
+		return reply.code(400).send({ error: 'Username not found' });
 
 	
 	let friendListString = user.friends || "";
@@ -378,7 +379,6 @@ export async function addFriend(request, reply) {
 	const updatedUser = await db.registered.updateCol('friends', user.name, val);
 
 	delete friend.hashedPassword;
-	delete friend.type;
 	delete friend.friends;
 
 	return reply.code(200).send({user: updatedUser, newFriend : friend,  message: `Friend ${friendName} added.` });

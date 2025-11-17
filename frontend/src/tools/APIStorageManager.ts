@@ -28,7 +28,8 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
 	if (response.status === 404) {
-		console.error("User not found");
+
+		console.error("User not found", response);
 		localStorage.removeItem('user');
 		navigate("/");
 		return response;
@@ -133,6 +134,7 @@ export async function addNewFriend(friendName: string){
 		method: "POST",
 	});
 
+	console.log("###########################", response);
 	return response;
 }
 
