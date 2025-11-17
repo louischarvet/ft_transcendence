@@ -1,45 +1,18 @@
-backend_file=backend/docker-compose.yml
+NAME=ft_transcendence
 
-backend:
-	@docker compose -f $(backend_file) up --build
+all: $(NAME)
 
-backend-clean:
-	@echo "Stopping running containers..."
-	@docker compose -f $(backend_file) down -v
+$(NAME): up
 
 up:
+	@./ssl/generate_ssl.sh
 	@docker compose up --build
 
-up-d:
-	@docker compose up -d --build
-	@echo "✅ Containers launched in detached mode. Showing logs..."
-	@docker compose logs -f
-
 down:
+	@./ssl/delete_ssl.sh
 	@docker compose down
 
-build:
-	@docker compose build
-
-start:
-	@docker compose start
-
-stop:
-	@docker compose stop
-
-restart:
-	@docker compose restart
-
-image:
-	@docker compose images
-
-logs:
-	@docker compose logs -f
-
-ps:
-	@docker compose ps
-
-clean:
+clean: down
 	@echo "Stopping running containers..."
 	@docker ps -q | xargs -r docker stop
 
@@ -55,11 +28,12 @@ clean:
 	@echo "Removing networks..."
 	@docker network ls --format "table {{.Name}}" | tail -n +2 | grep -vE "^(bridge|host|none)$$" | xargs -r docker network rm
 
-fclean: clean
+fclean: down clean
 	@echo "Pruning..."
 	@docker system prune -af
 
 re: clean up
+
 fre: fclean up
 
-.PHONY: backend backend-clean up down build start stop restart image logs ps clean fclean re fre
+.PHONY: all up down clean fclean re fre
