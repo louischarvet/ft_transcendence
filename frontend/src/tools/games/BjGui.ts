@@ -6,6 +6,7 @@ import { AdvancedDynamicTexture,
 import { Scene, Vector2
 } from "@babylonjs/core";
 import { navigate } from '../../router';
+import { BjRequest } from './BjRequest';
 
 export default class BjGui {
   ui: AdvancedDynamicTexture;
@@ -97,6 +98,91 @@ export default class BjGui {
 
     this.cardsInteractions = this.initCardsInteractionGui();
     this.cardsInteractionsVisibility(false);
+
+    // Backend events wiring
+    window.addEventListener('bj:resetDeck', () => {
+      this.sceneFunctions.resetDeck?.();
+    });
+    window.addEventListener('bj:dealPlace', (e: any) => {
+      const { card, place, placeCardsValue, onSplit } = e.detail || {};
+      this.sceneFunctions.dealPlace?.(card, place, onSplit);
+      if (placeCardsValue) this.setPlaceCardsValue(place, placeCardsValue);
+    });
+    window.addEventListener('bj:cardInteraction', (e: any) => {
+      const { place } = e.detail || {};
+      if (place) this.sceneFunctions.setCameraToPlace?.(place);
+    });
+    window.addEventListener('bj:turnDealerCard', (e: any) => {
+      this.sceneFunctions.turnDealerCard?.();
+      const val = e.detail?.cardsValue;
+      if (val) this.setPlaceCardsValue('dealers', val);
+    });
+    window.addEventListener('bj:popUpBJ', (e: any) => {
+      const { place } = e.detail || {};
+      console.log('Blackjack!', place);
+    });
+    window.addEventListener('bj:popUpBust', (e: any) => {
+      const { place } = e.detail || {};
+      console.log('Bust!', place);
+    });
+    window.addEventListener('bj:endRound', (e: any) => {
+      console.log('End round', e.detail?.results);
+
+      // Attendre un peu pour que le joueur voie les résultats
+      setTimeout(async () => {
+        // Nettoyer les cartes de la table
+        this.sceneFunctions.resetPlaces?.();
+
+        // Attendre un peu que les cartes soient nettoyées
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Reconstituer le deck
+        await this.sceneFunctions.resetDeck?.();
+
+        // Attendre que le deck soit prêt
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Cacher les valeurs des cartes
+        Object.values(this.Bet.areas).forEach(area => {
+          this.hidePlaceCardsValue(area.place);
+        });
+        this.hidePlaceCardsValue('dealers');
+
+        // Réinitialiser les mises à 0 dans les zones
+        Object.values(this.Bet.areas).forEach(area => {
+          area.bet = 0;
+          area.textBet.text = '';
+          area.textBet.isVisible = false;
+          area.buttonCleanBet.isVisible = false;
+        });
+
+        // Réinitialiser le total des mises
+        this.totalBetAmount = 0;
+        (this.ui.getControlByName("TotalBetLabel") as TextBlock).text = `Total Bet: 0 €`;
+
+        // Réafficher les boutons de mise
+        this.betGuiVisibility(true);
+      }, 3000); // 3 secondes de délai pour voir les résultats
+    });
+
+    // Montrer/cacher les actions quand la partie démarre ou quand le croupier joue
+    window.addEventListener('bj:actions:show', () => this.cardsInteractionsVisibility(true));
+    window.addEventListener('bj:actions:hide', () => this.cardsInteractionsVisibility(false));
+
+    // Mettre à jour la balance quand elle change
+    window.addEventListener('bj:updateBalance', (e: any) => {
+      if (e.detail?.balance !== undefined) {
+        this.updateBalance(e.detail.balance);
+      }
+    });
+
+    // Mettre à jour l'affichage du pari (pour le double)
+    window.addEventListener('bj:updateBet', (e: any) => {
+      const { place, newBet } = e.detail || {};
+      if (place && newBet !== undefined) {
+        this.updateBetDisplay(place, newBet);
+      }
+    });
   }
 
   private initConstGui() {
@@ -439,6 +525,20 @@ Gain classique : 1,5 fois la mise."; }
       button.isVisible = false;
 
       this.sceneFunctions.endOfBetting();
+
+      // Backend: envoyer les mises puis démarrer la partie
+      try {
+        const places: { [place: string]: { bet: number } } = {};
+        Object.values(this.Bet.areas).forEach(area => {
+          if (area.bet > 0) places[area.place] = { bet: area.bet };
+        });
+        const playerId = (window as any).BJ_PLAYER_ID || 'player_1';
+        BjRequest.send.playerBet(playerId, places);
+        // Démarrer la partie après un court délai
+        setTimeout(() => BjRequest.send.start(), 500);
+      } catch (e) {
+        console.error('[BjGui] Envoi des mises/start échoué:', e);
+      }
     });
     this.ui.addControl(button);
 
@@ -588,7 +688,7 @@ Gain classique : 1,5 fois la mise."; }
     stand.onPointerClickObservable.add(() => {
       console.log("Player chose to STAND");
       this.cardsInteractionsVisibility(false);
-      // BjRequest.stand();
+      BjRequest.send.stand();
     });
     stand.isVisible = false;
     this.ui.addControl(stand);
@@ -608,19 +708,19 @@ Gain classique : 1,5 fois la mise."; }
     hit.alpha = 0.7;
     hit.onPointerClickObservable.add(() => {
       console.log("Player chose to HIT");
-      // BjRequest.hit();
+      BjRequest.send.hit();
     });
     hit.isVisible = false;
     this.ui.addControl(hit);
 
     // Double Down Button
-    const doubleDown = Button.CreateSimpleButton("doubleDownButton", "DOUBLE DOWN");
+    const doubleDown = Button.CreateSimpleButton("doubleDownButton", "DOUBLE");
     doubleDown.verticalAlignment = Button.VERTICAL_ALIGNMENT_BOTTOM;
-    doubleDown.top = 65 + "px";
+    doubleDown.top = -65 + "px";
     doubleDown.left = -80 + "px";
-    doubleDown.width = 288 + "px";
+    doubleDown.width = 180 + "px";
     doubleDown.height = 60 + "px";
-    doubleDown.fontSize = 32 + "px";
+    doubleDown.fontSize = 24 + "px";
     doubleDown.color = "black";
     doubleDown.cornerRadius = 15;
     doubleDown.thickness = 0;
@@ -628,7 +728,7 @@ Gain classique : 1,5 fois la mise."; }
     doubleDown.alpha = 0.7;
     doubleDown.onPointerClickObservable.add(() => {
       console.log("Player chose to DOUBLE DOWN");
-      // BjRequest.doubleDown();
+      BjRequest.send.doubleDown();
       this.cardsInteractionsVisibility(false);
     });
     doubleDown.isVisible = false;
@@ -638,7 +738,7 @@ Gain classique : 1,5 fois la mise."; }
     const split = Button.CreateSimpleButton("splitButton", "SPLIT");
     split.verticalAlignment = Button.VERTICAL_ALIGNMENT_BOTTOM;
     split.top = -65 + "px";
-    split.left = 156 + "px";
+    split.left = 120 + "px";
     split.width = 136 + "px";
     split.height = 60 + "px";
     split.fontSize = 32 + "px";
@@ -649,7 +749,7 @@ Gain classique : 1,5 fois la mise."; }
     split.alpha = 0.7;
     split.onPointerClickObservable.add(() => {
       console.log("Player chose to SPLIT");
-      // BjRequest.split();
+      BjRequest.send.split();
     });
     split.isVisible = false;
     this.ui.addControl(split);
@@ -682,7 +782,7 @@ Gain classique : 1,5 fois la mise."; }
   setPlaceCardsValue(place: string, value: string) {
     let cardsValue = this.Bet.areas[place]?.cardsValue;
     if (!cardsValue) {
-      if (place == "dealers")
+      if (place == "dealers" || place == "dealer")
         cardsValue = this.dealersCardsValue;
       else {
         console.error(`Area for place ${place} not found`);
@@ -711,5 +811,32 @@ Gain classique : 1,5 fois la mise."; }
     this.cardsInteractions.hit.isVisible = isVisible;
     this.cardsInteractions.doubleDown.isVisible = isVisible;
     this.cardsInteractions.split.isVisible = isVisible;
+  }
+
+  updateBalance(newBalance: number) {
+    console.log(`[BjGui] Updating balance from ${this.bankAmount} to ${newBalance}`);
+    this.bankAmount = newBalance;
+    (this.ui.getControlByName("BankLabel") as TextBlock).text = `Bank: ${this.bankAmount} €`;
+  }
+
+  updateBetDisplay(place: string, newBet: number) {
+    console.log(`[BjGui] Updating bet display for ${place} to ${newBet}`);
+    const area = this.Bet.areas[place];
+    if (area) {
+      // Mettre à jour le montant local
+      const oldBet = area.bet;
+      area.bet = newBet;
+
+      // Mettre à jour le texte affiché
+      area.textBet.text = newBet.toString();
+
+      // Mettre à jour le total des mises (ajouter la différence)
+      const difference = newBet - oldBet;
+      this.totalBetAmount += difference;
+      (this.ui.getControlByName("TotalBetLabel") as TextBlock).text = `Total Bet: ${this.totalBetAmount} €`;
+
+      // Mettre à jour le matériau du jeton pour refléter le nouveau montant
+      this.sceneFunctions.setCoinMaterial?.(place, newBet);
+    }
   }
 }

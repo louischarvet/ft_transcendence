@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Blackjack WebSocket service for Transcendance",
   "type": "module",
-  "main": "app.js",
+  "main": "src/app.js",
   "author": "42 Student",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "dependencies": {
     "fastify": "^4.29.1",
