@@ -34,15 +34,6 @@ async function routesPlugin(fastify, options) {
 		upstream: "http://user-service:3000",
 		prefix: '/user',
 		rewritePrefix: '/',
-		//preHandler: async (request, reply) => {
-		//	if (request.headers.cookie)
-		//		request.headers.cookie = request.headers.cookie;
-		//},
-		//replyOptions: {
-		//	onResponse (res) {
-		//		res.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
-		//	}
-		//}
 	});
 	fastify.register(fastifyHttpProxy, {
 		upstream: "http://match-service:3000",
@@ -70,37 +61,6 @@ async function routesPlugin(fastify, options) {
 	rewritePrefix: '/',
 	websocket: true
 	});
-
-	// HTTPS ?
-	// fastify.post('/session/refresh', async (request, reply) => {
-	// 	try {
-	// 		const response = await fetch('http://session-service:3000/refresh', {
-	// 			method: 'POST',
-	// 			headers: {
-	// 				'Authorization': request.headers.authorization,
-	// 			}
-	// 		});
-	// 		const data = await response.json();
-	// 		return reply.code(200).send(data);
-	// 	} catch (error) {
-	// 		fastify.log.error(error);
-	// 		reply.status(500).send({ error: 'Internal Server Error' });
-	// 	}
-	// });
-	
-/*	fastify.get('/auth', async (request, reply) => {
-		try {
-			const response = await fetch('http://auth:3001/data');
-			const data = await response.json();
-
-			return (data); ////
-		} catch (error) {
-			fastify.log.error(error);
-			reply.status(500).send({ error: 'Internal Server Error' });
-		}
-	})
-*/
-	
 }
 
 export default routesPlugin;
