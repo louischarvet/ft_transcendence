@@ -29,6 +29,7 @@ async function userRoutes(fastify, options) {
 	fastify.delete('/deleteFriend',{preHandler: authenticateJWT , schema: deleteFriendSchema },  deleteFriend);
 	fastify.get('/getfriendsprofiles', { preHandler: authenticateJWT }, getFriendsProfiles);
 
+	// utilisee ?
 	fastify.get('/find/:name/status', getUserStatus);
 
 	fastify.post('/tournament', getUsersTournament);

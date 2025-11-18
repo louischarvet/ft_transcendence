@@ -16,15 +16,21 @@ async function routesPlugin(fastify, options) {
 	fastify.put('/user/updatestats', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
+	fastify.post('/user/tournament', async (request, reply) => {
+		return reply.code(400).send({ error: 'Forbidden route.' });
+	});
+	// get '/user/find/:name/status' ?
+
 		// match
 	fastify.post('/match/tournament', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
-	fastify.post('/match/abort', async (request, reply) => {
+	fastify.get('/match/history/tournament/:id', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
+
 		// twofa
-	fastify.post('/verifycode', async (request, reply) => {
+	fastify.post('/twofa/sendcode', async (request, reply) => {
 		return reply.code(400).send({ error: 'Forbidden route.' });
 	});
 
