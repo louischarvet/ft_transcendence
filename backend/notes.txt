@@ -209,13 +209,8 @@ empecher de jouer contre nous meme
 modifier les "alert" --- > remplacer par popup
 ne pas afficher les mots de passe en clair (match vs login, modification mot de passe, tournoi login)
 matchs vs login: play again -> nouveau match vs guest
-
-Match contre ami: a la fin le P2 est 'available' (finish match)
-
-authenticate: change status?
-
-blackjack:
-	quand on quitte: on est renvoye sur la page de login/register
-	hit puis double: freeze
-
 Checker toutes les routes interdites du backend
+
+match ou tournament login: si le name est mauvais -> undefined
+
+quand on quitte le blackjack: on est renvoye sur la page de login/register

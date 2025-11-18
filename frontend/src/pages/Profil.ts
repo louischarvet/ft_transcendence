@@ -63,12 +63,12 @@ export default function Profile(): HTMLElement {
   const ratio = createStatCard('Ratio', '1.28');
   const gamesPlayed = createStatCard('Number of game played', '0');
   const wins = createStatCard('Number of victory', '0');
-  const bestStreak = createStatCard('Best win streak', '0');
+//  const bestStreak = createStatCard('Best win streak', '0');
   const wallet = createStatCard('Wallet', '0');
   const currentStreak = createStatCard('Current win streak', '0');
 
   // Ajout dans la grille
-  [ratio, gamesPlayed, wins, bestStreak, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
+  [ratio, gamesPlayed, wins, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
   statsSection.appendChild(statsGrid);
 
   // Section Profil utilisateur
@@ -234,7 +234,7 @@ export default function Profile(): HTMLElement {
         alert('Error deleting account.');
       }
   }
-  };
+  };currentStreak
 
   // Ajout des sections principales
   profileCard.appendChild(statsSection);
@@ -259,10 +259,10 @@ export default function Profile(): HTMLElement {
 		user.played_matches ?? '0';
 		wins.querySelector('p:nth-child(2)')!.textContent =
 		user.match_wins ?? '0';
-		bestStreak.querySelector('p:nth-child(2)')!.textContent =
-		user.wins_streak ?? '0';
+	//	bestStreak.querySelector('p:nth-child(2)')!.textContent =
+//		user.wins_streak ?? '0';
 		currentStreak.querySelector('p:nth-child(2)')!.textContent =
-		user.currentStreak ?? '0';
+		user.wins_streak ?? '0';
 		wallet.querySelector('p:nth-child(2)')!.textContent =
 		`${user.wallet ?? 0} 🪙`;
 	});

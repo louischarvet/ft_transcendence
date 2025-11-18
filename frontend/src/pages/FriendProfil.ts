@@ -56,11 +56,11 @@ export default function FriendProfil(id: string): HTMLElement {
 	const ratio = createStatCard('Ratio', '0.00');
 	const gamesPlayed = createStatCard('Nombre de parties', '0');
 	const wins = createStatCard('Victoires', '0');
-	const bestStreak = createStatCard('Meilleure série', '0');
+//	const bestStreak = createStatCard('Meilleure série', '0');
 	const currentStreak = createStatCard('Série actuelle', '0');
 	const wallet = createStatCard('Wallet', '0');
 
-	[ratio, gamesPlayed, wins, bestStreak, currentStreak, wallet].forEach(c => statsGrid.appendChild(c));
+	[ratio, gamesPlayed, wins, currentStreak, wallet].forEach(c => statsGrid.appendChild(c));
 	statsSection.appendChild(statsGrid);
 
 	// Section Profil utilisateur
@@ -146,8 +146,8 @@ export default function FriendProfil(id: string): HTMLElement {
 			ratio.querySelector('p:nth-child(2)')!.textContent = (user.win_rate?.toFixed(2)) ?? '0.00';
 			gamesPlayed.querySelector('p:nth-child(2)')!.textContent = user.played_matches ?? '0';
 			wins.querySelector('p:nth-child(2)')!.textContent = user.match_wins ?? '0';
-			bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
-			currentStreak.querySelector('p:nth-child(2)')!.textContent = user.currentStreak ?? '0';
+		//	bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
+			currentStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
 			wallet.querySelector('p:nth-child(2)')!.textContent = `${user.wallet ?? 0} 🪙`;
 		})
 	} catch (err) {
