@@ -89,7 +89,7 @@ export default function Profile(): HTMLElement {
 	}
   // Image reelle de l’avatar
 	const avatarImg = document.createElement('img');
-  	avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+  	avatarImg.src = currentUser.picture ? `/user/${currentUser.picture}` : '/user/pictures/avatar_1.jpg';
 	avatarImg.alt = 'Avatar';
 	avatarImg.className = 'object-cover w-full h-full bg-red';
 	avatar.appendChild(avatarImg);
@@ -123,7 +123,7 @@ export default function Profile(): HTMLElement {
 		try {
 			const res = await updateAvatar(file);
 			console.log("res", res);
-			//avatarImg.src = `https://localhost:4343/user/${res.picture}`;
+			//avatarImg.src = `/user/${res.picture}`;
 			alert('Avatar updated successfully!');
 			navigate('/profil');
 		} catch (err) {
@@ -267,7 +267,7 @@ export default function Profile(): HTMLElement {
 		`${user.wallet ?? 0} 🪙`;
 	});
 
-	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
+	avatarImg.src = user.picture ? `/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
   return container;
 }

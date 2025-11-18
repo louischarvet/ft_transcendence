@@ -122,13 +122,13 @@ export default function FriendProfil(id: string): HTMLElement {
 			
 			const user = data;
 			username.textContent = user.name;
-			// jai avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+			// jai avatarImg.src = currentUser.picture ? `/user/${currentUser.picture}` : '/user/pictures/avatar_1.jpg';
 			// dans profil.ts
 
 			if(user.picture){
 				avatar.innerHTML = '';
 				const avatarImg = document.createElement('img');
-				avatarImg.src = `https://localhost:4343/user/${user.picture}`;
+				avatarImg.src = `/user/${user.picture}`;
 				avatarImg.alt = 'Avatar';
 				avatarImg.className = 'object-cover w-full h-full bg-red';
 				avatar.appendChild(avatarImg);
@@ -136,7 +136,7 @@ export default function FriendProfil(id: string): HTMLElement {
 			else{
 				avatar.innerHTML = '';
 				const avatarImg = document.createElement('img');
-				avatarImg.src = 'https://localhost:4343/user/pictures/avatar_1.jpg';
+				avatarImg.src = '/user/pictures/avatar_1.jpg';
 				avatarImg.alt = 'Avatar';
 				avatarImg.className = 'object-cover w-full h-full bg-red';
 				avatar.appendChild(avatarImg);
