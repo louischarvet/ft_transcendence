@@ -650,14 +650,14 @@ export default class PgGui {
 
     const switchToPlayersSetting = (nbOfPlayers: number) => {
       launchTournament(nbOfPlayers).then((tournament) => {
-		console.log("launchTournament data ->", tournament);
-		if (!tournament) {
-			console.error("Tournament creation failed");
-			return;
-		}
+        console.log("launchTournament data ->", tournament);
+        if (!tournament) {
+          console.error("Tournament creation failed");
+          return;
+        }
 
-		this.currentTournament = tournament;
-		console.log("Current tournament set to:", this.currentTournament);
+        this.currentTournament = tournament;
+        console.log("Current tournament set to:", this.currentTournament);
         // Hide size selection
         this.tournament.selectSize.isVisible = false;
         this.tournament.size4.isVisible = false;
@@ -666,6 +666,10 @@ export default class PgGui {
   
         // Show players setting and Start button
   
+        this.tournament.playersScrollViewer.players.forEach((playerText) => {
+          this.tournament.playersScrollViewer.playersBlock.removeControl(playerText);
+          playerText.dispose();
+        });
         this.tournament.playersScrollViewer.players = [];
         this.tournament.playersScrollViewer.playersBlock.height = "0px";
         this.tournament.playersScrollViewer.scrollViewer.isVisible = true;
@@ -805,7 +809,7 @@ export default class PgGui {
       startButton.width = 300 + "px";
       startButton.height = 70 + "px";
       startButton.top = "200px";
-      startButton.left = "-100px";
+      startButton.left = "-50px";
       startButton.fontSize = 42 + "px";
       startButton.color = "white";
       startButton.cornerRadius = 20;
@@ -888,7 +892,7 @@ export default class PgGui {
 
       const createMatchBlock = (match: any, x: number, y: number): Rectangle => {
         const matchBlock = new Rectangle(`tournamentMatchBlock_${match.id}`); {
-          matchBlock.width = 140 + "px";
+          matchBlock.width = (x ? 140 : 400) + "px";
           matchBlock.height = 80 + "px";
           matchBlock.left = `${x}px`;
           matchBlock.top = `${y}px`;
@@ -900,8 +904,11 @@ export default class PgGui {
           player1Text.parent = matchBlock;
           player1Text.width = "100%";
           player1Text.height = "50%";
-          player1Text.top = "-20px";
-          player1Text.fontSize = 24 + "px";
+          if (x)
+            player1Text.top = "-30px";
+          else
+            player1Text.left = "-120px";
+          player1Text.fontSize = (x ? 28 : 32) + "px";
           player1Text.color = "purple";
           matchBlock.addControl(player1Text);
         }
@@ -910,7 +917,7 @@ export default class PgGui {
           vsText.parent = matchBlock;
           vsText.width = "100%";
           vsText.height = "30px";
-          vsText.fontSize = 18 + "px";
+          vsText.fontSize = (x ? 18 : 32) + "px";
           vsText.fontStyle = "italic";
           vsText.color = "green";
           matchBlock.addControl(vsText);
@@ -920,8 +927,11 @@ export default class PgGui {
           player2Text.parent = matchBlock;
           player2Text.width = "100%";
           player2Text.height = "50%";
-          player2Text.top = "20px";
-          player2Text.fontSize = 24 + "px";
+          if (x)
+            player2Text.top = "30px";
+          else
+            player2Text.left = "120px";
+          player2Text.fontSize = (x ? 28 : 32) + "px";
           player2Text.color = "purple";
           matchBlock.addControl(player2Text);
         }
