@@ -151,8 +151,10 @@ export default class PgGame {
     this.ball.position.add(this.ball.direction.clone().multiplyScalar(this.currentSpeed));
 
     this.collidedDirection = undefined;
-    this.handleCollision(this.paddleLeft, this.paddleLeft.speedInertia);
-    this.handleCollision(this.paddleRight, this.paddleRight.speedInertia);
+    if (this.handleCollision(this.paddleLeft, this.paddleLeft.speedInertia))
+      this.paddleLeft.speedInertia = 0;
+    if (this.handleCollision(this.paddleRight, this.paddleRight.speedInertia))
+      this.paddleRight.speedInertia = 0;
     for (const objKey in this.frontAddedObjects) {
       if (this.handleCollision(this.frontAddedObjects[objKey]))
         break;
@@ -308,7 +310,9 @@ export default class PgGame {
     this.leftScore = 0;
     this.rightScore = 0;
     this.paddleLeft.position.y = 8.5;
+    this.paddleLeft.speedInertia = 0;
     this.paddleRight.position.y = 8.5;
+    this.paddleRight.speedInertia = 0;
     this.ball.position.x = 15;
     this.ball.position.y = 10;
     this.initBallDirection();
