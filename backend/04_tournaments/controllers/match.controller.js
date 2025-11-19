@@ -58,7 +58,5 @@ export async function fetchDeleteMatch(id, cookies) {
 		headers: { 'Cookie': cookieHeader },
 		credentials: 'include',
 	});
-	console.log("##################### RES\n", res,
-				"\n#########################\n");
 	return res;
 }

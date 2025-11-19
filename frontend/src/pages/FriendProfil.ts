@@ -1,6 +1,8 @@
 // pages/FriendProfil.ts
 import { navigate } from '../router';
 import { getUserById, removeFriend } from '../tools/APIStorageManager';
+import { popUpAlert } from '../tools/popup';
+
 
 export default function FriendProfil(id: string): HTMLElement {
 	const container = document.createElement('div');
@@ -56,11 +58,11 @@ export default function FriendProfil(id: string): HTMLElement {
 	const ratio = createStatCard('Ratio', '0.00');
 	const gamesPlayed = createStatCard('Nombre de parties', '0');
 	const wins = createStatCard('Victoires', '0');
-	const bestStreak = createStatCard('Meilleure série', '0');
+//	const bestStreak = createStatCard('Meilleure série', '0');
 	const currentStreak = createStatCard('Série actuelle', '0');
 	const wallet = createStatCard('Wallet', '0');
 
-	[ratio, gamesPlayed, wins, bestStreak, currentStreak, wallet].forEach(c => statsGrid.appendChild(c));
+	[ratio, gamesPlayed, wins, currentStreak, wallet].forEach(c => statsGrid.appendChild(c));
 	statsSection.appendChild(statsGrid);
 
 	// Section Profil utilisateur
@@ -97,11 +99,12 @@ export default function FriendProfil(id: string): HTMLElement {
 				//if (!response?.ok) throw new Error('Impossible de supprimer l’ami');
 			});
 			//const response = await removeFriend(Number(id));
-			alert('Ami supprimé avec succès !');
+			popUpAlert("Youhou : ", "Friend deleted successfully");
+			
 			navigate('/select-game'); // Retour au profil principal
 		} catch (err) {
 			console.error(err);
-			alert('Erreur lors de la suppression de l’ami.');
+			popUpAlert("Error : ", "Error deleting friend");
 		}
 	};
 
@@ -115,20 +118,20 @@ export default function FriendProfil(id: string): HTMLElement {
 		getUserById(Number(id), 'registered').then((response) =>{
 			data = response;
 			if (!data) {
-				alert("Utilisateur non trouvé");
+				popUpAlert("Error : ", "User not found");
 				navigate('/profil');
 				return container;
 			}
 			
 			const user = data;
 			username.textContent = user.name;
-			// jai avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+			// jai avatarImg.src = currentUser.picture ? `/user/${currentUser.picture}` : '/user/pictures/avatar_1.jpg';
 			// dans profil.ts
 
 			if(user.picture){
 				avatar.innerHTML = '';
 				const avatarImg = document.createElement('img');
-				avatarImg.src = `https://localhost:4343/user/${user.picture}`;
+				avatarImg.src = `/user/${user.picture}`;
 				avatarImg.alt = 'Avatar';
 				avatarImg.className = 'object-cover w-full h-full bg-red';
 				avatar.appendChild(avatarImg);
@@ -136,7 +139,7 @@ export default function FriendProfil(id: string): HTMLElement {
 			else{
 				avatar.innerHTML = '';
 				const avatarImg = document.createElement('img');
-				avatarImg.src = 'https://localhost:4343/user/pictures/avatar_1.jpg';
+				avatarImg.src = '/user/pictures/avatar_1.jpg';
 				avatarImg.alt = 'Avatar';
 				avatarImg.className = 'object-cover w-full h-full bg-red';
 				avatar.appendChild(avatarImg);
@@ -146,13 +149,13 @@ export default function FriendProfil(id: string): HTMLElement {
 			ratio.querySelector('p:nth-child(2)')!.textContent = (user.win_rate?.toFixed(2)) ?? '0.00';
 			gamesPlayed.querySelector('p:nth-child(2)')!.textContent = user.played_matches ?? '0';
 			wins.querySelector('p:nth-child(2)')!.textContent = user.match_wins ?? '0';
-			bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
-			currentStreak.querySelector('p:nth-child(2)')!.textContent = user.currentStreak ?? '0';
+		//	bestStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
+			currentStreak.querySelector('p:nth-child(2)')!.textContent = user.wins_streak ?? '0';
 			wallet.querySelector('p:nth-child(2)')!.textContent = `${user.wallet ?? 0} 🪙`;
 		})
 	} catch (err) {
 		console.error(err);
-		alert('Erreur lors de la récupération du profil de l’ami.');
+		popUpAlert("Error : ", "Error retrieving friend's profile");
 	}
 
 	return container;

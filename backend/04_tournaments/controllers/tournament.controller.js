@@ -1,7 +1,7 @@
 // tournament.controller.js
 
 import { addNewPlayerToTournament } from './player.controller.js';
-import { fetchUserTournament } from './user.controller.js';
+import { fetchChangeStatusUser, fetchUserTournament } from './user.controller.js';
 import {
 	fetchMatchForTournament,
 	fetchHistoryMatchForTournament,
@@ -78,6 +78,17 @@ export async function endTournament(request, reply, tournamentId, user){
 		const iaUser = { id: 0, type: 'ia', name: 'normalAI' };
 		return reply.code(200).send({ tournament, winner: iaUser, message: 'Tournament ended' });
 	}
+	// a tester
+	let users = tournament.players.split(';');
+	for (let i = 0, n = users.length; i < n; i++) {
+		const split = users[i].split(':');
+		const id = split[0];
+		const type = split[1];
+		const user = await fetchGetUserById(id, type);
+		const status = i === 0 ? 'available' : 'logged_out';
+		await fetchChangeStatusUser(user, status);
+	}
+
 	const winner = await fetchGetUserById(user.id, user.type);
 	if (!winner)
 		return reply.code(400).send({ error: 'Could not fetch winner info' });
@@ -105,7 +116,7 @@ export async function startTournament(request, reply){
 	let countIa = 0;
 	for (; tournament.remainingPlaces > 0;) {
 		countIa++;
-		tournament = await addNewPlayerToTournament(db, tournamentId, '0', 'ia');
+		tournament = await addNewPlayerToTournament(db, tournamentId, '0:ia;');
 	}
 
 	const playersArray = tournament.players.split(';');

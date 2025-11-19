@@ -23,7 +23,7 @@ export default class PgGame {
   paused: boolean = false;
 
   speed = 0.2;
-  speedInertiaTransfert = this.speed / 40;
+  speedInertiaTransfert = this.speed / 80;
   currentSpeed = this.speed;
 
   collidedDirection?: Victor;
@@ -85,7 +85,9 @@ export default class PgGame {
     //           speed: number, scores?: { left: number; right: number }, ballDirection?: Victor }
 
     while (this.started) {
-      while (this.paused) await this.delay(this.fps);
+      while (this.paused && this.started) await this.delay(this.fps);
+      if (!this.started)
+        break;
       this.send(this.ws, {type: 'update', data: {
         positions: {
           ball: this.ball.position.clone(),
@@ -103,21 +105,16 @@ export default class PgGame {
       await this.delay(this.fps);
       timer += this.fps;
     }
+    console.log("Game ended...");
     this.send(this.ws, {type: 'result', data: {left: this.leftScore, right: this.rightScore}});
-    this.reset();
   }
 
   pause() {
     this.paused = true;
   }
 
-  restart() {
-    this.reset();
-    if (this.gameMode) {
-      this.start(this.gameMode);
-      return this.gameMode;
-    }
-    return "";
+  ended() {
+    this.started = false;
   }
 
   resume() {
@@ -151,15 +148,17 @@ export default class PgGame {
     this.ball.position.add(this.ball.direction.clone().multiplyScalar(this.currentSpeed));
 
     this.collidedDirection = undefined;
-    this.handleCollision(this.paddleLeft, this.paddleLeft.speedInertia);
-    this.handleCollision(this.paddleRight, this.paddleRight.speedInertia);
+    if (this.handleCollision(this.paddleLeft))
+      this.paddleLeft.speedInertia = 0;
+    if (this.handleCollision(this.paddleRight))
+      this.paddleRight.speedInertia = 0;
     for (const objKey in this.frontAddedObjects) {
       if (this.handleCollision(this.frontAddedObjects[objKey]))
         break;
     }
 
     // reset this.ball (at winner's paddle) if out of bounds
-    if (this.ball.position.x < -this.width / 2 || this.ball.position.x > this.width * 1.5) {
+    if (this.ball.position.x < (-this.width / 2 + 0.5) || this.ball.position.x > (this.width * 1.5 - 0.5)) {
       if (this.ball.position.x < 0) {
         this.rightScore++;
         this.ball.position.x = this.width - this.paddleRight.width - this.ball.radius * 3;
@@ -245,7 +244,7 @@ export default class PgGame {
     }
   }
 
-  private handleCollision(obj: { position: Victor, width: number, height: number }, speedInertia: number = 0): boolean {
+  private handleCollision(obj: { position: Victor, width: number, height: number, speedInertia?: number }): boolean {
     const ballPreviousPos = this.ball.position.clone().subtract(this.ball.direction.clone().multiplyScalar(this.currentSpeed));
     const stepRatio = this.currentSpeed / (this.speed * 0.1);
     const ballVerticesTotal = 16; // 2^4
@@ -277,22 +276,24 @@ export default class PgGame {
           ballCollisionOffset.x < 0 && this.ball.direction.x < 0)) {
         this.collidedDirection = this.ball.direction.clone();
         this.ball.direction.x *= -1;
-        this.ball.direction.y += speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
+        if (obj.speedInertia !== undefined)
+          this.ball.direction.y += obj.speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
         this.ball.direction.normalize();
       } else if (Math.abs(ballCollisionOffset.y) > Math.abs(ballCollisionOffset.x) &&
         (ballCollisionOffset.y > 0 && this.ball.direction.y > 0 ||
           ballCollisionOffset.y < 0 && this.ball.direction.y < 0)) {
         this.collidedDirection = this.ball.direction.clone();
         this.ball.direction.y *= -1;
-        this.ball.direction.x += speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
+        if (obj.speedInertia !== undefined)
+          this.ball.direction.x += obj.speedInertia * this.speedInertiaTransfert; // add some inertia to the ball direction
         this.ball.direction.normalize();
       }
 
       // increase ball speed depending on speedInertia
-      const speed = Math.abs(speedInertia) * this.speedInertiaTransfert;
-      if (this.currentSpeed < speed)
-        this.currentSpeed = speed;
-      else if (this.currentSpeed - this.speedInertiaTransfert >= this.speed)
+      const speed = Math.abs(obj.speedInertia !== undefined ? obj.speedInertia : 0) * this.speedInertiaTransfert;
+      if (this.currentSpeed < this.speed + speed)
+        this.currentSpeed = this.speed + speed;
+      else if (obj.speedInertia !== undefined && this.currentSpeed - this.speedInertiaTransfert >= this.speed)
         this.currentSpeed -= this.speedInertiaTransfert;
 
       // move ball the remaining distance of the step
@@ -308,7 +309,9 @@ export default class PgGame {
     this.leftScore = 0;
     this.rightScore = 0;
     this.paddleLeft.position.y = 8.5;
+    this.paddleLeft.speedInertia = 0;
     this.paddleRight.position.y = 8.5;
+    this.paddleRight.speedInertia = 0;
     this.ball.position.x = 15;
     this.ball.position.y = 10;
     this.initBallDirection();

@@ -74,7 +74,7 @@ fastify.register(async function (fastify: any) {
   }, 30000);
 
   function validateMessage(data: any) {
-    const validTypes = ['start', 'restart', 'pause', 'resume', 'input', 'ready'];
+    const validTypes = ['start', 'ended', 'pause', 'resume', 'input', 'ready'];
     return data && typeof data.type === 'string' && validTypes.includes(data.type);
   }
 
@@ -87,8 +87,8 @@ fastify.register(async function (fastify: any) {
       case 'start':
         session.game.start(data.data);
         break;
-      case 'restart':
-        session.ws.send(JSON.stringify({type: 'restart', data: session.game.restart()}));
+      case 'ended':
+        session.game.ended();
         break;
       case 'pause':
         session.game.pause();

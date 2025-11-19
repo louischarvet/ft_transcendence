@@ -3,6 +3,8 @@ import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
 import { updateInfo, getUser, Logout, updateAvatar, getUserById} from '../tools/APIStorageManager';
+import { popUpAlert } from '../tools/popup';
+
 export default function Profile(): HTMLElement {
 
   if (!getUser()) {
@@ -63,12 +65,12 @@ export default function Profile(): HTMLElement {
   const ratio = createStatCard('Ratio', '1.28');
   const gamesPlayed = createStatCard('Number of game played', '0');
   const wins = createStatCard('Number of victory', '0');
-  const bestStreak = createStatCard('Best win streak', '0');
+//  const bestStreak = createStatCard('Best win streak', '0');
   const wallet = createStatCard('Wallet', '0');
   const currentStreak = createStatCard('Current win streak', '0');
 
   // Ajout dans la grille
-  [ratio, gamesPlayed, wins, bestStreak, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
+  [ratio, gamesPlayed, wins, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
   statsSection.appendChild(statsGrid);
 
   // Section Profil utilisateur
@@ -82,14 +84,14 @@ export default function Profile(): HTMLElement {
 
 	const currentUser = getUser();
 	if (!currentUser){
-		alert("User not found");
+    popUpAlert("Error : ", "User not found");
 		navigate('/');
 		localStorage.removeItem('user');
 		return container;
 	}
   // Image reelle de l’avatar
 	const avatarImg = document.createElement('img');
-  	avatarImg.src = currentUser.picture ? `https://localhost:4343/user/${currentUser.picture}` : 'https://localhost:4343/user/pictures/avatar_1.jpg';
+  	avatarImg.src = currentUser.picture ? `/user/${currentUser.picture}` : '/user/pictures/avatar_1.jpg';
 	avatarImg.alt = 'Avatar';
 	avatarImg.className = 'object-cover w-full h-full bg-red';
 	avatar.appendChild(avatarImg);
@@ -123,12 +125,12 @@ export default function Profile(): HTMLElement {
 		try {
 			const res = await updateAvatar(file);
 			console.log("res", res);
-			//avatarImg.src = `https://localhost:4343/user/${res.picture}`;
-			alert('Avatar updated successfully!');
+			//avatarImg.src = `/user/${res.picture}`;
+      popUpAlert("Youhou ", "Avatar updated successfully!");
 			navigate('/profil');
 		} catch (err) {
 			console.error('Erreur upload avatar :', err);
-			alert('Error uploading avatar.');
+      popUpAlert("Error : ", "Error uploading avatar");
 		}
 	};
 
@@ -148,12 +150,12 @@ export default function Profile(): HTMLElement {
       const popup = createChangeEmail(async (password, newEmail) => {
         updateInfo(password, 'email', newEmail)
           .then((res) => {
-            alert('Email updated successfully!');
+            popUpAlert("Youhou : ", "Email updated successfully!");
             console.log('Update response:', res);
             navigate('/profil');
           })
           .catch(err => {
-            alert('Error changing email.');
+            popUpAlert("Error : ", "Error changing email");
             console.error(err);
           });
     });
@@ -169,11 +171,11 @@ export default function Profile(): HTMLElement {
       const popup = createChangePassword(async (oldPassword, newPassword) => {
         updateInfo(oldPassword, 'password', newPassword)
           .then((res) => {
-            alert('Password updated successfully!');
+            popUpAlert("Youhou : ", "Password updated successfully!");
             console.log('Update response:', res);
           })
           .catch(err => {
-            alert('Error changing password.');
+            popUpAlert("Error : ", "Error changing password");
             console.error(err);
           });
     });
@@ -206,7 +208,7 @@ export default function Profile(): HTMLElement {
         navigate('/'); // Retour à la home
       } catch (err) {
         console.error(err);
-        alert('Error deleting account.');
+        popUpAlert("Error : ", "Error deleting account");
       }
     });
     // Affiche la popup par-dessus tout :
@@ -223,18 +225,18 @@ export default function Profile(): HTMLElement {
 					console.log("go to logout");
 					navigate("/");
 				} else
-					alert("Erreur lors de la déconnexion");
+        popUpAlert("Error : ", "Error during disconnection");
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);
-				alert("Erreur lors de la déconnexion");
+        popUpAlert("Error : ", "Error during disconnection");
 			});
     } catch (err) {
         console.error(err);
-        alert('Error deleting account.');
+        popUpAlert("Error : ", "Error deleting account");
       }
   }
-  };
+  };currentStreak
 
   // Ajout des sections principales
   profileCard.appendChild(statsSection);
@@ -259,15 +261,15 @@ export default function Profile(): HTMLElement {
 		user.played_matches ?? '0';
 		wins.querySelector('p:nth-child(2)')!.textContent =
 		user.match_wins ?? '0';
-		bestStreak.querySelector('p:nth-child(2)')!.textContent =
-		user.wins_streak ?? '0';
+	//	bestStreak.querySelector('p:nth-child(2)')!.textContent =
+//		user.wins_streak ?? '0';
 		currentStreak.querySelector('p:nth-child(2)')!.textContent =
-		user.currentStreak ?? '0';
+		user.wins_streak ?? '0';
 		wallet.querySelector('p:nth-child(2)')!.textContent =
 		`${user.wallet ?? 0} 🪙`;
 	});
 
-	avatarImg.src = user.picture ? `https://localhost:4343/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
+	avatarImg.src = user.picture ? `/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
   return container;
 }

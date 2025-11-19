@@ -1,27 +1,19 @@
 import PgScene from "../tools/games/PgScene";
-import DropDownMenu from "../tools/DropDownMenu";
-import { getUser, checkConnection } from "../tools/APIStorageManager";
+import { getUser } from "../tools/APIStorageManager";
 import { navigate } from "../router";
 
 export default function Pong(): HTMLElement {
-  // checkConnection().then((connected) => {
-  //   if (!connected) {
-  //     navigate('/');
-  //   }
-  // });
   const container = document.createElement('div');
   let UserCurrent = getUser();
   if (!UserCurrent){
-	navigate('/');
-	return container;
+    navigate('/');
+    return container;
   }
   container.className = 'flex justify-center items-center h-screen bg-black';
   
   const canvas = document.createElement('canvas');
   canvas.className = 'w-full h-full';
   container.appendChild(canvas);
-
-  container.appendChild(DropDownMenu());
 
   // Initial size, will be resized for the responsive
   canvas.width = 2032;
@@ -54,7 +46,7 @@ export default function Pong(): HTMLElement {
   };
   
   function game() {
-    const pgScene = new PgScene(canvas, keys, getUser().name);
+    const pgScene = new PgScene(canvas, keys, UserCurrent.name);
     
     resizeCanvas();
     pgScene.engine.resize();

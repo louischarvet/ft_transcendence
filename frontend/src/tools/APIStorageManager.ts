@@ -333,7 +333,6 @@ export async function createMatch(playerType: string, name?: string, password?: 
 	} as Match;
 }
 
-// Mockup
 export async function deleteMatch(matchId: number): Promise<boolean> {
 
 	const res = await apiFetch(`/api/match/${matchId}`, {
@@ -367,10 +366,35 @@ export async function launchTournament(nbPlayers: number) {
 	const data = await res.json();
 	console.log("launchTournament data -> ", data);
 	if (data.error) return null;
-	//return data.Tournament as Tournament;
-	// Retourne directement le premier tournoi
 	return data.Tournament as Tournament;
 }
+
+/*
+export async function joinTournamentAsLogged( tournamentId: number, name: string, password: string ): Promise<{ success: boolean; message: string; id?: string; name?: string }> {
+
+	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name, password })
+	});
+
+	const data = await res.json();
+
+	if (data.error) {
+		return {
+			success: false,
+			message: data.error || "Unknown error"
+		};
+	}
+
+	return {
+		success: true,
+		id: data.user.id,
+		name: data.user.name,
+		message: "User logged"
+	};
+}
+*/
 
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
 
@@ -379,7 +403,12 @@ export async function joinTournamentAsLogged(tournamentId: number, name: string,
 		headers: {'Content-Type': 'application/json'},
 		body: JSON.stringify({ name, password })
 	});
+
 	const data = await res.json();
+	
+	if(data.error)
+		throw new Error("Login failed please try again");
+
 	if (data.error) return null;
 	return { id: data.user.id, name: data.user.name };
 }
@@ -418,7 +447,6 @@ export async function startTournament(tournamentId: number): Promise<Tournament 
 	return data.tournament as Tournament;
 }
 
-// Mockup
 export async function deleteTournament(tournamentId: number): Promise<boolean> {
 
 	const res = await apiFetch(`/api/tournament/${tournamentId}`, {

@@ -210,4 +210,7 @@ modifier les "alert" --- > remplacer par popup
 ne pas afficher les mots de passe en clair (match vs login, modification mot de passe, tournoi login)
 matchs vs login: play again -> nouveau match vs guest
 Checker toutes les routes interdites du backend
+
+match ou tournament login: si le name est mauvais -> undefined
+
 quand on quitte le blackjack: on est renvoye sur la page de login/register
