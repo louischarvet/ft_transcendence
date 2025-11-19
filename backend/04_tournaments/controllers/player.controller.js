@@ -20,7 +20,7 @@ async function alreadyJoined(players, id, type) {
 
 		const [playerId, rawType] = player.split(':');
 		const playerType = rawType.trim();
-		console.log(`Checking playerId: ${playerId}, playerType: ${playerType} against id: ${trimmedId}, type: ${trimmedType}`);
+		console.log(`Checking playerId: |${playerId}|, playerType: |${playerType}| against id: |${trimmedId}|, type: |${trimmedType}|`);
 		if (playerId === trimmedId && playerType === trimmedType)
 		{
 			console.log(`Player with ID ${trimmedId} and type ${trimmedType} has already joined.`);
@@ -75,7 +75,7 @@ export async function joinTournamentRegistered(request, reply){
 		return reply.code(400).send({ error: 'Tournament is full or already joined' });
 
 	// verifie que le joueur n'ai pas dans le tournoi
-	if ( alreadyJoined(tournament.players, String(player2.id).trim(), String(player2.type).trim()) )
+	if ( await alreadyJoined(tournament.players, String(player2.id).trim(), String(player2.type).trim()))
 		return reply.code(400).send({ error: 'Player ' + player2.name + ' is already connected ' });
 
 	// Récupère le joueur pour vérifier son statut
