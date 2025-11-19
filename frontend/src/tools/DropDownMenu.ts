@@ -1,7 +1,8 @@
 import { getFriendsList, addNewFriend } from "./APIStorageManager";
 import { Logout } from "./APIStorageManager";
-import { checkConnection, getUser } from './APIStorageManager';
+import { getUser } from './APIStorageManager';
 import { navigate } from '../router';
+import { popUpAlert } from "./popup";
 
 export default function DropDownMenu() {
 	const wrapper = document.createElement('div');
@@ -131,15 +132,15 @@ export default function DropDownMenu() {
 			if (!friendName) return;
 
 			if (friendName.length > 64) {
-				alert("Erreur : invalid name");
+				popUpAlert("Error : ", "invalid name" );
 				return;
 			}
 
 			addNewFriend(friendName)
 				.then((response) => {
 					if (!response) {
-						alert("Erreur : aucune réponse du serveur.");
-						return null; // arrête la chaîne
+						popUpAlert("Error : ", "no response from server" );
+						return null;
 					}
 					return response.json()
 						.catch(() => ({}))
@@ -153,12 +154,12 @@ export default function DropDownMenu() {
 
 					if (!response.ok) {
 						const errorMessage = data.error || `Erreur inconnue (${response.status})`;
-						alert(errorMessage);
+						popUpAlert("Error : ", errorMessage );
 						console.warn("Erreur backend:", errorMessage);
 						return;
 					}
 
-					alert(data.message || `Friend ${friendName} added!`);
+					popUpAlert("Youhou : ", data.message || `Friend ${friendName} added!`);
 
 					const newFriend = { name: friendName, status: data.status, picture: data.picture, id: data.id };
 					friendsList.push(newFriend);
@@ -169,7 +170,7 @@ export default function DropDownMenu() {
 					return;
 				})
 				.catch((err) => {
-					alert("Erreur de connexion au serveur");
+					popUpAlert("Error : ", "Error server" );
 					console.error("Erreur front: ", err);
 				}
 			);
@@ -217,13 +218,13 @@ export default function DropDownMenu() {
 					navigate("/");
 				} else{
 					console.log("reponse", response);
-					alert("Erreur lors de la déconnexion");
+					popUpAlert("Error : ", "Error during disconnection" );
 				}
 
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);
-				alert("Erreur lors de la déconnexion");
+				popUpAlert("Error : ", "no response from server" );
 			});
 	};
 

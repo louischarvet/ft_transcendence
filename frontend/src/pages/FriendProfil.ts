@@ -1,6 +1,8 @@
 // pages/FriendProfil.ts
 import { navigate } from '../router';
 import { getUserById, removeFriend } from '../tools/APIStorageManager';
+import { popUpAlert } from '../tools/popup';
+
 
 export default function FriendProfil(id: string): HTMLElement {
 	const container = document.createElement('div');
@@ -97,11 +99,12 @@ export default function FriendProfil(id: string): HTMLElement {
 				//if (!response?.ok) throw new Error('Impossible de supprimer l’ami');
 			});
 			//const response = await removeFriend(Number(id));
-			alert('Ami supprimé avec succès !');
+			popUpAlert("Youhou : ", "Friend deleted successfully");
+			
 			navigate('/select-game'); // Retour au profil principal
 		} catch (err) {
 			console.error(err);
-			alert('Erreur lors de la suppression de l’ami.');
+			popUpAlert("Error : ", "Error deleting friend");
 		}
 	};
 
@@ -115,7 +118,7 @@ export default function FriendProfil(id: string): HTMLElement {
 		getUserById(Number(id), 'registered').then((response) =>{
 			data = response;
 			if (!data) {
-				alert("Utilisateur non trouvé");
+				popUpAlert("Error : ", "User not found");
 				navigate('/profil');
 				return container;
 			}
@@ -152,7 +155,7 @@ export default function FriendProfil(id: string): HTMLElement {
 		})
 	} catch (err) {
 		console.error(err);
-		alert('Erreur lors de la récupération du profil de l’ami.');
+		popUpAlert("Error : ", "Error retrieving friend's profile");
 	}
 
 	return container;

@@ -1,5 +1,7 @@
 import { navigate } from "../router";
 import { checkConnection, login} from "./APIStorageManager";
+import { popUpAlert } from "./popup";
+
 
 export default function Login(): HTMLElement {
 
@@ -40,23 +42,13 @@ export default function Login(): HTMLElement {
 		console.log('Login Form:', form);
 
 		if (!form.name || !form.password){
-			alert("Name and password required");
+			popUpAlert("Login failed: ", "Name and password required");
 			return;
 		}
 
-		if (form.password.length < 8) {
-			alert("Password must be at least 8 characters long");
-			return;
-		}
-		if (!/[0-9]/.test(form.password)) {
-			alert("Password must contain a number");
-			return;
-		}
-		
 		login(form.name, form.password).then( (res) => {
 			if (!res.success){
-				alert(res.message);
-				console.error("Login failed:", res.message);
+				popUpAlert("Error : ", "Login failed");
 				navigate('/login');
 				return;
 			}

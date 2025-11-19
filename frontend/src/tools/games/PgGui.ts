@@ -8,6 +8,8 @@ import { type Match, createMatch, deleteMatch, updateMatchResult,
   joinTournamentAsLogged, startTournament, deleteTournament, nextTournamentMatch
 } from "../APIStorageManager";
 
+import { popUpAlert } from "../popup";
+
 export default class PgGui {
   hostPlayer: string;
 
@@ -722,13 +724,13 @@ export default class PgGui {
         if (this.currentTournament == null) return;
         joinTournamentAsGuest(this.currentTournament.id).then((player) => {
           if ('error' in player) {
-            alert(`Error : ${player.error}`);
+            popUpAlert("Error : ", `${player.error}`)
             console.error(player.error);
             return;
           }
             this.tournament.addPlayer(player);
           if (player.message != "Joined tournament")
-            alert(player.message);
+            popUpAlert("Error : ", player.message)
         });
       });
       this.ui.addControl(addGuestButton);
@@ -1764,13 +1766,17 @@ export default class PgGui {
         const password = passwordInput.text;
         
         if (username === "" || password === "") {
-          alert("Please enter both username and password.");
+          popUpAlert("Error : ", "Please enter both username and password.")
+          // alert("Please enter both username and password.");
           return;
         }
 
         if (!this.currentTournament) {
           createMatch("registered", username, password).then((match) => {
-            if (match == null) return;
+            if (match == null){
+              popUpAlert("Error : ", "Fail to login. Please try again");
+              return;
+            }
             this.currentMatch = match;
             this.login.visibility(false);
             this.vsFriend.visibility(false);
@@ -1778,11 +1784,15 @@ export default class PgGui {
             this.match.visibility(true, this.currentMatch.player1.name, this.currentMatch.player2.name);
           });
         } else {
-          joinTournamentAsLogged(this.currentTournament.id, username, password).then((player) => {
+          joinTournamentAsLogged(this.currentTournament.id, username, password)
+          .then((player) => {
             if (player == null) return;
             this.tournament.addPlayer(player);
             this.login.visibility(false);
-          });
+          })
+          .catch((err) => {
+            popUpAlert("Error : ", err.message)
+	        });
         }
       });
       this.ui.addControl(loginButton);

@@ -369,6 +369,33 @@ export async function launchTournament(nbPlayers: number) {
 	return data.Tournament as Tournament;
 }
 
+/*
+export async function joinTournamentAsLogged( tournamentId: number, name: string, password: string ): Promise<{ success: boolean; message: string; id?: string; name?: string }> {
+
+	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name, password })
+	});
+
+	const data = await res.json();
+
+	if (data.error) {
+		return {
+			success: false,
+			message: data.error || "Unknown error"
+		};
+	}
+
+	return {
+		success: true,
+		id: data.user.id,
+		name: data.user.name,
+		message: "User logged"
+	};
+}
+*/
+
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
 
 	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
@@ -376,7 +403,12 @@ export async function joinTournamentAsLogged(tournamentId: number, name: string,
 		headers: {'Content-Type': 'application/json'},
 		body: JSON.stringify({ name, password })
 	});
+
 	const data = await res.json();
+	
+	if(data.error)
+		throw new Error("Login failed please try again");
+
 	if (data.error) return null;
 	return { id: data.user.id, name: data.user.name };
 }
