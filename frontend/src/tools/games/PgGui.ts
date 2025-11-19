@@ -442,7 +442,7 @@ export default class PgGui {
       });
       this.font.isVisible = visible;
       if (visible) {
-        this.started = false;
+        this.startedType = { type: "ended" };
         if (this.currentTournament) {
           deleteTournament(this.currentTournament.id);
           this.currentTournament = null;
@@ -1336,6 +1336,7 @@ export default class PgGui {
     }
 
     const show = () => {
+      if (!this.started) return;
       this.started = false;
       // update win parts
       if (this.score.left.text > this.score.right.text) {
