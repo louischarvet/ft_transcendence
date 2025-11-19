@@ -63,25 +63,10 @@ function onWsMessage(ev: MessageEvent<string>): void {
         state.playerId = msg.data.playerId;
         console.log('[BjRequest] Updated playerId from backend:', state.playerId);
       }
-
-      // NOUVEAU: Récupérer la balance initiale du backend (depuis la DB)
-      if (msg.data?.balance !== undefined) {
-        console.log(`[BjRequest] Balance initiale reçue depuis DB: ${msg.data.balance}`);
-        dispatch('bj:updateBalance', { balance: msg.data.balance });
-      }
-
       state.joined = true;
       // Flush messages en attente maintenant que le joueur est inscrit côté serveur
       for (const m of state.queue.splice(0)) {
         if (m.event !== 'join') sendWs(m);
-      }
-      break;
-    }
-    case 'betPlaced': {
-      // Le backend envoie la nouvelle balance après chaque mise
-      if (msg.data && msg.data.playerId === state.playerId && msg.data.balance !== undefined) {
-        console.log(`[BjRequest] Bet placed, nouvelle balance: ${msg.data.balance}`);
-        dispatch('bj:updateBalance', { balance: msg.data.balance });
       }
       break;
     }
@@ -142,21 +127,12 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (d && d.card && d.position) {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
-        console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}, balance: ${d.balance}`);
+        console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}`);
         // Distribuer la carte
         dealPlace(String(d.card), positionStr, String(d.value ?? ''), false);
         // Mettre à jour l'affichage de la mise
         if (d.newBet !== undefined) {
           dispatch('bj:updateBet', { place: positionStr, newBet: d.newBet });
-        }
-        // NOUVEAU: Mettre à jour la balance si c'est notre joueur
-        if (d.playerId === state.playerId && d.balance !== undefined) {
-          console.log(`[BjRequest] Double down, nouvelle balance: ${d.balance}`);
-          dispatch('bj:updateBalance', { balance: d.balance });
-        }
-        // Cacher les boutons car le double a réussi et la main est terminée
-        if (d.playerId === state.playerId) {
-          dispatch('bj:actions:hide');
         }
       }
       break;
@@ -213,9 +189,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
       break;
     }
     case 'error': {
-      // Ignorer silencieusement les erreurs (ex: double non autorisé)
-      // Le joueur peut continuer à jouer avec Hit/Stand
-      console.log('[WS][Blackjack] Error:', msg.data || msg);
+      console.error('[WS][Blackjack] Error:', msg.data?.message || msg);
       break;
     }
     default:

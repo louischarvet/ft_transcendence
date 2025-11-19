@@ -2,7 +2,6 @@ import Fastify from 'fastify';
 import fastifyWebsocket from '@fastify/websocket';
 import fastifyCors from '@fastify/cors';
 import shutdown from '../common_tools/shutdown.js';
-import { authenticateFromCookie } from './authentication/auth.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -19,53 +18,6 @@ fastify.register(shutdown);
 
 // Stockage des salles de jeu
 const gameRooms = new Map();
-
-// Helper pour récupérer les infos user complètes depuis user-service
-// sessionData vient de authenticateFromCookie() et contient { id, name, type, ... }
-async function getUserFromSessionData(sessionData) {
-  try {
-    const userRes = await fetch(`http://user-service:3000/${sessionData.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: sessionData.type })
-    });
-
-    if (!userRes.ok) {
-      console.error(`[getUserFromSessionData] HTTP error: ${userRes.status}`);
-      return null;
-    }
-
-    const userData = await userRes.json();
-    return userData.user;
-  } catch (error) {
-    console.error('[getUserFromSessionData] Error:', error);
-    return null;
-  }
-}
-
-// Helper pour mettre à jour le wallet via la nouvelle route /updatewallet
-async function updateUserWallet(userName, userType, newWallet) {
-  try {
-    const response = await fetch(`http://user-service:3000/updatewallet`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: userName,
-        type: userType,
-        wallet: newWallet
-      })
-    });
-    if (!response.ok) {
-      console.error(`[updateUserWallet] HTTP error: ${response.status}`);
-      return false;
-    }
-    console.log(`[updateUserWallet] Wallet mis à jour pour ${userName}: ${newWallet}€`);
-    return true;
-  } catch (error) {
-    console.error('[updateUserWallet] Error:', error);
-    return false;
-  }
-}
 
 // Génération d'un deck de cartes
 function generateDeck() {
@@ -139,23 +91,11 @@ fastify.get('/health', async (request, reply) => {
 
 // Route WebSocket
 fastify.register(async function (fastify) {
-  fastify.get('/blackjack', { websocket: true }, async (socket, req) => {
+  fastify.get('/blackjack', { websocket: true }, (socket, req) => {
     let playerId = null;
     let roomId = null;
-    let authenticatedUser = null; // Stocker les infos user depuis la DB
-    let sessionData = null; // Données de session (id, name, type, etc.)
 
-    console.log('[WebSocket] Nouvelle connexion');
-
-    // Authentifier via le cookie
-    sessionData = await authenticateFromCookie(req.headers.cookie || '');
-    if (sessionData) {
-      console.log('[WebSocket] Utilisateur authentifié:', sessionData.name);
-    } else {
-      console.log('[WebSocket] Aucun utilisateur authentifié');
-    }
-
-    socket.on('message', async (message) => {
+    socket.on('message', (message) => {
       try {
         const { event, data } = JSON.parse(message.toString());
 
@@ -187,39 +127,9 @@ fastify.register(async function (fastify) {
       }
     });
 
-    async function handleJoin(socket, data) {
+    function handleJoin(socket, data) {
       playerId = Math.random().toString(36).substring(7);
-
-      // OBLIGATOIRE: Être authentifié pour jouer
-      if (!sessionData) {
-        console.log(`[handleJoin] REJECTED: Pas d'authentification`);
-        socket.send(JSON.stringify({
-          event: 'error',
-          data: 'Authentification requise pour jouer'
-        }));
-        return;
-      }
-
-      // Récupérer les infos complètes user depuis la DB
-      const dbUser = await getUserFromSessionData(sessionData);
-      if (!dbUser) {
-        console.log(`[handleJoin] REJECTED: Impossible de récupérer user depuis DB`);
-        socket.send(JSON.stringify({
-          event: 'error',
-          data: 'Utilisateur non trouvé en base de données'
-        }));
-        return;
-      }
-
-      // Stocker les infos user
-      authenticatedUser = dbUser;
-      const userDbId = dbUser.id;
-      const userType = dbUser.type; // "registered" ou "guest"
-      const userName = dbUser.name || sessionData.name || data.username || 'Player';
-      const initialBalance = dbUser.wallet !== undefined ? dbUser.wallet : 500;
-
-      console.log(`[handleJoin] User ${userName} (${userType}) rejoint avec balance: ${initialBalance}€`);
-
+      
       if (data.mode === 'solo') {
         roomId = `solo_${playerId}`;
         const room = {
@@ -262,17 +172,12 @@ fastify.register(async function (fastify) {
       const room = gameRooms.get(roomId);
       const player = {
         id: playerId,
-        username: userName,
-        balance: initialBalance,
+        username: data.username,
+        balance: 5000,
         socket: socket,
         bets: new Map(),
         hands: new Map(),
-        ready: false,
-        //stocker les infos pour update DB
-        dbId: userDbId,
-        dbType: userType,
-        dbName: userName,
-        authenticated: !!authenticatedUser
+        ready: false
       };
 
       room.players.set(playerId, player);
@@ -283,9 +188,7 @@ fastify.register(async function (fastify) {
           playerId,
           roomId,
           mode: room.mode,
-          playerCount: room.players.size,
-          balance: initialBalance, //Envoyer la balance au frontend
-          username: player.username
+          playerCount: room.players.size
         }
       }));
 
@@ -296,8 +199,8 @@ fastify.register(async function (fastify) {
 
       if (room.mode === 'solo' || room.players.size === 2) {
         room.state = 'betting';
-        broadcastToRoom(room, 'bettingPhase', {
-          message: 'Placez vos paris (positions 1-5)'
+        broadcastToRoom(room, 'bettingPhase', { 
+          message: 'Placez vos paris (positions 1-5)' 
         });
       }
     }
@@ -428,7 +331,7 @@ fastify.register(async function (fastify) {
     function nextPlayerTurn(room) {
       const playerIds = Array.from(room.players.keys());
 
-      // Si on a fini avec tous les joueurs passer au dealer
+      // Si on a fini avec tous les joueurs, passer au dealer
       if (room.currentPlayerIndex >= playerIds.length) {
         console.log('[nextPlayerTurn] All players done, starting dealer turn');
         dealerTurn(room);
@@ -633,7 +536,6 @@ fastify.register(async function (fastify) {
       // Vérifier que le joueur a exactement 2 cartes (double down seulement sur main initiale)
       if (targetHand.length !== 2) {
         socket.send(JSON.stringify({ event: 'error', data: 'Double Down n\'est autorisé que sur la main initiale (2 cartes)' }));
-        // Ne pas bloquer - le joueur peut continuer avec Hit/Stand
         return;
       }
 
@@ -644,7 +546,6 @@ fastify.register(async function (fastify) {
       // Vérifier que le joueur a assez d'argent
       if (player.balance < currentBet) {
         socket.send(JSON.stringify({ event: 'error', data: 'Solde insuffisant pour doubler la mise' }));
-        // Ne pas bloquer - le joueur peut continuer avec Hit/Stand
         return;
       }
 
@@ -672,8 +573,7 @@ fastify.register(async function (fastify) {
         position: targetPosition,
         newBet,
         card: newCard,
-        value,
-        balance: player.balance  // NOUVEAU: Envoyer la balance mise à jour
+        value
       });
 
       // Passer automatiquement à la main/joueur suivant (le joueur ne peut plus jouer cette main)
@@ -765,21 +665,6 @@ fastify.register(async function (fastify) {
             newBalance: player.balance
           });
         });
-
-        // NOUVEAU: Mettre à jour la DB si l'utilisateur est authentifié
-        if (player.authenticated && player.dbName) {
-          updateUserWallet(player.dbName, player.dbType, player.balance)
-            .then(success => {
-              if (success) {
-                console.log(`[finishRound] Wallet mis à jour pour ${player.dbName}: ${player.balance}€`);
-              } else {
-                console.error(`[finishRound] Échec mise à jour wallet pour ${player.dbName}`);
-              }
-            })
-            .catch(err => {
-              console.error(`[finishRound] Erreur mise à jour wallet:`, err);
-            });
-        }
       });
 
       broadcastToRoom(room, 'roundFinished', {

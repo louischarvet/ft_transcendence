@@ -2,7 +2,7 @@
 
 mkdir -p ./ssl
 
-openssl req -x509 -nodes \
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 -out ./ssl/proxy.crt \
 -keyout ./ssl/proxy.key \
 -subj "/C=FR/ST=NA/L=Angouleme/O=42/OU=42/CN=locharve.42.fr/UID=locharve"

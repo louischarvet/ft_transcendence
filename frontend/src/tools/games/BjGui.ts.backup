@@ -53,8 +53,8 @@ export default class BjGui {
 
     this.sceneFunctions = sceneFunctions;
 
-    // Balance sera reçue du backend via 'bj:updateBalance' après connexion
-    this.bankAmount = 0;
+    // TO DO: Backend request
+    this.bankAmount = 5000;
     this.totalBetAmount = 0;
 
     // Play Button
@@ -508,9 +508,8 @@ Gain classique : 1,5 fois la mise."; }
       console.log("Play Bet clicked");
       if (this.totalBetAmount === 0)
         return;
-      // SUPPRIMÉ: Ne plus déduire localement - le backend gère la balance via DB
-      // this.bankAmount -= this.totalBetAmount;
-      // La balance sera mise à jour par le backend via 'bj:updateBalance'
+      this.bankAmount -= this.totalBetAmount;
+      (this.ui.getControlByName("BankLabel") as TextBlock).text = `Bank: ${this.bankAmount} €`;
 
       Object.values(this.Bet.areas).forEach(area => {
         if (area.bet > 0) {
@@ -730,7 +729,7 @@ Gain classique : 1,5 fois la mise."; }
     doubleDown.onPointerClickObservable.add(() => {
       console.log("Player chose to DOUBLE DOWN");
       BjRequest.send.doubleDown();
-      // Ne pas cacher les boutons ici - ils seront cachés si le double réussit
+      this.cardsInteractionsVisibility(false);
     });
     doubleDown.isVisible = false;
     this.ui.addControl(doubleDown);

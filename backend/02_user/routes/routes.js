@@ -1,7 +1,7 @@
 import { createGuest, register, logIn, logOut, deleteUser, getUserStatus,
 	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
 	getUserByIdToken, getUserById, getFriendsProfiles,
-	getUsersTournament , deleteFriend}
+	getUsersTournament , deleteFriend, updateWallet}
 	from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema, guestTmp , deleteSchema, deleteFriendSchema} from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
@@ -35,6 +35,7 @@ async function userRoutes(fastify, options) {
 
 	fastify.put('/changestatus',{schema: userSchema }, changeStatus);
 	fastify.put('/updatestats', { schema: updateStatsSchema }, updateStats);
+	fastify.put('/updatewallet', updateWallet);
 }
 
 export default userRoutes;
