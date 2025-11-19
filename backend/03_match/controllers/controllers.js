@@ -23,6 +23,13 @@ export async function registeredMatch(request, reply) {
 	const { db } = request.server;
 	const { name, password } = request.body;
 	const player1 = request.user;
+	
+	if (name === player1.name) {
+		return reply.code(400).send({
+			error: 'You cannot play against yourself!'
+		});
+	}
+
 	const body = JSON.stringify({
 		name: name,
 		password: password,
