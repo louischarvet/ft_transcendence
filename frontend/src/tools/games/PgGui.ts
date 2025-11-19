@@ -306,8 +306,10 @@ export default class PgGui {
           // delete and clear current match or tournament
           this.currentMatch = null;
           this.currentTournament = null;
+
         }
         this.goBackUI = "menu";
+        this.goBackButton.isVisible = true;
         // As Guest or Login temporarily
         this.vsFriend.visibility(true);
       });
@@ -440,6 +442,7 @@ export default class PgGui {
       });
       this.font.isVisible = visible;
       if (visible) {
+        this.started = false;
         if (this.currentTournament) {
           deleteTournament(this.currentTournament.id);
           this.currentTournament = null;
@@ -1172,8 +1175,8 @@ export default class PgGui {
       menuButton.onPointerClickObservable.add(() => {
 
         this.pause.visibility(false);
-        this.goBackUI = "pause";
-        this.goBackButton.isVisible = true;
+        // this.goBackUI = "pause";
+        // this.goBackButton.isVisible = true;
         this.menu.visibility(true);
       });
       this.ui.addControl(menuButton);
@@ -1369,7 +1372,8 @@ export default class PgGui {
       } else if (this.currentMatch) {
         updateMatchResult(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch);
         this.result.visibility(true);
-      }
+      } else
+        this.result.visibility(true);
 
       this.currentMatch = null;
       return;
