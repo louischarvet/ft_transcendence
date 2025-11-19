@@ -116,7 +116,7 @@ export async function startTournament(request, reply){
 	let countIa = 0;
 	for (; tournament.remainingPlaces > 0;) {
 		countIa++;
-		tournament = await addNewPlayerToTournament(db, tournamentId, '0', 'ia');
+		tournament = await addNewPlayerToTournament(db, tournamentId, '0:ia;');
 	}
 
 	const playersArray = tournament.players.split(';');
