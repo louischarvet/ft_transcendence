@@ -290,6 +290,13 @@ export default class PgScene {
       this.gameMode = this.gui.isStarted();
       if (!this.gameMode)
         return;
+      if (this.gameMode.type === "ended") {
+        console.log("Game ended, stopping scene updates. with gameMode :", this.gameMode);
+        this.game.send({ type: 'ended' });
+        this.gui.startedType = null;
+        this.gui.started = false;
+        return;
+      }
 
       if (!cinematicEndUp) {
         cinematicElapsedTime += deltaTime;
@@ -309,11 +316,7 @@ export default class PgScene {
         this.gameStartTime -= deltaTime;
         if (this.gameStartTime <= 0) {
           this.gameStarted = true;
-          if (this.gameMode.type === "restart") {
-            this.game.send({ type: 'restart' });
-          } else {
-            this.game.send({ type: 'start', data: this.gameMode });
-          }
+          this.game.send({ type: 'start', data: this.gameMode });
         }
         return;
       }

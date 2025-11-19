@@ -67,9 +67,6 @@ export default class GameConnection {
       case 'result':
         this.functions.showResult(message.data);
         break;
-      case 'restart':
-        this.functions.restart(message.data);
-        break;
       case 'error':
         console.error('Server error:', message.error);
         break;
