@@ -729,8 +729,10 @@ export default class PgGui {
             return;
           }
             this.tournament.addPlayer(player);
-          if (player.message != "Joined tournament")
+          if (player.message != "Joined tournament"){
+            // alert("Error");
             popUpAlert("Error : ", player.message)
+          }
         });
       });
       this.ui.addControl(addGuestButton);

@@ -25,8 +25,8 @@ export default function Home(subPage?: string): HTMLElement {
 	separator.className = 'w-3/4 border-t border-white/20 my-5';
 	container.appendChild(separator);
 	
-	// if (subPage && getUser())
-	// 	container.appendChild(DropDownMenu());
+	if (!subPage && getUser())
+		navigate('/select-game');
 	if (subPage === 'login') {
 		container.appendChild(Login());
 	} else if (subPage === 'register') {

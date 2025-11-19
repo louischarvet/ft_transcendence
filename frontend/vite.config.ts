@@ -27,7 +27,7 @@ export default defineConfig({
         rewrite: (path: string) => path.replace(/^\/api/, ''),
       },
       '/user/pictures': {
-	    	target: 'https://proxy-service:443', // le proxy Fastify
+	    	target: 'https://proxy-service:443',
 	    	changeOrigin: true,
 	    	secure: false,
 	    	rewrite: (path: string )=> path.replace(/^\/user\/pictures/, '/user/pictures'),
