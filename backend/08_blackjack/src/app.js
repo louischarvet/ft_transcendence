@@ -3,7 +3,7 @@ import fastifyWebsocket from '@fastify/websocket';
 import fastifyCors from '@fastify/cors';
 import shutdown from '../common_tools/shutdown.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 // Enregistrer CORS
 fastify.register(fastifyCors, {
@@ -46,32 +46,24 @@ function calculateHandValue(cards) {
   let value = 0;
   let aces = 0;
 
-  console.log('[calculateHandValue] Cards:', cards);
-
   cards.forEach(card => {
     const name = card.split('_of_')[0];
-    console.log('[calculateHandValue] Card:', card, 'Name:', name);
     if (name === 'As') {
       aces++;
       value += 11;
-      console.log('[calculateHandValue] As found, value now:', value);
     } else if (['Jack', 'Queen', 'King'].includes(name)) {
       value += 10;
-      console.log('[calculateHandValue] Figure found, value now:', value);
     } else {
       const cardValue = parseInt(name);
       value += cardValue;
-      console.log('[calculateHandValue] Number card:', cardValue, 'value now:', value);
     }
   });
 
   while (value > 21 && aces > 0) {
     value -= 10;
     aces--;
-    console.log('[calculateHandValue] Adjusting ace, value now:', value);
   }
 
-  console.log('[calculateHandValue] Final value:', value);
   return value;
 }
 
@@ -218,10 +210,7 @@ fastify.register(async function (fastify) {
         return;
       }
 
-      console.log(`[handlePlaceBet] Player ${playerId} trying to bet ${data.amount} on position ${data.position}, current balance: ${player.balance}`);
-
       if (data.amount > player.balance) {
-        console.log(`[handlePlaceBet] REJECTED: ${data.amount} > ${player.balance}`);
         socket.send(JSON.stringify({ event: 'error', data: 'Solde insuffisant' }));
         return;
       }
@@ -300,13 +289,11 @@ fastify.register(async function (fastify) {
           hand.push(room.deck.pop());
           hand.push(room.deck.pop());
           player.hands.set(position, hand);
-          console.log(`[startRound] Player ${player.id} position ${position} initial hand:`, hand);
         });
       });
 
       room.dealerHand.push(room.deck.pop());
       room.dealerHand.push(room.deck.pop());
-      console.log('[startRound] Dealer initial hand:', room.dealerHand);
 
       const gameState = {
         dealerCard: room.dealerHand[0],
@@ -333,7 +320,6 @@ fastify.register(async function (fastify) {
 
       // Si on a fini avec tous les joueurs, passer au dealer
       if (room.currentPlayerIndex >= playerIds.length) {
-        console.log('[nextPlayerTurn] All players done, starting dealer turn');
         dealerTurn(room);
         return;
       }
@@ -343,30 +329,23 @@ fastify.register(async function (fastify) {
 
       // Trouver la prochaine main à jouer pour ce joueur
       const positions = Array.from(currentPlayer.hands.keys()).sort((a, b) => a - b);
-      console.log('[nextPlayerTurn] Player positions:', positions, 'currentHandPosition:', room.currentHandPosition);
 
       // Si currentHandPosition est null, commencer par la première main
       if (room.currentHandPosition === null) {
         if (positions.length === 0) {
-          console.log('[nextPlayerTurn] No hands for this player, moving to next player');
           room.currentPlayerIndex++;
           nextPlayerTurn(room);
           return;
         }
         room.currentHandPosition = positions[0];
-        console.log('[nextPlayerTurn] Starting with first position:', room.currentHandPosition);
-      } else {
-        console.log('[nextPlayerTurn] Using current position:', room.currentHandPosition);
       }
 
       // Vérifier si cette main peut encore jouer
       const currentHand = currentPlayer.hands.get(room.currentHandPosition);
       const handValue = calculateHandValue(currentHand);
-      console.log('[nextPlayerTurn] Hand value for position', room.currentHandPosition, ':', handValue);
 
       if (handValue === 21 && currentHand.length === 2) {
         // Blackjack notifier le joueur
-        console.log('[nextPlayerTurn] Blackjack! Skipping to next hand');
         broadcastToRoom(room, 'blackjack', {
           playerId: currentPlayerId,
           position: room.currentHandPosition
@@ -384,7 +363,6 @@ fastify.register(async function (fastify) {
         return;
       } else if (handValue > 21) {
         // Bust! Cette main est terminée
-        console.log('[nextPlayerTurn] Bust! Skipping to next hand');
         const currentIndex = positions.indexOf(room.currentHandPosition);
         if (currentIndex + 1 < positions.length) {
           room.currentHandPosition = positions[currentIndex + 1];
@@ -397,7 +375,6 @@ fastify.register(async function (fastify) {
         return;
       }
 
-      console.log('[nextPlayerTurn] Broadcasting playerTurn for position', room.currentHandPosition);
       broadcastToRoom(room, 'playerTurn', {
         playerId: currentPlayerId,
         username: currentPlayer.username,
@@ -436,7 +413,6 @@ fastify.register(async function (fastify) {
       const newCard = room.deck.pop();
       targetHand.push(newCard);
 
-      console.log(`[handleHit] Player ${playerId} position ${targetPosition} hand after draw:`, targetHand);
       const value = calculateHandValue(targetHand);
 
       broadcastToRoom(room, 'cardDrawn', {
@@ -481,7 +457,6 @@ fastify.register(async function (fastify) {
       }
 
       const targetPosition = room.currentHandPosition;
-      console.log('[handleStand] Player standing on position', targetPosition);
 
       // Broadcast que le joueur s'arrête pour cette main
       broadcastToRoom(room, 'playerStand', {
@@ -492,18 +467,14 @@ fastify.register(async function (fastify) {
 
       // Passer à la prochaine main de ce joueur
       const positions = Array.from(player.hands.keys()).sort((a, b) => a - b);
-      console.log('[handleStand] All positions for this player:', positions);
       const currentIndex = positions.indexOf(targetPosition);
-      console.log('[handleStand] Current index:', currentIndex, 'total positions:', positions.length);
 
       if (currentIndex + 1 < positions.length) {
         // Passer à la prochaine main de ce joueur
         room.currentHandPosition = positions[currentIndex + 1];
-        console.log('[handleStand] Moving to next hand at position:', room.currentHandPosition);
         nextPlayerTurn(room);
       } else {
         // Toutes les mains de ce joueur sont terminées
-        console.log('[handleStand] All hands done, moving to next player');
         room.currentPlayerIndex++;
         room.currentHandPosition = null;
         nextPlayerTurn(room);
@@ -553,8 +524,6 @@ fastify.register(async function (fastify) {
       player.balance -= currentBet;
       player.bets.set(targetPosition, newBet);
 
-      console.log(`[handleDouble] Player ${playerId} doubled bet on position ${targetPosition}: ${currentBet} -> ${newBet}`);
-
       // Régénérer le deck si vide
       if (room.deck.length === 0) {
         room.deck = generateDeck();
@@ -564,7 +533,6 @@ fastify.register(async function (fastify) {
       const newCard = room.deck.pop();
       targetHand.push(newCard);
 
-      console.log(`[handleDouble] Player ${playerId} position ${targetPosition} hand after double:`, targetHand);
       const value = calculateHandValue(targetHand);
 
       // Notifier tous les joueurs du double down
@@ -617,9 +585,7 @@ fastify.register(async function (fastify) {
         const card = room.deck.pop();
         room.dealerHand.push(card);
 
-        console.log('[dealerTurn] Dealer hand after draw:', room.dealerHand);
         const dealerValue = calculateHandValue(room.dealerHand);
-        console.log('[dealerTurn] Dealer value:', dealerValue);
 
         broadcastToRoom(room, 'dealerDraw', {
           card,
@@ -714,7 +680,6 @@ fastify.register(async function (fastify) {
 const start = async () => {
   try {
     await fastify.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('Blackjack service running on http://localhost:3000');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

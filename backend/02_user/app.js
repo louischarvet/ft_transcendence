@@ -17,7 +17,7 @@ import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
@@ -69,7 +69,6 @@ fastify.register(shutdownPlugin);
 async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log('User-service listening on port 3000');
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

@@ -5,7 +5,7 @@ import Fastify from 'fastify';
 import fastifyWebsocket from '@fastify/websocket';
 import '@fastify/cookie';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(shutdownPlugin);
 fastify.register(fastifyWebsocket);
@@ -18,7 +18,6 @@ fastify.register(async function (fastify: any) {
     const ws = connection.socket;
 
     const id = (ids++).toString();
-    console.log(`Session ${id} connected`);
     
     // Associer le WebSocket à l'utilisateur
     activeSessions.set(id, {
@@ -41,7 +40,6 @@ fastify.register(async function (fastify: any) {
     });
 
     ws.on('close', () => {
-      console.log(`Session ${id} disconnected`);
       activeSessions.delete(id);
     });
     

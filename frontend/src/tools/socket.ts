@@ -14,7 +14,6 @@ class SocketManager {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
-          console.log('✅ WebSocket connected to', url);
           this.reconnectAttempts = 0;
           this.trigger('connect', {});
           resolve();
@@ -23,7 +22,6 @@ class SocketManager {
         this.ws.onmessage = (event) => {
           try {
             const { event: eventName, data } = JSON.parse(event.data);
-            console.log('📨 Received:', eventName, data);
             this.trigger(eventName, data);
           } catch (error) {
             console.error('Error parsing message:', error);
@@ -36,7 +34,6 @@ class SocketManager {
         };
 
         this.ws.onclose = () => {
-          console.log('🔌 WebSocket disconnected');
           this.trigger('disconnect', {});
           this.attemptReconnect(url);
         };
@@ -52,8 +49,6 @@ class SocketManager {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * this.reconnectAttempts;
       
-      console.log(`🔄 Reconnecting in ${delay}ms (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      
       this.reconnectTimeout = window.setTimeout(() => {
         this.connect(url).catch(() => {
           // Will retry in next attempt
@@ -68,7 +63,6 @@ class SocketManager {
   emit(event: string, data?: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       const message = JSON.stringify({ event, data });
-      console.log('📤 Sending:', event, data);
       this.ws.send(message);
     } else {
       console.error('❌ Cannot send, WebSocket not connected (state:', this.ws?.readyState, ')');

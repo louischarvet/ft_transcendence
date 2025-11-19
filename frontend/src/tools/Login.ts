@@ -37,7 +37,6 @@ export default function Login(): HTMLElement {
 	loginButton.textContent = 'Login';
 	loginButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
 	loginButton.onclick = () => {
-		console.log('Login Form:', form);
 
 		if (!form.name || !form.password){
 			alert("Name and password required");
@@ -70,7 +69,6 @@ export default function Login(): HTMLElement {
 	registerButton.textContent = 'Or Register';
 	registerButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
 	registerButton.onclick = () => {
-		console.log('Register Form:', form);
 		navigate('/register');
 	};
 	buttonsWrapper.appendChild(registerButton);

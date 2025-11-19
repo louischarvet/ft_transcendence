@@ -61,7 +61,6 @@ function onWsMessage(ev: MessageEvent<string>): void {
       // Le backend génère son propre playerId, on doit l'utiliser
       if (msg.data && msg.data.playerId) {
         state.playerId = msg.data.playerId;
-        console.log('[BjRequest] Updated playerId from backend:', state.playerId);
       }
       state.joined = true;
       // Flush messages en attente maintenant que le joueur est inscrit côté serveur
@@ -73,13 +72,9 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'roundStarted': {
       // Le backend envoie gameState avec les mains des joueurs
       const gameState = msg.data;
-      console.log('[BjRequest] roundStarted data:', JSON.stringify(gameState, null, 2));
-      console.log('[BjRequest] Current state.playerId:', state.playerId);
 
       // Distribuer les cartes du dealer
-      console.log('[BjRequest] gameState.dealerCards:', gameState?.dealerCards);
       if (gameState && gameState.dealerCards && gameState.dealerCards.length >= 2) {
-        console.log('[BjRequest] Dealing dealer cards:', gameState.dealerCards);
         // Distribuer les 2 vraies cartes du dealer
         dealPlace(gameState.dealerCards[0], 'dealer', '', false);
         dealPlace(gameState.dealerCards[1], 'dealer', '', false);
@@ -89,18 +84,14 @@ function onWsMessage(ev: MessageEvent<string>): void {
 
       if (gameState && gameState.players) {
         // Traiter les cartes initiales de chaque joueur
-        console.log('[BjRequest] Searching for player with id:', state.playerId);
         const player = gameState.players.find((p: any) => p.id === state.playerId);
-        console.log('[BjRequest] Player found:', player);
 
         if (player && player.hands) {
           Object.entries(player.hands).forEach(([position, handData]: [string, any]) => {
             // Convertir position numérique (1, 2, 3...) en format "p1", "p2", "p3"...
             const positionStr = `p${position}`;
-            console.log('[BjRequest] Dealing to position:', positionStr, 'cards:', handData.cards);
             if (handData.cards && Array.isArray(handData.cards)) {
               handData.cards.forEach((card: string, index: number) => {
-                console.log(`[BjRequest] Dealing card ${index}: ${card} to position ${positionStr}`);
                 dealPlace(card, positionStr, String(handData.value), false);
               });
             }
@@ -117,7 +108,6 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (d && d.card && d.position) {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
-        console.log(`[BjRequest] cardDrawn: ${d.card} to position ${positionStr}, value: ${d.value}`);
         dealPlace(String(d.card), positionStr, String(d.value ?? ''), false);
       }
       break;
@@ -127,7 +117,6 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (d && d.card && d.position) {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
-        console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}`);
         // Distribuer la carte
         dealPlace(String(d.card), positionStr, String(d.value ?? ''), false);
         // Mettre à jour l'affichage de la mise
@@ -148,7 +137,6 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'dealerDraw': {
       const dealerData = msg.data;
       if (dealerData && dealerData.card) {
-        console.log('[BjRequest] Dealer draws card:', dealerData.card, 'new value:', dealerData.value);
         // Distribuer la nouvelle carte au dealer
         dealPlace(dealerData.card, 'dealer', String(dealerData.value), false);
       }
@@ -170,7 +158,6 @@ function onWsMessage(ev: MessageEvent<string>): void {
           }
         }
       });
-      console.log('[BjRequest] Round finished, results:', resultMap, 'newBalance:', newBalance);
 
       // Mettre à jour la balance si disponible
       if (newBalance !== undefined) {
@@ -202,13 +189,11 @@ export async function connect(params: { gameId: string; playerId: string; player
   state.playerId = params.playerId;
 
   if (!state.ws || state.ws.readyState > 1) {
-    console.log('[BjRequest] Connecting to WebSocket:', WS_URL);
     state.ws = new WebSocket(WS_URL);
     state.isOpen = false;
     state.joined = false;
     state.queue = [];
     state.ws.onopen = () => {
-      console.log('[BjRequest] WebSocket connected!');
       state.isOpen = true;
       // Toujours joindre la partie en premier
       const joinMessage = {
@@ -220,7 +205,6 @@ export async function connect(params: { gameId: string; playerId: string; player
           mode: 'solo'
         }
       };
-      console.log('[BjRequest] Sending join:', joinMessage);
       sendWs(joinMessage);
     };
     state.ws.onmessage = onWsMessage;
@@ -228,7 +212,6 @@ export async function connect(params: { gameId: string; playerId: string; player
       console.error('[BjRequest] WebSocket error:', err);
     };
     state.ws.onclose = () => {
-      console.log('[BjRequest] WebSocket closed');
       state.isOpen = false;
     };
   }
@@ -236,7 +219,6 @@ export async function connect(params: { gameId: string; playerId: string; player
 
 export function disconnect() {
   if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-    console.log('[BjRequest] Disconnecting WebSocket...');
     state.ws.close(1000, 'Page navigation');
     state.ws = null;
     state.isOpen = false;

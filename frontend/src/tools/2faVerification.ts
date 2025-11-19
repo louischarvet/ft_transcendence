@@ -2,14 +2,6 @@ import { navigate } from "../router";
 import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
-  // checkConnection().then((connected) => {
-  //   if (connected){
-  //     console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
-  //     navigate('/select-game');
-	// 		return;
-  //   }
-  // });
-
   let code: string = '';
   
   const wrapper = document.createElement('div');
@@ -38,8 +30,6 @@ export default function TwofaVerification(): HTMLElement {
   verifyButton.textContent = 'Verify code';
   verifyButton.className = 'bg-[#646cff] text-white rounded-full h-[35px] w-[90px] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   verifyButton.onclick = async () => {
-  console.log('2FA Verification:', code);
-
   
 		if (!code) {
 			console.error('2FA verification failed');

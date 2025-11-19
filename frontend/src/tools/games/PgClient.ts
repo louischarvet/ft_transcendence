@@ -21,7 +21,6 @@ export default class GameConnection {
     this.ws = new WebSocket(`/api/pong`);
     
     this.ws.onopen = () => {
-      console.log('Connected to game server');
       this.reconnectAttempts = 0;
       this.sendReady();
     };
@@ -36,13 +35,11 @@ export default class GameConnection {
     };
     
     this.ws.onclose = (event) => {
-      console.log('Disconnected from game server');
       
       // Reconnexion automatique
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
         setTimeout(() => {
-          console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
           this.connect();
         }, 1000 * this.reconnectAttempts);
       }

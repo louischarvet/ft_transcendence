@@ -13,15 +13,11 @@
 // 		},
 // 		body: JSON.stringify(user)
 // 	});
-// 	console.log("######## Function GENERATEJWT --> ", genRes, "\n#######\n");
 // 	return genRes;
 // }
 
 export async function authenticateJWT(request, reply) {
-//	console.log("################# AUTH COOKIES\n", request.cookies,
-//				"\n##############################\n");
 	const { accessToken } = request.cookies;
-	console.log("Accestoken in tournament auth -->", accessToken);
 	if (accessToken === undefined)
 		return reply.code(401).send({
 			error: 'Access token missing.'

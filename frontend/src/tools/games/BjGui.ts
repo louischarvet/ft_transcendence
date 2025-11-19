@@ -119,14 +119,11 @@ export default class BjGui {
     });
     window.addEventListener('bj:popUpBJ', (e: any) => {
       const { place } = e.detail || {};
-      console.log('Blackjack!', place);
     });
     window.addEventListener('bj:popUpBust', (e: any) => {
       const { place } = e.detail || {};
-      console.log('Bust!', place);
     });
     window.addEventListener('bj:endRound', (e: any) => {
-      console.log('End round', e.detail?.results);
 
       // Attendre un peu pour que le joueur voie les résultats
       setTimeout(async () => {
@@ -399,7 +396,6 @@ Gain classique : 1,5 fois la mise."; }
       });
       buttonQuitConfirmation.onPointerClickObservable.add(() => {
         // Handle quit confirmation
-        console.log("User confirmed quit");
         navigate("/"); // Redirect to home page
       });
       fontQuit.onPointerClickObservable.add(() => {
@@ -505,7 +501,6 @@ Gain classique : 1,5 fois la mise."; }
     button.background = "white";
     button.alpha = 0.7;
     button.onPointerClickObservable.add(() => {
-      console.log("Play Bet clicked");
       if (this.totalBetAmount === 0)
         return;
       this.bankAmount -= this.totalBetAmount;
@@ -621,7 +616,6 @@ Gain classique : 1,5 fois la mise."; }
     buttonCleanBet.isVisible = false;
     buttonCleanBet.onPointerEnterObservable.add(() => {
       buttonCleanBet.background = "white";
-      console.log("hover clean bet");
     });
     buttonCleanBet.onPointerOutObservable.add(() => {
       buttonCleanBet.background = "transparent";
@@ -686,7 +680,6 @@ Gain classique : 1,5 fois la mise."; }
     stand.background = "white";
     stand.alpha = 0.7;
     stand.onPointerClickObservable.add(() => {
-      console.log("Player chose to STAND");
       this.cardsInteractionsVisibility(false);
       BjRequest.send.stand();
     });
@@ -707,7 +700,6 @@ Gain classique : 1,5 fois la mise."; }
     hit.background = "white";
     hit.alpha = 0.7;
     hit.onPointerClickObservable.add(() => {
-      console.log("Player chose to HIT");
       BjRequest.send.hit();
     });
     hit.isVisible = false;
@@ -727,7 +719,6 @@ Gain classique : 1,5 fois la mise."; }
     doubleDown.background = "white";
     doubleDown.alpha = 0.7;
     doubleDown.onPointerClickObservable.add(() => {
-      console.log("Player chose to DOUBLE DOWN");
       BjRequest.send.doubleDown();
       this.cardsInteractionsVisibility(false);
     });
@@ -748,7 +739,6 @@ Gain classique : 1,5 fois la mise."; }
     split.background = "white";
     split.alpha = 0.7;
     split.onPointerClickObservable.add(() => {
-      console.log("Player chose to SPLIT");
       BjRequest.send.split();
     });
     split.isVisible = false;
@@ -814,13 +804,11 @@ Gain classique : 1,5 fois la mise."; }
   }
 
   updateBalance(newBalance: number) {
-    console.log(`[BjGui] Updating balance from ${this.bankAmount} to ${newBalance}`);
     this.bankAmount = newBalance;
     (this.ui.getControlByName("BankLabel") as TextBlock).text = `Bank: ${this.bankAmount} €`;
   }
 
   updateBetDisplay(place: string, newBet: number) {
-    console.log(`[BjGui] Updating bet display for ${place} to ${newBet}`);
     const area = this.Bet.areas[place];
     if (area) {
       // Mettre à jour le montant local

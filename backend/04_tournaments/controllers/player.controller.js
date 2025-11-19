@@ -15,15 +15,12 @@ async function alreadyJoined(players, id, type) {
 		.map(it => it.trim())
 		.filter(it => it !== '');
 
-	console.log("playerEntries: " , playerEntries);
 	for (const player of playerEntries) {
 
 		const [playerId, rawType] = player.split(':');
 		const playerType = rawType.trim();
-		console.log(`Checking playerId: |${playerId}|, playerType: |${playerType}| against id: |${trimmedId}|, type: |${trimmedType}|`);
 		if (playerId === trimmedId && playerType === trimmedType)
 		{
-			console.log(`Player with ID ${trimmedId} and type ${trimmedType} has already joined.`);
 			return true;
 		}
 	}

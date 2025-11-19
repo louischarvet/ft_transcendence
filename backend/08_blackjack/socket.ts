@@ -13,7 +13,6 @@ class SocketManager {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
-          console.log('WebSocket connected');
           this.reconnectAttempts = 0;
           this.trigger('connect', {});
           resolve();
@@ -35,7 +34,6 @@ class SocketManager {
         };
 
         this.ws.onclose = () => {
-          console.log('🔌 WebSocket disconnected');
           this.trigger('disconnect', {});
           this.attemptReconnect(url);
         };
@@ -48,7 +46,6 @@ class SocketManager {
   private attemptReconnect(url: string) {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       
       setTimeout(() => {
         this.connect(url).catch(() => {

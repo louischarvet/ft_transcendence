@@ -154,9 +154,7 @@ export default class BjScene {
 
     // Initialiser le deck après le chargement des assets
     this.assetsManager.onFinish = async (tasks) => {
-      console.log('[BjScene] Assets loaded, initializing deck...');
       await this.Cards.resetDeck();
-      console.log('[BjScene] Deck ready!');
     };
 
     this.assetsManager.load();

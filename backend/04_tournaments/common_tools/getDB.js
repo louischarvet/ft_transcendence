@@ -9,7 +9,6 @@ async function getDB() {
 		throw new Error('Database file path is not defined');
 	if (typeof dbFile !== 'string')
 		throw new Error('Database file path must be a string');
-	console.log('Opening database user at:', dbFile);
 	return open({
 		filename: dbFile,
 		driver: sqlite3.Database

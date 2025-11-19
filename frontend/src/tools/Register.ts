@@ -45,7 +45,6 @@ export default function Register(): HTMLElement {
   registerButton.textContent = 'Register';
   registerButton.className = 'bg-[#646cff] text-xl text-whaddite rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   registerButton.onclick = () => {
-    console.log('Register Form:', form);
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword){
       alert("All fields are required");
@@ -79,7 +78,6 @@ export default function Register(): HTMLElement {
 			alert(res.message);
 		}
 		else{
-			console.log('User created successfully : ', res	);
 			//localStorage.setItem('user', res.user);
 			navigate('/2fa-verification');
 		}
@@ -91,7 +89,6 @@ export default function Register(): HTMLElement {
   loginButton.textContent = 'Or Login';
   loginButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   loginButton.onclick = () => {
-    console.log('Login Form:', form);
     navigate('/login');
   };
   buttonsWrapper.appendChild(loginButton);

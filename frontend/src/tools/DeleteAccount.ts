@@ -147,7 +147,6 @@ function FinalConfirmation(email: string, password: string) {
   yesBtn.onclick = () => {
     overlay.remove();
     deleteUser(password).then( (res) => {
-      console.log("Res of deleteUser");
       if (!res){
         console.error('User delete failed');
         history.back();

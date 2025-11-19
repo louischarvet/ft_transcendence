@@ -8,10 +8,6 @@ export default function GameSelection(): HTMLElement {
 		return document.createElement('div');
 	}
 	const wrapper = document.createElement('div');
-	// checkConnection().then((connected) => {
-	// 	console.log("checkConnection : ", connected);
-	// 	if (!connected)
-	// 		navigate("/");
 		wrapper.appendChild(DropDownMenu());
 		wrapper.className = 'flex flex-col justify-center items-center w-[60%] h-[60%] gap-8 p-16';
 

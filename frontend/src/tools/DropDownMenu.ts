@@ -95,11 +95,8 @@ export default function DropDownMenu() {
 		getFriendsList()
 			.then((value) => {
 				if (!value || !Array.isArray(value.friends)) {
-					console.log("Pas d'amis trouvés ou utilisateur non authentifié");
 					return;
 				}
-
-				console.log("getFriendsList -> ", value);
 
 				value.friends.forEach((friend) => {
 					friendsList.push(friend);
@@ -213,10 +210,8 @@ export default function DropDownMenu() {
 						friendsListContainer.innerHTML = '';
 						dropDownFriendList.classList.add('hidden');
 					}
-					console.log("go to logout");
 					navigate("/");
 				} else{
-					console.log("reponse", response);
 					alert("Erreur lors de la déconnexion");
 				}
 

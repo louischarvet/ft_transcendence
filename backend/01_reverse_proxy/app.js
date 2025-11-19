@@ -15,7 +15,7 @@ const httpsOptions = {
     cert: fs.readFileSync(path.join(dirname, 'ssl/proxy.crt'))
 };
 
-const server = Fastify({ logger: true, https: httpsOptions });
+const server = Fastify({ logger: false, https: httpsOptions });
 
 server.register(fastifyCors, {
     origin: true,

@@ -15,7 +15,7 @@ import shutdownPlugin from './common_tools/shutdown.js';
 
 const secretKey = (speakeasy.generateSecret({ length: 20 })).base32;
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 // CORS configuration
 fastify.register(fastifyCors, {
@@ -57,7 +57,6 @@ fastify.register(shutdownPlugin);
 const start = async () => {
     try {
         await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log('Session-service listening on port 3000');
     } catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

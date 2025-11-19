@@ -21,7 +21,6 @@ async function clearCookies(reply) {
 export async function createGuest(request, reply) {
 	const { db } = request.server;
 	const guests = await db.guest.getCol('id');
-	console.log("guests = ", guests);
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
@@ -323,7 +322,6 @@ export	async function getUserById(request, reply){
 	if (!userId)
 		return reply.code(400).send({ error : 'Id of user required'});
 	let userInfos;
-	console.log('type', type);
 	if (type === 'ia') {
 		userInfos = {
 			id: 0,
@@ -332,7 +330,6 @@ export	async function getUserById(request, reply){
 		};
 	} else{
 		userInfos = await db[type].getById(userId);
-		console.log('userInfos', userInfos);
 	}
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
@@ -361,7 +358,6 @@ export async function addFriend(request, reply) {
 	const { friendName } = request.params;
 	if (friendName === undefined)
 		return reply.code(400).send({ error: 'friendName is missing' });
-	console.log("friendName", friendName);
 
 	const friend = await db.registered.getByName(friendName);
 	if (!friend)

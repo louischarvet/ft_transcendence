@@ -9,7 +9,7 @@ import shutdownPlugin from './common_tools/shutdown.js';
 
 import { tournamentSchema } from './schema/tournamentSchema.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 
 // Middlewares / plugins
@@ -37,7 +37,6 @@ fastify.register(shutdownPlugin);
 async function start() {
 	try {
 		const address = await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log(`Server listening on ${address}`);
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);
