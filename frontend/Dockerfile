@@ -11,6 +11,6 @@ COPY . .
 # Expose Vite port
 EXPOSE 5173
 
-# CMD en forme exec JSON correcte pour Alpine et Vite
+# Run Vite directly with node instead of npm for proper signal handling
 # CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["node", "node_modules/vite/bin/vite.js", "--host"]
