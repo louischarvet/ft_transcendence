@@ -499,6 +499,35 @@ export async function changeStatus(request, reply) {
 	});
 }
 
+// Route PUT /updatewallet - Pour mettre à jour le wallet depuis les services de jeu
+export async function updateWallet(request, reply) {
+	const { db } = request.server;
+	const { name, wallet, type } = request.body;
+	if (name === undefined)
+		return reply.code(400).send({ error: 'Name is required' });
+	if (wallet === undefined)
+		return reply.code(400).send({ error: 'Wallet is required' });
+	if (type === undefined)
+		return reply.code(400).send({ error: 'Type is required' });
+
+	let user;
+	if (type == 'guest')
+		user = await db.guest.updateCol('wallet', name, wallet);
+	else if (type == 'registered')
+		user = await db.registered.updateCol('wallet', name, wallet);
+
+	if (!user)
+		return reply.code(404).send({ error: 'User not found' });
+
+	delete user.hashedPassword;
+	delete user.telephone;
+	delete user.email;
+	return reply.code(200).send({
+		user: user,
+		message : 'Wallet updated!',
+	});
+}
+
 export async function updateStats(request, reply) {
 	const { db } = request.server;
 	const { p1_id, p1_type, p2_id, p2_type, winner_id } = request.body;

@@ -47,7 +47,7 @@ export default function Blackjack(): HTMLElement {
         gameId,
         playerId,
         playerName: 'Player',
-        bank: 5000,
+        bank: 0,
         position: 'p1'
       });
     } catch (e) {
