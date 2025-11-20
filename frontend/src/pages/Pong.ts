@@ -42,12 +42,12 @@ export default function Pong(): HTMLElement {
     keys[e.code] = false;
   };
   const handleBlur = () => {
-    Object.values(keys).forEach(key => key = false);
+    Object.keys(keys).forEach(key => keys[key] = false);
   };
   
   function game() {
     const pgScene = new PgScene(canvas, keys, UserCurrent.name);
-    
+
     resizeCanvas();
     pgScene.engine.resize();
 
@@ -58,6 +58,38 @@ export default function Pong(): HTMLElement {
     window.addEventListener("blur", handleBlur);
 
     pgScene.start();
+
+    // Cleanup function
+    const cleanup = () => {
+      console.log('[Pong] Cleaning up...');
+
+      // Disconnect WebSocket
+      if (pgScene.game) {
+        pgScene.game.disconnect();
+      }
+
+      // Stop render loop
+      pgScene.engine.stopRenderLoop();
+
+      // Remove event listeners
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("beforeunload", cleanup);
+
+      // Dispose engine and scene
+      pgScene.scene.dispose();
+      pgScene.engine.dispose();
+
+      console.log('[Pong] Cleanup complete');
+    };
+
+    // Register cleanup function for router
+    (window as any).__pongDisconnect = cleanup;
+
+    // Handle browser close/refresh
+    window.addEventListener("beforeunload", cleanup);
   }
 
   game();

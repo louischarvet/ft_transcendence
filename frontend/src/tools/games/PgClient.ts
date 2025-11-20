@@ -4,6 +4,7 @@ export default class GameConnection {
   ws: WebSocket | null;
   reconnectAttempts: number;
   maxReconnectAttempts: number;
+  shouldReconnect: boolean;
 
   functions: any;
   beginData: any;
@@ -12,6 +13,7 @@ export default class GameConnection {
     this.ws = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+    this.shouldReconnect = true;
 
     this.functions = functions;
     this.beginData = beginData;
@@ -37,9 +39,9 @@ export default class GameConnection {
     
     this.ws.onclose = (event) => {
       console.log('Disconnected from game server');
-      
-      // Reconnexion automatique
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+
+      // Reconnexion automatique seulement si non intentionnel
+      if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
         setTimeout(() => {
           console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
@@ -71,5 +73,16 @@ export default class GameConnection {
         console.error('Server error:', message.error);
         break;
     }
+  }
+
+  disconnect() {
+    console.log('[PgClient] Disconnecting WebSocket...');
+    this.shouldReconnect = false;
+
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.close(1000, 'Page navigation');
+    }
+
+    this.ws = null;
   }
 }

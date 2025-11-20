@@ -29,6 +29,14 @@ export function renderRoute() {
 		}
 	}
 
+	if ((window as any).__pongDisconnect) {
+		try {
+			(window as any).__pongDisconnect();
+		} catch (e) {
+			console.error('[Router] Error disconnecting Pong:', e);
+		}
+	}
+
 	app.innerHTML = '';
 
 	// Trouve une route exacte OU une route dynamique

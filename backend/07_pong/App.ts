@@ -42,6 +42,7 @@ fastify.register(async function (fastify: any) {
 
     ws.on('close', () => {
       console.log(`Session ${id} disconnected`);
+      ws.close();
       activeSessions.delete(id);
     });
     
