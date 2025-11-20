@@ -40,8 +40,12 @@ export default function Blackjack(): HTMLElement {
     resizeCanvas();
     bjScene.engine.resize();
 
-    window.addEventListener("resize", resizeCanvas);
-    window.addEventListener("resize", () => bjScene.engine.resize());
+    const handleResize = () => {
+      resizeCanvas();
+      bjScene.engine.resize();
+    };
+
+    window.addEventListener("resize", handleResize);
 
     // Le gameId sera généré par le backend lors du join
     const gameId = `game_${Date.now()}`;
@@ -62,6 +66,44 @@ export default function Blackjack(): HTMLElement {
     }
 
     bjScene.start();
+
+    // Cleanup function
+    const cleanup = () => {
+      console.log('[Blackjack] Cleaning up...');
+
+      // Stop render loop
+      bjScene.engine.stopRenderLoop();
+
+      // Remove event listeners
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("beforeunload", cleanup);
+
+      // Dispose engine and scene
+      bjScene.scene.dispose();
+      bjScene.engine.dispose();
+
+      console.log('[Blackjack] Cleanup complete');
+    };
+
+    // Store the previous __bjDisconnect if it exists
+    const previousBjDisconnect = (window as any).__bjDisconnect;
+
+    // Override __bjDisconnect to include cleanup
+    (window as any).__bjDisconnect = () => {
+      // Call previous disconnect if it exists (for WebSocket cleanup)
+      if (previousBjDisconnect && typeof previousBjDisconnect === 'function') {
+        try {
+          previousBjDisconnect();
+        } catch (e) {
+          console.error('[Blackjack] Error in WebSocket disconnect:', e);
+        }
+      }
+      // Then cleanup the scene
+      cleanup();
+    };
+
+    // Handle browser close/refresh
+    window.addEventListener("beforeunload", cleanup);
   }
 
   game();
