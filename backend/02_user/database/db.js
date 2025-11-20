@@ -105,7 +105,7 @@ export async function initDB(fastify) {
 			const win_rate = (match_wins / played_matches) * 100;
 			await db.run(
 				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
-				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				played_matches = ?,	win_rate = ? , wallet = (wallet + 50) WHERE id = ?`,
 				[ match_wins, played_matches, win_rate, id ]
 			);
 		},
@@ -178,7 +178,7 @@ export async function initDB(fastify) {
 			const win_rate = (match_wins / played_matches) * 100;
 			await db.run(
 				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
-				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				played_matches = ?,	win_rate = ? , wallet = (wallet + 50) WHERE id = ?`,
 				[ match_wins, played_matches, win_rate, id ]
 			);
 		},

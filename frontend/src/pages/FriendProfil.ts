@@ -99,12 +99,12 @@ export default function FriendProfil(id: string): HTMLElement {
 				//if (!response?.ok) throw new Error('Impossible de supprimer l’ami');
 			});
 			//const response = await removeFriend(Number(id));
-			popUpAlert("Youhou : ", "Friend deleted successfully");
+			popUpAlert("Confirm", "Friend deleted successfully");
 			
 			navigate('/select-game'); // Retour au profil principal
 		} catch (err) {
 			console.error(err);
-			popUpAlert("Error : ", "Error deleting friend");
+			popUpAlert("Error", "Error deleting friend");
 		}
 	};
 
@@ -118,7 +118,7 @@ export default function FriendProfil(id: string): HTMLElement {
 		getUserById(Number(id), 'registered').then((response) =>{
 			data = response;
 			if (!data) {
-				popUpAlert("Error : ", "User not found");
+				popUpAlert("Error", "User not found");
 				navigate('/profil');
 				return container;
 			}
@@ -155,7 +155,7 @@ export default function FriendProfil(id: string): HTMLElement {
 		})
 	} catch (err) {
 		console.error(err);
-		popUpAlert("Error : ", "Error retrieving friend's profile");
+		popUpAlert("Error", "Error retrieving friend's profile");
 	}
 
 	return container;

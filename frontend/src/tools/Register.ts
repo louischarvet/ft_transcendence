@@ -41,34 +41,34 @@ export default function Register(): HTMLElement {
     console.log('Register Form:', form);
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword){
-      popUpAlert("Error : ", "All fields are required");
+      popUpAlert("Error", "All fields are required");
       return;
     }
 	const nameRegex = /^[A-Za-z][A-Za-z0-9]*$/;
 	if (!nameRegex.test(form.name)) {
-    popUpAlert("Error : ", "Invalid name format. It must begin with a letter and contain only alphanumeric characters.");
+    popUpAlert("Error", "Invalid name format. It must begin with a letter and contain only alphanumeric characters.");
 		return;
 	}
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(form.email) || form.email.length < 8) {
-    popUpAlert("Error : ", "Invalid email format");
+    popUpAlert("Error", "Invalid email format");
 		return;
 	}
     if (form.password !== form.confirmPassword){
-      popUpAlert("Error : ", "The two passwords are different");
+      popUpAlert("Error", "The two passwords are different");
       return;
     }
 	if (form.password.length < 8) {
-    popUpAlert("Error : ", "Password must be at least 8 characters long");
+    popUpAlert("Error", "Password must be at least 8 characters long");
 		return;
 	}
 	if (!/[0-9]/.test(form.password)) {
-    popUpAlert("Error : ", "Password must contain a number");
+    popUpAlert("Error", "Password must contain a number");
 		return;
 	}
     register(form.name, form.email, form.password).then( (res) => {
 		if (!res.success) {
-      popUpAlert("Error : ", "User creation failed, try again");
+      popUpAlert("Error", "User creation failed, try again");
 		}
 		else{
 			console.log('User created successfully : ', res	);

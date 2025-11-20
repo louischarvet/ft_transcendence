@@ -174,7 +174,7 @@ export async function fetchRefreshToken(){
 	
 	const user = await response.json();
 	console.log("fetchRefreshToken user -> ", user);
-	setUser(user);
+//	setUser(user);
 	return true;
 }
 

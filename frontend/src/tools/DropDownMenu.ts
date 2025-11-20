@@ -132,14 +132,14 @@ export default function DropDownMenu() {
 			if (!friendName) return;
 
 			if (friendName.length > 64) {
-				popUpAlert("Error : ", "invalid name" );
+				popUpAlert("Error", "invalid name" );
 				return;
 			}
 
 			addNewFriend(friendName)
 				.then((response) => {
 					if (!response) {
-						popUpAlert("Error : ", "no response from server" );
+						popUpAlert("Error", "no response from server" );
 						return null;
 					}
 					return response.json()
@@ -154,12 +154,12 @@ export default function DropDownMenu() {
 
 					if (!response.ok) {
 						const errorMessage = data.error || `Erreur inconnue (${response.status})`;
-						popUpAlert("Error : ", errorMessage );
+						popUpAlert("Error", errorMessage );
 						console.warn("Erreur backend:", errorMessage);
 						return;
 					}
 
-					popUpAlert("Youhou : ", data.message || `Friend ${friendName} added!`);
+					popUpAlert("Confirm", data.message || `Friend ${friendName} added!`);
 
 					const newFriend = { name: friendName, status: data.status, picture: data.picture, id: data.id };
 					friendsList.push(newFriend);
@@ -170,7 +170,7 @@ export default function DropDownMenu() {
 					return;
 				})
 				.catch((err) => {
-					popUpAlert("Error : ", "Error server" );
+					popUpAlert("Error", "Error server" );
 					console.error("Erreur front: ", err);
 				}
 			);
@@ -218,13 +218,13 @@ export default function DropDownMenu() {
 					navigate("/");
 				} else{
 					console.log("reponse", response);
-					popUpAlert("Error : ", "Error during disconnection" );
+					popUpAlert("Error", "Error during disconnection" );
 				}
 
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);
-				popUpAlert("Error : ", "no response from server" );
+				popUpAlert("Error", "no response from server" );
 			});
 	};
 

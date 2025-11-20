@@ -8,7 +8,7 @@ const dirname = path.dirname(filename);
 
 export default defineConfig({
   optimizeDeps: {
-    exclude: ['@babylonjs/core', '@babylonjs/gui', '@babylonjs/loaders'],
+    include: ['@babylonjs/core', '@babylonjs/gui', '@babylonjs/loaders'],
   },
   server: {
     port: 5173,

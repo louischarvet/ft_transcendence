@@ -42,13 +42,13 @@ export default function Login(): HTMLElement {
 		console.log('Login Form:', form);
 
 		if (!form.name || !form.password){
-			popUpAlert("Login failed: ", "Name and password required");
+			popUpAlert("Error", "Name and password required");
 			return;
 		}
 
 		login(form.name, form.password).then( (res) => {
 			if (!res.success){
-				popUpAlert("Error : ", "Login failed");
+				popUpAlert("Error", "Login failed");
 				navigate('/login');
 				return;
 			}

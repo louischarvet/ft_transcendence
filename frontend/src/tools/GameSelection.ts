@@ -3,11 +3,11 @@ import { checkConnection, asGuest, getUser} from './APIStorageManager';
 import DropDownMenu from '../tools/DropDownMenu';
 
 export default function GameSelection(): HTMLElement {
+	const wrapper = document.createElement('div');
 	if ( !getUser()){
 		navigate('/');
-		return document.createElement('div');
+		return wrapper;
 	}
-	const wrapper = document.createElement('div');
 	// checkConnection().then((connected) => {
 	// 	console.log("checkConnection : ", connected);
 	// 	if (!connected)

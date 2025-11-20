@@ -566,7 +566,6 @@ export async function updateStats(request, reply) {
 		user1 = {
 			id: 0,
 			type: 'ia'
-			// name ?
 		};
 	}
 
@@ -578,7 +577,6 @@ export async function updateStats(request, reply) {
 		user2 = {
 			id: 0,
 			type: 'ia'
-			// name ?
 		};
 	}
 

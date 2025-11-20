@@ -79,17 +79,20 @@ export async function endTournament(request, reply, tournamentId, user){
 	}
 	tournament = await db.tournament.get('id', tournamentId);
 	// a tester
-	console.log("#########################3 tournament.player", tournament.players.split(';'));
 	let users = tournament.players.split(';');
 	for (let i = 0, n = users.length - 1; i < n; i++) {
 		const split = users[i].split(':');
 		const id = split[0];
 		const type = split[1];
-		const user = await fetchGetUserById(id, type);
-		const status = i === 0 ? 'available' : 'logged_out';
-		await fetchChangeStatusUser(user, status);
+		if (type === 'guest' && i > 0)
+			await deleteGuest(id);
+		else{
+			const user = await fetchGetUserById(id, type);
+			const status = i === 0 ? 'available' : 'logged_out';
+			await fetchChangeStatusUser(user, status);
+		}
 	}
-
+	tournament = await fetchHistoryMatchForTournament(tournamentId);
 	const winner = await fetchGetUserById(user.id, user.type);
 	if (!winner)
 		return reply.code(400).send({ error: 'Could not fetch winner info' });
@@ -216,7 +219,7 @@ async function LogoutPLayers(players) {
 	for (let i = 0, n = players.length - 1; i < n; i++) {
 		const [id , type] = players[i].split(':');
 		console.log("id du guest a supprimer :", id);
-		if (type === 'guest')
+		if (type === 'guest' && i > 0)
 			deleteGuest(id);
 		// GERER les login ?
 	}

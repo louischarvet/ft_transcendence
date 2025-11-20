@@ -209,11 +209,11 @@ export default class PgGui {
       });
       goBackButton.onPointerClickObservable.add(() => {
         if (this.currentTournament) {
-          deleteTournament(this.currentTournament.id);
-          this.currentTournament = null;
-          this.rounds = {};
-          this.currentRoundIndex = 0;
-          this.currentMatch = null;
+            deleteTournament(this.currentTournament.id);
+            this.currentTournament = null;
+            this.rounds = {};
+            this.currentRoundIndex = 0;
+            this.currentMatch = null;
         }
         this.goBack();
       });
