@@ -8,6 +8,19 @@ type WsMessage = {
   playerId?: string;
 };
 
+// Helper pour calculer la valeur d'une carte
+function getCardValue(card: string): number {
+  // Format backend: "As_of_Spades", "10_of_Hearts", "Jack_of_Diamonds", etc.
+  const name = card.split('_of_')[0];
+  console.log('[getCardValue] Card:', card, 'Name:', name);
+
+  if (name === 'As') return 11; // As vaut 11 par défaut
+  if (['Jack', 'Queen', 'King'].includes(name)) return 10;
+
+  const value = parseInt(name);
+  return isNaN(value) ? 0 : value;
+}
+
 const API_URL: string = ((import.meta as any).env?.VITE_BJ_API_URL || 'http://localhost:3000');
 // Utiliser le proxy Vite pour les WebSockets - connexion relative à l'hôte actuel
 const WS_URL: string = ((import.meta as any).env?.VITE_BJ_WS_URL || (window.location.protocol === 'https:' ? `wss://${window.location.host}/ws/blackjack` : `ws://${window.location.host}/ws/blackjack`));
@@ -95,8 +108,12 @@ function onWsMessage(ev: MessageEvent<string>): void {
       console.log('[BjRequest] gameState.dealerCards:', gameState?.dealerCards);
       if (gameState && gameState.dealerCards && gameState.dealerCards.length >= 2) {
         console.log('[BjRequest] Dealing dealer cards:', gameState.dealerCards);
-        // Distribuer les 2 vraies cartes du dealer
-        dealPlace(gameState.dealerCards[0], 'dealer', '', false);
+        // Calculer la valeur de la première carte visible du dealer
+        const firstCardValue = getCardValue(gameState.dealerCards[0]);
+        console.log('[BjRequest] Dealer first card value:', firstCardValue);
+        // Distribuer la première carte avec sa valeur
+        dealPlace(gameState.dealerCards[0], 'dealer', String(firstCardValue), false);
+        // Distribuer la deuxième carte face cachée (sans valeur)
         dealPlace(gameState.dealerCards[1], 'dealer', '', false);
       } else {
         console.error('[BjRequest] No dealer cards to deal! gameState:', gameState);
@@ -203,12 +220,19 @@ function onWsMessage(ev: MessageEvent<string>): void {
 
       endRound(resultMap);
       dispatch('bj:actions:hide');
+      dispatch('bj:resetActivePlaces');
       break;
     }
     case 'playerTurn': {
       const turnData = msg.data;
       if (turnData && turnData.playerId === state.playerId) {
         dispatch('bj:actions:show');
+        // Highlighter la place active si une position est spécifiée
+        if (turnData.position) {
+          const positionStr = `p${turnData.position}`;
+          console.log(`[BjRequest] Player turn for position: ${positionStr}`);
+          dispatch('bj:setActivePlace', { place: positionStr });
+        }
       }
       break;
     }

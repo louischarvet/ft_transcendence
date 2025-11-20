@@ -443,4 +443,5 @@ export default class BjScene {
       place.meshes.coinMesh?.forEach(coin => coin.material = this.transparentMat);
     });
   }
+
 }

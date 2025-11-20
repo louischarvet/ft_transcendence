@@ -46,6 +46,8 @@ export default class BjGui {
     split: Button;
   };
 
+  activePlace: string | null = null; // Pour tracker la place active
+
   constructor(width: number, height: number, sceneFunctions: any) {
     this.ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     this.width = width;
@@ -182,6 +184,18 @@ export default class BjGui {
       if (place && newBet !== undefined) {
         this.updateBetDisplay(place, newBet);
       }
+    });
+
+    // Highlighter la place active en blanc
+    window.addEventListener('bj:setActivePlace', (e: any) => {
+      if (e.detail?.place) {
+        this.setActivePlace(e.detail.place);
+      }
+    });
+
+    // Reset toutes les places
+    window.addEventListener('bj:resetActivePlaces', () => {
+      this.resetActivePlaces();
     });
   }
 
@@ -508,9 +522,6 @@ Gain classique : 1,5 fois la mise."; }
       console.log("Play Bet clicked");
       if (this.totalBetAmount === 0)
         return;
-      // SUPPRIMÉ: Ne plus déduire localement - le backend gère la balance via DB
-      // this.bankAmount -= this.totalBetAmount;
-      // La balance sera mise à jour par le backend via 'bj:updateBalance'
 
       Object.values(this.Bet.areas).forEach(area => {
         if (area.bet > 0) {
@@ -584,8 +595,14 @@ Gain classique : 1,5 fois la mise."; }
       selectBox.alpha = 0.1;
     });
     selectBox.onPointerOutObservable.add(() => {
-      selectBox.background = "green";
-      selectBox.alpha = 0.2;
+      // Si c'est la place active, rester en blanc, sinon retour au vert
+      if (this.activePlace === place) {
+        selectBox.background = "yellow";
+        selectBox.alpha = 0.1;
+      } else {
+        selectBox.background = "green";
+        selectBox.alpha = 0.2;
+      }
     });
     selectableAreaAttachedUI.addControl(selectBox);
 
@@ -818,6 +835,32 @@ Gain classique : 1,5 fois la mise."; }
     console.log(`[BjGui] Updating balance from ${this.bankAmount} to ${newBalance}`);
     this.bankAmount = newBalance;
     (this.ui.getControlByName("BankLabel") as TextBlock).text = `Bank: ${this.bankAmount} €`;
+  }
+
+  setActivePlace(place: string) {
+    console.log(`[BjGui] Setting active place to: ${place}`);
+    // Reset toutes les autres places d'abord
+    this.resetActivePlaces();
+
+    // Mettre la place active
+    this.activePlace = place;
+    const area = this.Bet.areas[place];
+    if (area && area.selectBox) {
+      area.selectBox.background = "white";
+      area.selectBox.alpha = 0.1;
+    }
+  }
+
+  resetActivePlaces() {
+    console.log(`[BjGui] Resetting all active places`);
+    this.activePlace = null;
+    // Remettre toutes les places en vert
+    Object.values(this.Bet.areas).forEach(area => {
+      if (area.selectBox) {
+        area.selectBox.background = "green";
+        area.selectBox.alpha = 0.2;
+      }
+    });
   }
 
   updateBetDisplay(place: string, newBet: number) {
