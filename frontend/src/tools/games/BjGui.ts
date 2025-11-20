@@ -400,7 +400,7 @@ Gain classique : 1,5 fois la mise."; }
       buttonQuitConfirmation.onPointerClickObservable.add(() => {
         // Handle quit confirmation
         console.log("User confirmed quit");
-        navigate("/"); // Redirect to home page
+        navigate("/select-game"); // Redirect to home page
       });
       fontQuit.onPointerClickObservable.add(() => {
         // Close the quit confirmation box

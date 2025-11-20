@@ -56,6 +56,7 @@ export default async function routesPlugin(fastify, options) {
 	// route PUT pour generer les matchs du prochain round, et MAJ les data de tournoi
 	fastify.put('/next', { preHandler: authenticateJWT, schema: nextSchema }, nextRound);
 
+
 	//! ajout le 22/09/2025
 	//pour louis
 	fastify.put('/updateMatchAndPlaces', { preHandler: authenticateJWT }, updateMatchAndRemainingPlaces);

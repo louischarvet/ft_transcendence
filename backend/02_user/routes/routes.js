@@ -1,7 +1,7 @@
 import { createGuest, register, logIn, logOut, deleteUser, getUserStatus,
 	updateAvatar, updateInfo, addFriend, changeStatus, updateStats,
 	getUserByIdToken, getUserById, getFriendsProfiles,
-	getUsersTournament , deleteFriend}
+	getUsersTournament , deleteFriend, deleteGuest}
 	from '../controllers/controllers.js';
 import { registerInput, loginInput, updateSchema, guestTmp , deleteSchema, deleteFriendSchema} from '../schema/userInput.js';
 import { userSchema, updateStatsSchema } from '../schema/userSchema.js';
@@ -24,6 +24,7 @@ async function userRoutes(fastify, options) {
 
 	fastify.put('/logout', {preHandler: authenticateJWT }, logOut);
 	fastify.delete('/delete',{preHandler: authenticateJWT , schema: deleteSchema },  deleteUser);
+	fastify.delete('/deleteGuest',  deleteGuest);
 
 	fastify.post('/addfriend/:friendName', {preHandler: authenticateJWT},  addFriend);
 	fastify.delete('/deleteFriend',{preHandler: authenticateJWT , schema: deleteFriendSchema },  deleteFriend);

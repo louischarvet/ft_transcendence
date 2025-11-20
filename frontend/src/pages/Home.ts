@@ -27,7 +27,7 @@ export default function Home(subPage?: string): HTMLElement {
 	
 	if (!subPage && getUser())
 		navigate('/select-game');
-	if (subPage === 'login') {
+	else if (subPage === 'login') {
 		container.appendChild(Login());
 	} else if (subPage === 'register') {
 		container.appendChild(Register());

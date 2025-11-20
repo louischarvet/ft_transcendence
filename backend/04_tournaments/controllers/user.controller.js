@@ -32,6 +32,21 @@ export async function fetchGetUserById(id, type){
 	return currentUser.user;
 }
 
+// supprimer un guest du tournoi
+export async function deleteGuest(id){
+	const user = await fetch(`http://user-service:3000/deleteGuest`, {
+		method: 'DELETE',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ id: id })
+	});
+
+	const message = await user.json();
+	if (message === 'User successfully deleted.')
+		return true;
+
+	return false;
+}
+
 // recupere un guest par son id
 //! peut etre utile pour front
 export async function fetchGetGuestById(id){

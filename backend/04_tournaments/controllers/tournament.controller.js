@@ -5,11 +5,10 @@ import { fetchChangeStatusUser, fetchUserTournament } from './user.controller.js
 import {
 	fetchMatchForTournament,
 	fetchHistoryMatchForTournament,
-	fetchFinishMatchForTournament,
 	fetchDeleteMatch
 } from './match.controller.js';
 
-import { fetchGetUserById } from './user.controller.js';
+import { fetchGetUserById , deleteGuest} from './user.controller.js';
 // Recupere tout les tournoie gagnes par un user
 export async function getTournamentWinUserId(request, reply){
 	const { db } = request.server;
@@ -78,9 +77,11 @@ export async function endTournament(request, reply, tournamentId, user){
 		const iaUser = { id: 0, type: 'ia', name: 'normalAI' };
 		return reply.code(200).send({ tournament, winner: iaUser, message: 'Tournament ended' });
 	}
+	tournament = await db.tournament.get('id', tournamentId);
 	// a tester
+	console.log("#########################3 tournament.player", tournament.players.split(';'));
 	let users = tournament.players.split(';');
-	for (let i = 0, n = users.length; i < n; i++) {
+	for (let i = 0, n = users.length - 1; i < n; i++) {
 		const split = users[i].split(':');
 		const id = split[0];
 		const type = split[1];
@@ -210,6 +211,17 @@ export async function getAllTournaments(request, reply) {
 // 	// delete rounds
 // }
 
+async function LogoutPLayers(players) {
+	//ne pas delog le premier (hote)
+	for (let i = 0, n = players.length - 1; i < n; i++) {
+		const [id , type] = players[i].split(':');
+		console.log("id du guest a supprimer :", id);
+		if (type === 'guest')
+			deleteGuest(id);
+		// GERER les login ?
+	}
+}
+
 export async function deleteTournament(request, reply) {
 	const { db } = request.server;
 	const { id } = request.params;
@@ -222,6 +234,10 @@ export async function deleteTournament(request, reply) {
 			if (!res.ok)
 				return reply.code(400).send({ error: 'deleteMatch error' });
 		}
+
+		const players = tournament.players.split(';');
+		if (players.length !== 0)
+			await LogoutPLayers(players);
 	}
 	// supprimer rounds
 	await db.round.delete('tournament_id', id);

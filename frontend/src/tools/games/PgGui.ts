@@ -208,6 +208,13 @@ export default class PgGui {
         goBackButton.alpha = 0.7;
       });
       goBackButton.onPointerClickObservable.add(() => {
+        if (this.currentTournament) {
+          deleteTournament(this.currentTournament.id);
+          this.currentTournament = null;
+          this.rounds = {};
+          this.currentRoundIndex = 0;
+          this.currentMatch = null;
+        }
         this.goBack();
       });
       this.ui.addControl(goBackButton);

@@ -202,6 +202,23 @@ export async function deleteUser(request, reply) {
 	}
 }
 
+// Route DELETE /deleteGuest pour tournament
+export async function deleteGuest(request, reply) {
+	const { db } = request.server;
+	const { id} = request.body;
+
+	const exists = await db.guest.getById(id);
+	if (!exists)
+		return reply.code(400).send({ error: 'User is not in the database' });
+
+	console.log("joueru a supprimer : ",exists);
+	await db.guest.delete(exists.name);
+
+	return reply.code(200).send({
+		message: "User successfully deleted."
+	});
+}
+
 // Route PUT /update
 export async function updateInfo(request, reply) {
 	const { db } = request.server;
