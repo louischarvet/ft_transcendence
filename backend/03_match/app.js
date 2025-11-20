@@ -10,7 +10,7 @@ import { matchSchema, registeredMatchSchema, tournamentMatchSchema }
 import { initDB } from './database/db.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 

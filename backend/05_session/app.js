@@ -15,7 +15,7 @@ import shutdownPlugin from './common_tools/shutdown.js';
 
 const secretKey = (speakeasy.generateSecret({ length: 20 })).base32;
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 // CORS configuration
 fastify.register(fastifyCors, {

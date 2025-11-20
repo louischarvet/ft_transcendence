@@ -5,7 +5,7 @@ import Fastify from 'fastify';
 import fastifyWebsocket from '@fastify/websocket';
 import '@fastify/cookie';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(shutdownPlugin);
 fastify.register(fastifyWebsocket);

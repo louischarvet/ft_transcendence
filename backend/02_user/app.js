@@ -17,7 +17,7 @@ import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 

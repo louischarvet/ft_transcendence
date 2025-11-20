@@ -9,7 +9,7 @@ import shutdownPlugin from './common_tools/shutdown.js';
 
 import { tournamentSchema } from './schema/tournamentSchema.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 
 // Middlewares / plugins

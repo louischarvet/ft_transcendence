@@ -4,7 +4,7 @@ import fastifyCors from '@fastify/cors';
 import shutdown from '../common_tools/shutdown.js';
 import { authenticateFromCookie } from './authentication/auth.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 // Enregistrer CORS
 fastify.register(fastifyCors, {
