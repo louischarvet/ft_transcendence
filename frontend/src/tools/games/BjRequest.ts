@@ -251,6 +251,19 @@ export async function connect(params: { gameId: string; playerId: string; player
   state.gameId = params.gameId;
   state.playerId = params.playerId;
 
+  const { apiFetch, checkConnection } = await import('../APIStorageManager');
+  const { navigate } = await import('../../router');
+
+  const isConnected = await checkConnection();
+  if (!isConnected) {
+    navigate('/');
+    throw new Error('User not authenticated');
+  }
+  const response = await apiFetch('/api/user/id', { method: 'GET' });
+  if (!response.ok) {
+    throw new Error('Token validation failed');
+  }
+
   if (!state.ws || state.ws.readyState > 1) {
     console.log('[BjRequest] Connecting to WebSocket:', WS_URL);
     state.ws = new WebSocket(WS_URL);

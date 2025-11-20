@@ -191,6 +191,46 @@ export default class BjScene {
     this.scene.dispose();
   }
 
+  dispose() {
+    console.log('[BjScene] Disposing scene and all resources...');
+
+    // Arrêter le render loop
+    this.engine.stopRenderLoop();
+
+    // Disposer la GUI et ses event listeners
+    if (this.gui) {
+      this.gui.dispose();
+    }
+
+    // Disposer les cartes
+    if (this.Cards) {
+      // BjCard n'a peut-être pas de dispose, mais on peut nettoyer
+      this.Cards.cleanPlaces();
+    }
+
+    // Disposer les particules
+    if (this.fontParticles) {
+      this.fontParticles.dispose();
+    }
+
+    if (this.reactors) {
+      Object.values(this.reactors).forEach(reactor => {
+        if (reactor.particles) {
+          reactor.particles.dispose();
+        }
+      });
+    }
+
+    // Disposer la scène et le moteur
+    if (this.scene) {
+      this.scene.dispose();
+    }
+
+    if (this.engine) {
+      this.engine.dispose();
+    }
+  }
+
   private stepProgression(step: number, startValue: number, endValue: number) {
     return startValue + (endValue - startValue) * step;
   }

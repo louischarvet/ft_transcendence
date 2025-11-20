@@ -35,7 +35,7 @@ export default class BjCard {
     this.assetsManager = assetsManager;
 
     const cardBackTexture = new Texture(`assets/cardBackTexture.png`, this.scene);
-    cardBackTexture.vOffset = 0.04; // Adjust texture offset for better alignment
+    cardBackTexture.vOffset = 0.04;
     this.cardBackMaterial = new StandardMaterial(`MatCardBack`, this.scene);
     this.cardBackMaterial.hasTexture(cardBackTexture);
     this.cardBackMaterial.diffuseTexture = cardBackTexture;
@@ -146,7 +146,7 @@ export default class BjCard {
       this.moveCard(card, position, rotation, true, 40).then(() => {
         this.moveCard(card, position.add(offset.scale(i)), rotation, true, 100);
       });
-      await this.delay(0.01);
+      await this.delay(0.001);
     }
 
     await this.delay(150);

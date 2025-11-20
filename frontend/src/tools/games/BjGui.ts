@@ -48,6 +48,9 @@ export default class BjGui {
 
   activePlace: string | null = null; // Pour tracker la place active
 
+  // Stocker les event listeners pour pouvoir les supprimer
+  private eventListeners: Array<{ event: string; handler: (e?: any) => void }> = [];
+
   constructor(width: number, height: number, sceneFunctions: any) {
     this.ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     this.width = width;
@@ -102,32 +105,32 @@ export default class BjGui {
     this.cardsInteractionsVisibility(false);
 
     // Backend events wiring
-    window.addEventListener('bj:resetDeck', () => {
+    this.addListener('bj:resetDeck', () => {
       this.sceneFunctions.resetDeck?.();
     });
-    window.addEventListener('bj:dealPlace', (e: any) => {
+    this.addListener('bj:dealPlace', (e: any) => {
       const { card, place, placeCardsValue, onSplit } = e.detail || {};
       this.sceneFunctions.dealPlace?.(card, place, onSplit);
       if (placeCardsValue) this.setPlaceCardsValue(place, placeCardsValue);
     });
-    window.addEventListener('bj:cardInteraction', (e: any) => {
+    this.addListener('bj:cardInteraction', (e: any) => {
       const { place } = e.detail || {};
       if (place) this.sceneFunctions.setCameraToPlace?.(place);
     });
-    window.addEventListener('bj:turnDealerCard', (e: any) => {
+    this.addListener('bj:turnDealerCard', (e: any) => {
       this.sceneFunctions.turnDealerCard?.();
       const val = e.detail?.cardsValue;
       if (val) this.setPlaceCardsValue('dealers', val);
     });
-    window.addEventListener('bj:popUpBJ', (e: any) => {
+    this.addListener('bj:popUpBJ', (e: any) => {
       const { place } = e.detail || {};
       console.log('Blackjack!', place);
     });
-    window.addEventListener('bj:popUpBust', (e: any) => {
+    this.addListener('bj:popUpBust', (e: any) => {
       const { place } = e.detail || {};
       console.log('Bust!', place);
     });
-    window.addEventListener('bj:endRound', (e: any) => {
+    this.addListener('bj:endRound', (e: any) => {
       console.log('End round', e.detail?.results);
 
       // Attendre un peu pour que le joueur voie les résultats
@@ -168,18 +171,18 @@ export default class BjGui {
     });
 
     // Montrer/cacher les actions quand la partie démarre ou quand le croupier joue
-    window.addEventListener('bj:actions:show', () => this.cardsInteractionsVisibility(true));
-    window.addEventListener('bj:actions:hide', () => this.cardsInteractionsVisibility(false));
+    this.addListener('bj:actions:show', () => this.cardsInteractionsVisibility(true));
+    this.addListener('bj:actions:hide', () => this.cardsInteractionsVisibility(false));
 
     // Mettre à jour la balance quand elle change
-    window.addEventListener('bj:updateBalance', (e: any) => {
+    this.addListener('bj:updateBalance', (e: any) => {
       if (e.detail?.balance !== undefined) {
         this.updateBalance(e.detail.balance);
       }
     });
 
     // Mettre à jour l'affichage du pari (pour le double)
-    window.addEventListener('bj:updateBet', (e: any) => {
+    this.addListener('bj:updateBet', (e: any) => {
       const { place, newBet } = e.detail || {};
       if (place && newBet !== undefined) {
         this.updateBetDisplay(place, newBet);
@@ -187,16 +190,37 @@ export default class BjGui {
     });
 
     // Highlighter la place active en blanc
-    window.addEventListener('bj:setActivePlace', (e: any) => {
+    this.addListener('bj:setActivePlace', (e: any) => {
       if (e.detail?.place) {
         this.setActivePlace(e.detail.place);
       }
     });
 
     // Reset toutes les places
-    window.addEventListener('bj:resetActivePlaces', () => {
+    this.addListener('bj:resetActivePlaces', () => {
       this.resetActivePlaces();
     });
+  }
+
+  // Helper pour ajouter un event listener et le tracker
+  private addListener(event: string, handler: (e?: any) => void) {
+    window.addEventListener(event, handler);
+    this.eventListeners.push({ event, handler });
+  }
+
+  // Nettoyer tous les event listeners et ressources
+  dispose() {
+    console.log('[BjGui] Disposing GUI and cleaning up event listeners...');
+    // Supprimer tous les event listeners
+    this.eventListeners.forEach(({ event, handler }) => {
+      window.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
+
+    // Disposer l'UI Babylon
+    if (this.ui) {
+      this.ui.dispose();
+    }
   }
 
   private initConstGui() {
