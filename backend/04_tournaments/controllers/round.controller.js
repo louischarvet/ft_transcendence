@@ -95,7 +95,7 @@ async function getCurrentRoundData(tournament, reply, db) {
 
     let matchHistory = await fetchHistoryMatchForTournament(tournament.id);
     if (matchHistory.error)
-        return reply.code(500).send({ error: 'Could not fetch match history' });
+        return reply.code(400).send({ error: 'Could not fetch match history' });
 //    console.log("###\nFonction getCurrentRoundData : matchHistory --> ", matchHistory, "\n###\n");
 
     const matchesArray = normalizeHistory(matchHistory);
@@ -125,13 +125,13 @@ async function checkMatchValidity(round, matchBody, matchesArray, reply) {
 async function finishMatchAndReload(matchBody, tournament, request, reply) {
 	const finish = await finishMatch(matchBody, request, reply);
     if (finish?.error)
-        return reply.code(500).send({ error: 'Impossible to finish match' });
+        return reply.code(400).send({ error: 'Impossible to finish match' });
 //    console.log("###\nFonction finishMatchAndReload: finish -->", finish, "\n###\n");
 
     // Recharger l'historique pour vérifier l'état des matchs du round
     const matchHistory = await fetchHistoryMatchForTournament(tournament.id);
     if (matchHistory.error)
-        return reply.code(500).send({ error: 'Could not fetch match history' });
+        return reply.code(400).send({ error: 'Could not fetch match history' });
 
     return matchHistory;
 }
@@ -222,7 +222,7 @@ async function updateTournamentAfterRound(request, reply, tournament, round, arr
     // Creer les matchs via match service
     const creationResult = await createMatchesForNextRound(arrayMatchesNextRound);
     if (creationResult.error)
-		return reply.code(500).send({ error: 'Could not create matches for tournament' });
+		return reply.code(400).send({ error: 'Could not create matches for tournament' });
     const matchsNextRound = creationResult.matchsNextRound;
 
     // MAJ DB : finir le round courant et récupérer le nextRound
@@ -392,11 +392,11 @@ export async function updateMatchAndRemainingPlaces(request, reply) {
         const finishRes = await finishMatch({ id: matchId, scoreP1: body.scoreP1, scoreP2: body.scoreP2 }, request, reply);
         if (finishRes?.error) {
             console.error('fetchFinishMatchForTournament failed:', finishRes);
-            return reply.code(500).send({ error: 'Could not finish match' });
+            return reply.code(400).send({ error: 'Could not finish match' });
         }
     } catch (err) {
         console.error('Error while finishing match:', err);
-        return reply.code(500).send({ error: 'Error finishing match' });
+        return reply.code(400).send({ error: 'Error finishing match' });
     }
 
     // 2) construire les nouvelles strings players et matchs (on enlève playerId et matchId)
@@ -409,7 +409,7 @@ export async function updateMatchAndRemainingPlaces(request, reply) {
     // 3) MAJ la DB via updateMatchAndPlaces
     const updatedTournament = await db.tournament.updateMatchesAndPlaces(tournamentId, newMatchsStr, newPlayersStr);
     if (!updatedTournament)
-        return reply.code(500).send({ error: 'Could not update match and remaining places' });
+        return reply.code(400).send({ error: 'Could not update match and remaining places' });
 
     // 4) si tournoi terminé (<=1 joueur restant), set winner
     if (Number(updatedTournament.nbPlayersTotal) <= 1) {

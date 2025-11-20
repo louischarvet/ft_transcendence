@@ -12,10 +12,8 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
     id: Number(match.id),
     p1_id: Number(match.player1?.id ?? match.p1_id ?? 0),
     p1_type: match.player1?.type ?? match.p1_type ?? 'guest',
-	// p1_name: match.player1?.name,
     p2_id: Number(match.player2?.id ?? match.p2_id ?? 0),
     p2_type: match.player2?.type ?? match.p2_type ?? 'guest',
-	// p2_name: match.player2?.name,
     scoreP1: Number(scoreP1),
     scoreP2: Number(scoreP2),
     created_at: createdAt,
@@ -23,7 +21,6 @@ function buildFinishPayload(scoreP1:number, scoreP2:number, match:any) {
   };
 }
 
-// let isRefreshing = false;
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>  {
 	
 	let response = await fetch(input, { ...init, credentials: 'include' });
@@ -71,7 +68,6 @@ export async function getUserById(id: number, type : string){
 	}
 	console.log("reponse getUserById -> ", response);
 	const data = await response.json();
-	//setUser(data.user);
 	return data.user;
 }
 
@@ -161,7 +157,6 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 
 export async function fetchRefreshToken(){
 
-	// <-- Do NOT change this to apiFetch (sinon boucle potentielle)
 	const response = await fetch("/api/refresh", {
 		method: 'POST',
 		credentials: 'include',
@@ -174,7 +169,6 @@ export async function fetchRefreshToken(){
 	
 	const user = await response.json();
 	console.log("fetchRefreshToken user -> ", user);
-//	setUser(user);
 	return true;
 }
 
@@ -197,13 +191,6 @@ export async function removeFriend(friendId: string){
 	return false;
 }
 
-export async function checkConnection() {
-	if (!(getUser())){ // foireux ?
-	//	localStorage.removeItem('user');
-		return false;
-	}
-	return true;
-}
 
 export async function register(name: string, email: string, password: string) {
 	const response = await apiFetch('/api/user/register', {
@@ -225,7 +212,7 @@ export async function register(name: string, email: string, password: string) {
 	return { success: false, message: json.error || 'Unknown error' };
 }
 
-export async function asGuest(asPlayer2: Boolean = false) { // TO DO
+export async function asGuest(asPlayer2: Boolean = false) {
 	const response = await apiFetch('/api/user/guest', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -243,7 +230,6 @@ export async function asGuest(asPlayer2: Boolean = false) { // TO DO
 
     if (json.user) {
         setUser(json.user);
-        // setToken(json.token); // possiblement undefinded du coup si player2
         return true;
     }
     return false;
@@ -263,7 +249,6 @@ export async function login(name: string, password: string) {
 	
 	if (json.user) {
 		setUser(json.user);
-		// setToken(json.token);
 		return { success: true };
 	}
 	return { success: false, message: "Unexpected response from server" };
@@ -309,7 +294,7 @@ export async function verifyTwoFactorCode(code: string) {
 }
 
 export type Match = {
-	id: number, // changed, to test
+	id: number,
 	player1: { id: string, name?: string , type: string },
 	player2: { id: string, name?: string , type: string },
 	tournament_id: any | undefined
@@ -369,33 +354,6 @@ export async function launchTournament(nbPlayers: number) {
 	return data.Tournament as Tournament;
 }
 
-/*
-export async function joinTournamentAsLogged( tournamentId: number, name: string, password: string ): Promise<{ success: boolean; message: string; id?: string; name?: string }> {
-
-	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ name, password })
-	});
-
-	const data = await res.json();
-
-	if (data.error) {
-		return {
-			success: false,
-			message: data.error || "Unknown error"
-		};
-	}
-
-	return {
-		success: true,
-		id: data.user.id,
-		name: data.user.name,
-		message: "User logged"
-	};
-}
-*/
-
 export async function joinTournamentAsLogged(tournamentId: number, name: string, password: string): Promise<{id: string, name: string} | null> {
 
 	const res = await apiFetch(`/api/tournament/jointournamentregistered/${tournamentId}`, {
@@ -421,7 +379,6 @@ export async function joinTournamentAsGuest(tournamentId: number) {
 	const data = await res.json();
 	if (data.error)
 		return { error: data.error };
- 	console.log("joinTournamentAsGuest data -> ", data);
     return { 
         id: data.user.id,
         name: data.user.name, 
@@ -470,6 +427,5 @@ export async function nextTournamentMatch(scoreP1: number, scoreP2: number, matc
 		console.error(data.error);
 		return null;
 	}
-	console.log("next data : ", data);
 	return data;
 }

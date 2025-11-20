@@ -72,7 +72,6 @@ export default function Register(): HTMLElement {
 		}
 		else{
 			console.log('User created successfully : ', res	);
-			//localStorage.setItem('user', res.user);
 			navigate('/2fa-verification');
 		}
     })

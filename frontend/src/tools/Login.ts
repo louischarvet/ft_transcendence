@@ -1,5 +1,5 @@
 import { navigate } from "../router";
-import { checkConnection, login} from "./APIStorageManager";
+import {login} from "./APIStorageManager";
 import { popUpAlert } from "./popup";
 
 
@@ -13,7 +13,7 @@ export default function Login(): HTMLElement {
 	const title = document.createElement('h2');
 	title.textContent = 'Login';
 	title.className = 'text-4xl font-bold text-white';
-	title.onclick = () => navigate('/select-game'); // Retour à la home
+	title.onclick = () => navigate('/select-game');
 
 	wrapper.appendChild(title);
 

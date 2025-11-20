@@ -1,5 +1,5 @@
 import {navigate} from '../router';
-import { checkConnection, asGuest, getUser} from './APIStorageManager';
+import {getUser} from './APIStorageManager';
 import DropDownMenu from '../tools/DropDownMenu';
 
 export default function GameSelection(): HTMLElement {
@@ -8,10 +8,7 @@ export default function GameSelection(): HTMLElement {
 		navigate('/');
 		return wrapper;
 	}
-	// checkConnection().then((connected) => {
-	// 	console.log("checkConnection : ", connected);
-	// 	if (!connected)
-	// 		navigate("/");
+
 		wrapper.appendChild(DropDownMenu());
 		wrapper.className = 'flex flex-col justify-center items-center w-[60%] h-[60%] gap-8 p-16';
 

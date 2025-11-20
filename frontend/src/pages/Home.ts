@@ -1,5 +1,5 @@
 import { navigate } from '../router';
-import { checkConnection, getUser} from '../tools/APIStorageManager';
+import { getUser} from '../tools/APIStorageManager';
 import ContinueAs from '../tools/ContinueAs';
 import Login from '../tools/Login';
 import Register from '../tools/Register';

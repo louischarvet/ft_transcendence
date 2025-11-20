@@ -1,5 +1,5 @@
 import { navigate } from '../router';
-import { asGuest , checkConnection } from "./APIStorageManager";
+import { asGuest } from "./APIStorageManager";
 
 export default function ContinueAs() {
     const wrapper = document.createElement('div');

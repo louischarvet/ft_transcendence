@@ -44,7 +44,7 @@ export async function joinTournamentSession(request, reply){
 	const { tournamentId } = request.body;
 	const guest = await fetchCreateGuest();
 	if (guest.error)
-		return reply.code(500).send({ error: 'Could not create guest' });
+		return reply.code(400).send({ error: 'Could not create guest' });
 
 	const tournament = await addNewPlayerToTournament(request.server.db, tournamentId, guest.id, guest.type);
 	return reply.code(200).send({ tournament, user: guest });

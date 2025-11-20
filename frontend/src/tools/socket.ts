@@ -56,7 +56,6 @@ class SocketManager {
       
       this.reconnectTimeout = window.setTimeout(() => {
         this.connect(url).catch(() => {
-          // Will retry in next attempt
         });
       }, delay);
     } else {
@@ -129,5 +128,4 @@ class SocketManager {
   }
 }
 
-// Export singleton
 export const socket = new SocketManager();

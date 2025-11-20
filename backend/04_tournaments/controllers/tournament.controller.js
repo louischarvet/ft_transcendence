@@ -36,7 +36,7 @@ export async function launchTournament(request, reply) {
 	// crée une ligne dans la table tournament
 	const tmpTournament = await db.tournament.insert(body.nbPlayers, user.id);
 	if (!tmpTournament)
-		return reply.code(500).send({ error: 'Could not create tournament' });
+		return reply.code(400).send({ error: 'Could not create tournament' });
 
 	// let Tournament = await getTournament(tmpTournament.id);
 	let Tournament = await db.tournament.get('id', tmpTournament.id);
@@ -139,7 +139,7 @@ export async function startTournament(request, reply){
 	// Recupere les player d'un tournoi par une liste d'id et de type
 	let listPlayers = await fetchUserTournament(playersInfos);
 	if (listPlayers.error)
-		return reply.code(500).send({ error: 'Could not fetch users for tournament' });
+		return reply.code(400).send({ error: 'Could not fetch users for tournament' });
 
 	// Tri par win_rate
 	let rankedUsers = [...listPlayers.registered, ...listPlayers.guests].sort((a, b) => a.win_rate - b.win_rate);
@@ -167,7 +167,7 @@ export async function startTournament(request, reply){
 	for (let m of matches) {
 		const res = await fetchMatchForTournament(m);
 		if (res.error)
-			return reply.code(500).send({ error: 'Could not create matches for tournament' });
+			return reply.code(400).send({ error: 'Could not create matches for tournament' });
 		tournamentMatchData.push(res.match);
 		m.id = res.match.id;
 		console.log("Created match for tournament:", m);

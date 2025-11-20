@@ -50,9 +50,6 @@ export default function DropDownMenu() {
 		dropDownFriendList.className = 'hidden absolute top-0 right-40 mt-0.3 w-[220px] max-h-60 overflow-y-auto divide-y divide-white/10 rounded-xl bg-[#646cff8f] outline-1 -outline-offset-1 outline-white/10 transition transition-discrete';
 		friendButton.appendChild(dropDownFriendList);
 
-		// const friendsList: { name: string; status: string; picture?: string }[] = [];
-
-		// const friendsListContainer = document.createElement('div');
 		friendsListContainer.className = 'py-1 flex flex-col';
 		dropDownFriendList.appendChild(friendsListContainer);
 
@@ -68,7 +65,6 @@ export default function DropDownMenu() {
 			// Photo
 			const friendPic = document.createElement('img');
 			friendPic.src = friend.picture ? `/user/${friend.picture}` : '/user/pictures/avatar_1.jpg';	 
-			//friendPic.src = friend.picture || './pictures/avatar_1.jpg';
 			friendPic.className = 'w-8 h-8 rounded-full object-cover';
 			friendItem.appendChild(friendPic);
 
@@ -83,9 +79,6 @@ export default function DropDownMenu() {
 			statusDot.className = friend.status === 'available' ? 'text-green-500' : 'text-red-500';
 			statusDot.textContent = '●';
 			friendItem.appendChild(statusDot);
-			//const statusDot = document.createElement('span');
-			//statusDot.className = `w-3 h-3 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-red-500'}`;
-			//friendItem.appendChild(statusDot);
 			friendItem.onclick = () => {
 				navigate(`/profil/${friend.id}`);
 			};
@@ -96,7 +89,7 @@ export default function DropDownMenu() {
 		getFriendsList()
 			.then((value) => {
 				if (!value || !Array.isArray(value.friends)) {
-					console.log("Pas d'amis trouvés ou utilisateur non authentifié");
+					// console.log("Pas d'amis trouvés ou utilisateur non authentifié");
 					return;
 				}
 
