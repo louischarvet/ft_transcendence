@@ -26,7 +26,7 @@ export default class BjCard {
   activePlaces: string[] = [];
 
   // Step: Move from deck
-  private dealStep = {position: new Vector3(-0.4, 1, 0.15), rotation: new Vector3(-Math.PI, 0, 0)};
+  private dealStep = {position: new Vector3(-0.4, 1.04, 0.15), rotation: new Vector3(-Math.PI, 0, 0)};
 
   constructor(numberOfDeck: number, scene: Scene, assetsManager: AssetsManager) {
     this.scene = scene;
@@ -142,9 +142,12 @@ export default class BjCard {
     for (let i = this.Deck.length - 1; i >= 0; i--) {
       const card = this.Deck[i];
       this.moveCard(card, position, rotation, true, 40).then(() => {
-        this.moveCard(card, position.add(offset.scale(i)), rotation, true, 100);
+        this.moveCard(card, position.add(offset.scale(i)), rotation, true, 100).then(() => {
+          card.mesh[0].position = position.add(offset.scale(i));
+          card.mesh[0].rotation = rotation.clone();
+        });
       });
-      await this.delay(0.01);
+      await this.delay(0.001);
     }
 
     await this.delay(150);
@@ -217,24 +220,14 @@ export default class BjCard {
 
     const deltaTime = 16; // Approx. 60 FPS (16.67ms per frame)
     const steps = Math.floor(timeTo / deltaTime);
-    const stepPosition = position.subtract(card.mesh[0].position).scale(1 / steps);
-    const stepRotation = this.normalizeVector3Angles(rotation.subtract(card.mesh[0].rotation)).scale(1 / steps);
+    const stepPosition = position.subtract(card.mesh[0]?.position !== undefined ? card.mesh[0].position : new Vector3(0,0,0)).scale(1 / steps);
+    const stepRotation = this.normalizeVector3Angles(rotation.subtract(card.mesh[0]?.rotation !== undefined ? card.mesh[0].rotation : new Vector3(0,0,0))).scale(1 / steps);
 
     for (let i = 1; i <= steps; i++) {
       card.mesh[0].position = card.mesh[0].position.add(stepPosition);
       card.mesh[0].rotation = card.mesh[0].rotation.add(stepRotation);
       await this.delay(deltaTime);
     }
-  }
-
-  async beginDealingCards(places: string[]) {
-    this.activePlaces = places;
-    const dealingOrder = [...places, 'dealer', ...places, 'dealer'];
-
-    for (const place of dealingOrder) {
-      await this.dealPlace(this.CardsMaterials[Math.floor(Math.random() * this.CardsMaterials.length)].name, place);
-    }
-    await this.delay(1000);
   }
 
   private discardTrayPosition = new Vector3(0, 1, 0);

@@ -772,6 +772,10 @@ Gain classique : 1,5 fois la mise."; }
     });
     Object.values(this.Bet.areas).forEach(area => {
       area.selectBox.isVisible = isVisible;
+      area.selectBox.onPointerEnterObservable.add(() => {
+        area.selectBox.background = "white";
+        area.selectBox.alpha = 0.1;
+      });
     });
   }
 
