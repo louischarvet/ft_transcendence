@@ -1,8 +1,15 @@
 import BjScene from '../tools/games/BjScene';
 import { connect as BjConnect } from '../tools/games/BjRequest';
+import { getUser } from '../tools/APIStorageManager';
+import { navigate } from '../router';
 
 export default function Blackjack(): HTMLElement {
   const container = document.createElement('div');
+  let UserCurrent = getUser();
+  if (!UserCurrent){
+    navigate('/');
+    return container;
+  }
   container.className = 'flex justify-center items-center h-screen bg-[#09050d]';
 
   const canvas = document.createElement('canvas');
