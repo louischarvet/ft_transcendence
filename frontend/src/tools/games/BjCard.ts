@@ -20,10 +20,8 @@ export default class BjCard {
   private Places: { [name: string]: {
     cards: Card[];
     position: Vector3;
-    splitedCards: Card[];
     rotation: Vector3;
     stackOffset: Vector3;
-    splitOffset: Vector3;
   }} = {};
   activePlaces: string[] = [];
 
@@ -158,50 +156,38 @@ export default class BjCard {
       "dealer": {
         cards: [],
         position: new Vector3(0, 1, 0.32),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI, Math.PI),
         stackOffset: new Vector3(0.03, 0.0001, 0),
-        splitOffset: new Vector3()
       },
       "p1": {
         cards: [],
         position: new Vector3(0.7, 1, 0.4),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI + Math.PI / 3, Math.PI),
         stackOffset: new Vector3(-0.007, 0.0001, -0.03),
-        splitOffset: new Vector3(-0.03, 0, 0.05)
       },
       "p2": {
         cards: [],
         position: new Vector3(0.4, 1, 0.7),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI + Math.PI / 6, Math.PI),
         stackOffset: new Vector3(0.007, 0.0001, -0.03),
-        splitOffset: new Vector3(-0.05, 0, 0.03)
       },
       "p3": {
         cards: [],
         position: new Vector3(0, 1, 0.8),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI, Math.PI),
         stackOffset: new Vector3(0.02, 0.0001, -0.02),
-        splitOffset: new Vector3(-0.06)
       },
       "p4": {
         cards: [],
         position: new Vector3(-0.4, 1, 0.7),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI - Math.PI / 6, Math.PI),
         stackOffset: new Vector3(0.028, 0.0001, -0.008),
-        splitOffset: new Vector3(-0.05, 0, -0.03)
       },
       "p5": {
         cards: [],
         position: new Vector3(-0.7, 1, 0.4),
-        splitedCards: [],
         rotation: new Vector3(-Math.PI, Math.PI - Math.PI / 3, Math.PI),
         stackOffset: new Vector3(0.028, 0.0001, 0.008),
-        splitOffset: new Vector3(-0.03, 0, -0.055)
       },
     };
   }
@@ -264,18 +250,12 @@ export default class BjCard {
         cardsCollected++;
       });
       place.cards = [];
-      place.splitedCards?.forEach(card => {
-        this.moveCard(card, this.discardTrayPosition, card.mesh[0].rotation, true);
-        this.DiscardTray.push(card);
-        cardsCollected++;
-      });
-      place.splitedCards = [];
     });
 
     console.log(`[BjCard] cleanPlaces done - Collected ${cardsCollected} cards, DiscardTray now: ${this.DiscardTray.length}, Deck: ${this.Deck.length}, Total: ${this.DiscardTray.length + this.Deck.length}`);
   }
 
-  async dealPlace(cardName: string, placeName: string, onSplit = false) {
+  async dealPlace(cardName: string, placeName: string) {
     const place = this.Places[placeName];
     if (!place) {
       console.error(`Unknown place: ${placeName}`);
@@ -313,63 +293,33 @@ export default class BjCard {
 
     let cardStack = place.cards;
 
-    if (onSplit)
-      cardStack = place.splitedCards;
-
     console.log(`[BjCard] Dealing card to ${placeName}, cardStack.length = ${cardStack.length}`);
 
     // Utiliser la logique normale pour toutes les positions, y compris le dealer
-    if (onSplit)
-      this.moveCard(card, place.position.add(place.splitOffset).add(place.stackOffset.scale(cardStack.length)), place.rotation);
-    else if (place.splitedCards.length)
-      this.moveCard(card, place.position.add(place.splitOffset.scale(-1)).add(place.stackOffset.scale(cardStack.length)), place.rotation);
-    else {
-      const offset = place.stackOffset.scale(cardStack.length);
-      console.log(`[BjCard] Offset for card ${cardStack.length}:`, offset);
+    const offset = place.stackOffset.scale(cardStack.length);
+    console.log(`[BjCard] Offset for card ${cardStack.length}:`, offset);
 
-      if (placeName === 'dealer') {
-        if (cardStack.length === 0) {
-          // Carte 0: face cachée, hauteur +1
-          const elevatedOffset = offset.add(new Vector3(0, 0.002, 0));
-          this.moveCard(card, place.position.add(elevatedOffset), place.rotation.add(new Vector3(0, 0, -Math.PI)), false, 300);
-        } else if (cardStack.length === 1) {
-          // Carte 1: visible, hauteur 0 (normale)
-          this.moveCard(card, place.position.add(offset), place.rotation);
-        } else {
-          // Cartes 2+: de l'autre côté avec le même espacement, au-dessus de carte 0
-          // Utiliser -stackOffset pour aller dans la direction opposée
-          const reversedStackOffset = place.stackOffset.scale(-1);
-          const flippedOffset = place.position.add(reversedStackOffset.scale(cardStack.length - 1)).add(new Vector3(0, 0.004, 0));
-          this.moveCard(card, flippedOffset, place.rotation);
-        }
-      } else {
+    if (placeName === 'dealer') {
+      if (cardStack.length === 0) {
+        // Carte 0: face cachée, hauteur +1
+        const elevatedOffset = offset.add(new Vector3(0, 0.002, 0));
+        this.moveCard(card, place.position.add(elevatedOffset), place.rotation.add(new Vector3(0, 0, -Math.PI)), false, 300);
+      } else if (cardStack.length === 1) {
+        // Carte 1: visible, hauteur 0 (normale)
         this.moveCard(card, place.position.add(offset), place.rotation);
+      } else {
+        // Cartes 2+: de l'autre côté avec le même espacement, au-dessus de carte 0
+        // Utiliser -stackOffset pour aller dans la direction opposée
+        const reversedStackOffset = place.stackOffset.scale(-1);
+        const flippedOffset = place.position.add(reversedStackOffset.scale(cardStack.length - 1)).add(new Vector3(0, 0.004, 0));
+        this.moveCard(card, flippedOffset, place.rotation);
       }
+    } else {
+      this.moveCard(card, place.position.add(offset), place.rotation);
     }
     cardStack.push(card);
 
     await this.delay(300);
-  }
-
-  splitPlace(placeName: string) {
-    const place = this.Places[placeName];
-    if (!place) {
-      console.error(`Unknown place: ${placeName}`);
-      return;
-    }
-    if (place.cards.length != 2) {
-      console.error(`Place ${placeName} cannot be split, it has ${place.cards.length} cards.`);
-      return;
-    }
-    if (place.splitedCards.length) {
-      console.error(`Place ${placeName} cannot be split, it already is.`);
-      return;
-    }
-    const card = place.cards.pop()!;
-    this.moveCard(card, place.position.add(place.splitOffset), place.rotation, true);
-    place.splitedCards.push(card);
-
-    this.moveCard(place.cards[0], place.position.add(place.splitOffset.scale(-1)), place.rotation, true);
   }
 
   async turnDealerCard() {

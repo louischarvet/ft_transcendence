@@ -178,9 +178,6 @@ fastify.register(async function (fastify) {
           case 'double':
             handleDouble();
             break;
-          case 'split':
-            handleSplit(data);
-            break;
         }
       } catch (error) {
         console.error('Error handling message:', error);
@@ -799,13 +796,6 @@ fastify.register(async function (fastify) {
         
         broadcastToRoom(room, 'newRound', { message: 'Placez vos paris' });
       }, 5000);
-    }
-
-    function handleSplit(data) {
-      socket.send(JSON.stringify({ 
-        event: 'info', 
-        data: 'Split en cours de développement' 
-      }));
     }
 
     socket.on('close', () => {

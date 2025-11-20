@@ -303,8 +303,7 @@ export const BjRequest = {
     start,
     stand,
     hit,
-    doubleDown,
-    split
+    doubleDown
   },
   receive: {
     resetDeck,
@@ -363,19 +362,14 @@ async function doubleDown(): Promise<void> {
   sendWs({ event: 'double', data: {} });
 }
 
-async function split(): Promise<void> {
-  ensureConnected();
-  sendWs({ event: 'split', data: {} });
-}
-
 // Receive
 
 function resetDeck(): void {
   dispatch('bj:resetDeck');
 }
 
-function dealPlace(card: string, place: string, placeCardsValue: string, onSplit: boolean = false): void {
-  dispatch('bj:dealPlace', { card, place, placeCardsValue, onSplit });
+function dealPlace(card: string, place: string, placeCardsValue: string): void {
+  dispatch('bj:dealPlace', { card, place, placeCardsValue });
 }
 
 function cardInteraction(place: string): void {

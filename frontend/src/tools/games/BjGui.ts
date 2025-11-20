@@ -43,7 +43,6 @@ export default class BjGui {
     stand: Button;
     hit: Button;
     doubleDown: Button;
-    split: Button;
   };
 
   activePlace: string | null = null; // Pour tracker la place active
@@ -106,8 +105,8 @@ export default class BjGui {
       this.sceneFunctions.resetDeck?.();
     });
     window.addEventListener('bj:dealPlace', (e: any) => {
-      const { card, place, placeCardsValue, onSplit } = e.detail || {};
-      this.sceneFunctions.dealPlace?.(card, place, onSplit);
+      const { card, place, placeCardsValue } = e.detail || {};
+      this.sceneFunctions.dealPlace?.(card, place);
       if (placeCardsValue) this.setPlaceCardsValue(place, placeCardsValue);
     });
     window.addEventListener('bj:cardInteraction', (e: any) => {
@@ -732,11 +731,10 @@ Gain classique : 1,5 fois la mise."; }
     this.ui.addControl(hit);
 
     // Double Down Button
-    const doubleDown = Button.CreateSimpleButton("doubleDownButton", "DOUBLE");
+    const doubleDown = Button.CreateSimpleButton("doubleDownButton", "DOUBLE DOWN");
     doubleDown.verticalAlignment = Button.VERTICAL_ALIGNMENT_BOTTOM;
     doubleDown.top = -65 + "px";
-    doubleDown.left = -80 + "px";
-    doubleDown.width = 180 + "px";
+    doubleDown.width = 300 + "px";
     doubleDown.height = 60 + "px";
     doubleDown.fontSize = 24 + "px";
     doubleDown.color = "black";
@@ -752,27 +750,7 @@ Gain classique : 1,5 fois la mise."; }
     doubleDown.isVisible = false;
     this.ui.addControl(doubleDown);
 
-    // Split Button
-    const split = Button.CreateSimpleButton("splitButton", "SPLIT");
-    split.verticalAlignment = Button.VERTICAL_ALIGNMENT_BOTTOM;
-    split.top = -65 + "px";
-    split.left = 120 + "px";
-    split.width = 136 + "px";
-    split.height = 60 + "px";
-    split.fontSize = 32 + "px";
-    split.color = "black";
-    split.cornerRadius = 15;
-    split.thickness = 0;
-    split.background = "white";
-    split.alpha = 0.7;
-    split.onPointerClickObservable.add(() => {
-      console.log("Player chose to SPLIT");
-      BjRequest.send.split();
-    });
-    split.isVisible = false;
-    this.ui.addControl(split);
-
-    return {stand, hit, doubleDown, split};
+    return {stand, hit, doubleDown};
   }
 
   started(): boolean {
@@ -828,7 +806,6 @@ Gain classique : 1,5 fois la mise."; }
     this.cardsInteractions.stand.isVisible = isVisible;
     this.cardsInteractions.hit.isVisible = isVisible;
     this.cardsInteractions.doubleDown.isVisible = isVisible;
-    this.cardsInteractions.split.isVisible = isVisible;
   }
 
   updateBalance(newBalance: number) {
