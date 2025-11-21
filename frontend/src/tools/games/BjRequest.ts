@@ -1,3 +1,5 @@
+const { apiFetch } = await import('../APIStorageManager');
+const { navigate } = await import('../../router');
 
 type PlacesBet = { [place: string]: { bet: number } };
 
@@ -253,6 +255,12 @@ export async function connect(params: { gameId: string; playerId: string; player
 
   if (!state.ws || state.ws.readyState > 1) {
     console.log('[BjRequest] Connecting to WebSocket:', WS_URL);
+
+    const response = await apiFetch('/api/user/id', { method: 'GET' });
+    if (!response.ok) {
+      navigate('/');
+      throw new Error('Token validation failed');
+    }
     state.ws = new WebSocket(WS_URL);
     state.isOpen = false;
     state.joined = false;
