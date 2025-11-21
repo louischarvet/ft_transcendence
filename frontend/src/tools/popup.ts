@@ -29,7 +29,6 @@ export function popUpAlert(alertMessage: string, message: string) {
 	yesBtn.textContent = 'Ok';
 	yesBtn.className = `
 		text-white font-semibold py-2 px-6 rounded-lg
-		transition-all duration-200
 	`;
 	if (alertMessage == 'Confirm'){
 		yesBtn.classList.add('bg-green-600');

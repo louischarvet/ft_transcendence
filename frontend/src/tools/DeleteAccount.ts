@@ -109,8 +109,8 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
 function FinalConfirmation(email: string, password: string) {
   const overlay = document.createElement('div');
   overlay.className = `
-    fixed inset-0 bg-black/70 backdrop-blur-sm
-    flex justify-center items-center z-[60]popup
+    fixed inset-0 bg-black backdrop-blur-sm
+    flex justify-center items-center z-50
   `;
 
   const popup = document.createElement('div');
