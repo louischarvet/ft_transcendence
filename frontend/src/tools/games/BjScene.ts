@@ -202,9 +202,9 @@ export default class BjScene {
       this.gui.dispose();
     }
 
-    // Disposer les cartes
+    // Disposer les cartes et arrêter leurs animations
     if (this.Cards) {
-      // BjCard n'a peut-être pas de dispose, mais on peut nettoyer
+      this.Cards.dispose(); // Arrête toutes les animations en cours
       this.Cards.cleanPlaces();
     }
 

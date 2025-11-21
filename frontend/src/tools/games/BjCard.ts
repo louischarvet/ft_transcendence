@@ -26,6 +26,7 @@ export default class BjCard {
     splitOffset: Vector3;
   }} = {};
   activePlaces: string[] = [];
+  private isDisposed: boolean = false;
 
   // Step: Move from deck
   private dealStep = {position: new Vector3(-0.4, 1, 0.15), rotation: new Vector3(-Math.PI, 0, 0)};
@@ -224,6 +225,7 @@ export default class BjCard {
   }
 
   private async moveCard(card: Card, position: Vector3, rotation: Vector3, withoutStep = false, timeTo = 500) {
+    if (this.isDisposed) return; // Arrêter si disposé
 
     if (!withoutStep) {
       await this.moveCard(card, this.dealStep.position, this.dealStep.rotation, true, 100);
@@ -235,6 +237,7 @@ export default class BjCard {
     const stepRotation = this.normalizeVector3Angles(rotation.subtract(card.mesh[0].rotation)).scale(1 / steps);
 
     for (let i = 1; i <= steps; i++) {
+      if (this.isDisposed) return; // Arrêter si disposé pendant l'animation
       card.mesh[0].position = card.mesh[0].position.add(stepPosition);
       card.mesh[0].rotation = card.mesh[0].rotation.add(stepRotation);
       await this.delay(deltaTime);
@@ -392,5 +395,11 @@ export default class BjCard {
     console.log('[BjCard] turnDealerCard: turning card', place.cards[0]);
     // Retourner la première carte (index 0) qui est face cachée
     this.moveCard(place.cards[0], place.cards[0].mesh[0].position, place.rotation, true);
+  }
+
+  // Nettoyer et arrêter toutes les animations en cours
+  dispose() {
+    console.log('[BjCard] Disposing card animations...');
+    this.isDisposed = true;
   }
 }
