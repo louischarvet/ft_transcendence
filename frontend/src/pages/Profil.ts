@@ -84,7 +84,7 @@ export default function Profile(): HTMLElement {
 
 	const currentUser = getUser();
 	if (!currentUser){
-    popUpAlert("Error : ", "User not found");
+    popUpAlert("Error", "User not found");
 		navigate('/');
 		localStorage.removeItem('user');
 		return container;
@@ -126,11 +126,11 @@ export default function Profile(): HTMLElement {
 			const res = await updateAvatar(file);
 			console.log("res", res);
 			//avatarImg.src = `/user/${res.picture}`;
-      popUpAlert("Youhou ", "Avatar updated successfully!");
+      popUpAlert("Confirm", "Avatar updated successfully!");
 			navigate('/profil');
 		} catch (err) {
 			console.error('Erreur upload avatar :', err);
-      popUpAlert("Error : ", "Error uploading avatar");
+      popUpAlert("Error", "Error uploading avatar");
 		}
 	};
 
@@ -150,12 +150,12 @@ export default function Profile(): HTMLElement {
       const popup = createChangeEmail(async (password, newEmail) => {
         updateInfo(password, 'email', newEmail)
           .then((res) => {
-            popUpAlert("Youhou : ", "Email updated successfully!");
+            popUpAlert("Confirm", "Email updated successfully!");
             console.log('Update response:', res);
             navigate('/profil');
           })
           .catch(err => {
-            popUpAlert("Error : ", "Error changing email");
+            popUpAlert("Error", "Error changing email");
             console.error(err);
           });
     });
@@ -171,11 +171,11 @@ export default function Profile(): HTMLElement {
       const popup = createChangePassword(async (oldPassword, newPassword) => {
         updateInfo(oldPassword, 'password', newPassword)
           .then((res) => {
-            popUpAlert("Youhou : ", "Password updated successfully!");
+            popUpAlert("Confirm", "Password updated successfully!");
             console.log('Update response:', res);
           })
           .catch(err => {
-            popUpAlert("Error : ", "Error changing password");
+            popUpAlert("Error", "Error changing password");
             console.error(err);
           });
     });
@@ -195,7 +195,6 @@ export default function Profile(): HTMLElement {
    if (getUser().type !== 'guest'){
     const popup = createDeleteAccount(async () => {
       try {
-        // 👉 Exemple de requête DELETE vers ton backend :
         const response = await fetch('/api/user/delete', {
           method: 'DELETE',
           credentials: 'include',
@@ -208,7 +207,7 @@ export default function Profile(): HTMLElement {
         navigate('/'); // Retour à la home
       } catch (err) {
         console.error(err);
-        popUpAlert("Error : ", "Error deleting account");
+        popUpAlert("Error", "Error deleting account");
       }
     });
     // Affiche la popup par-dessus tout :
@@ -225,15 +224,15 @@ export default function Profile(): HTMLElement {
 					console.log("go to logout");
 					navigate("/");
 				} else
-        popUpAlert("Error : ", "Error during disconnection");
+          popUpAlert("Error", "Error during disconnection");
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);
-        popUpAlert("Error : ", "Error during disconnection");
+        popUpAlert("Error", "Error during disconnection");
 			});
     } catch (err) {
         console.error(err);
-        popUpAlert("Error : ", "Error deleting account");
+        popUpAlert("Error", "Error deleting account");
       }
   }
   };currentStreak

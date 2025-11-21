@@ -738,14 +738,14 @@ export default class PgGui {
         if (this.currentTournament == null) return;
         joinTournamentAsGuest(this.currentTournament.id).then((player) => {
           if ('error' in player) {
-            popUpAlert("Error : ", `${player.error}`)
+            popUpAlert("Error", `${player.error}`)
             console.error(player.error);
             return;
           }
             this.tournament.addPlayer(player);
           if (player.message != "Joined tournament"){
             // alert("Error");
-            popUpAlert("Error : ", player.message)
+            popUpAlert("Error", player.message)
           }
         });
       });
@@ -1790,7 +1790,7 @@ export default class PgGui {
         const password = passwordInput.text;
         
         if (username === "" || password === "") {
-          popUpAlert("Error : ", "Please enter both username and password.")
+          popUpAlert("Error", "Please enter both username and password.")
           // alert("Please enter both username and password.");
           return;
         }
@@ -1798,7 +1798,7 @@ export default class PgGui {
         if (!this.currentTournament) {
           createMatch("registered", username, password).then((match) => {
             if (match == null){
-              popUpAlert("Error : ", "Fail to login. Please try again");
+              popUpAlert("Error", "Fail to login. Please try again");
               return;
             }
             this.currentMatch = match;
@@ -1815,7 +1815,7 @@ export default class PgGui {
             this.login.visibility(false);
           })
           .catch((err) => {
-            popUpAlert("Error : ", err.message)
+            popUpAlert("Error", err.message)
 	        });
         }
       });

@@ -149,6 +149,7 @@ export default function DropDownMenu() {
 						const errorMessage = data.error || `Erreur inconnue (${response.status})`;
 						popUpAlert("Error", errorMessage );
 						console.warn("Erreur backend:", errorMessage);
+						addFriendInput.value = '';
 						return;
 					}
 

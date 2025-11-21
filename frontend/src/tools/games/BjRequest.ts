@@ -114,9 +114,9 @@ function onWsMessage(ev: MessageEvent<string>): void {
         const firstCardValue = getCardValue(gameState.dealerCards[0]);
         console.log('[BjRequest] Dealer first card value:', firstCardValue);
         // Distribuer la première carte avec sa valeur
-        dealPlace(gameState.dealerCards[0], 'dealer', String(firstCardValue), false);
+        dealPlace(gameState.dealerCards[0], 'dealer', String(firstCardValue));
         // Distribuer la deuxième carte face cachée (sans valeur)
-        dealPlace(gameState.dealerCards[1], 'dealer', '', false);
+        dealPlace(gameState.dealerCards[1], 'dealer', '');
       } else {
         console.error('[BjRequest] No dealer cards to deal! gameState:', gameState);
       }
@@ -135,7 +135,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
             if (handData.cards && Array.isArray(handData.cards)) {
               handData.cards.forEach((card: string, index: number) => {
                 console.log(`[BjRequest] Dealing card ${index}: ${card} to position ${positionStr}`);
-                dealPlace(card, positionStr, String(handData.value), false);
+                dealPlace(card, positionStr, String(handData.value));
               });
             }
           });
@@ -152,7 +152,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
         console.log(`[BjRequest] cardDrawn: ${d.card} to position ${positionStr}, value: ${d.value}`);
-        dealPlace(String(d.card), positionStr, String(d.value ?? ''), false);
+        dealPlace(String(d.card), positionStr, String(d.value ?? ''));
       }
       break;
     }
@@ -163,7 +163,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
         const positionStr = `p${d.position}`;
         console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}, balance: ${d.balance}`);
         // Distribuer la carte
-        dealPlace(String(d.card), positionStr, String(d.value ?? ''), false);
+        dealPlace(String(d.card), positionStr, String(d.value ?? ''));
         // Mettre à jour l'affichage de la mise
         if (d.newBet !== undefined) {
           dispatch('bj:updateBet', { place: positionStr, newBet: d.newBet });
@@ -193,7 +193,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (dealerData && dealerData.card) {
         console.log('[BjRequest] Dealer draws card:', dealerData.card, 'new value:', dealerData.value);
         // Distribuer la nouvelle carte au dealer
-        dealPlace(dealerData.card, 'dealer', String(dealerData.value), false);
+        dealPlace(dealerData.card, 'dealer', String(dealerData.value));
       }
       break;
     }

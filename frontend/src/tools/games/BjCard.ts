@@ -143,8 +143,10 @@ export default class BjCard {
       const card = this.Deck[i];
       this.moveCard(card, position, rotation, true, 40).then(() => {
         this.moveCard(card, position.add(offset.scale(i)), rotation, true, 100).then(() => {
-          card.mesh[0].position = position.add(offset.scale(i));
-          card.mesh[0].rotation = rotation.clone();
+          if (card.mesh && card.mesh[0]){
+            card.mesh[0].position = position.add(offset.scale(i));
+            card.mesh[0].rotation = rotation.clone();
+          }
         });
       });
       await this.delay(0.001);
@@ -222,11 +224,13 @@ export default class BjCard {
     const steps = Math.floor(timeTo / deltaTime);
     const stepPosition = position.subtract(card.mesh[0]?.position !== undefined ? card.mesh[0].position : new Vector3(0,0,0)).scale(1 / steps);
     const stepRotation = this.normalizeVector3Angles(rotation.subtract(card.mesh[0]?.rotation !== undefined ? card.mesh[0].rotation : new Vector3(0,0,0))).scale(1 / steps);
-
+    
     for (let i = 1; i <= steps; i++) {
-      card.mesh[0].position = card.mesh[0].position.add(stepPosition);
-      card.mesh[0].rotation = card.mesh[0].rotation.add(stepRotation);
-      await this.delay(deltaTime);
+      if (card.mesh && card.mesh[0]){
+        card.mesh[0].position = card.mesh[0].position.add(stepPosition);
+        card.mesh[0].rotation = card.mesh[0].rotation.add(stepRotation);
+        await this.delay(deltaTime);
+      }
     }
   }
 
@@ -238,13 +242,14 @@ export default class BjCard {
 
     Object.values(this.Places).forEach(place => {
       place.cards.forEach(card => {
-        this.moveCard(card, this.discardTrayPosition, card.mesh[0].rotation, true);
-        this.DiscardTray.push(card);
-        cardsCollected++;
+        if (card.mesh && card.mesh[0]){
+          this.moveCard(card, this.discardTrayPosition, card.mesh[0].rotation, true);
+          this.DiscardTray.push(card);
+          cardsCollected++;
+        }
       });
       place.cards = [];
     });
-
     console.log(`[BjCard] cleanPlaces done - Collected ${cardsCollected} cards, DiscardTray now: ${this.DiscardTray.length}, Deck: ${this.Deck.length}, Total: ${this.DiscardTray.length + this.Deck.length}`);
   }
 
@@ -280,8 +285,10 @@ export default class BjCard {
       return;
     }
     card.name = cardName;
-    card.mesh[1].material = cardMaterial.material;
-    card.mesh[1].material.markAsDirty(Material.AllDirtyFlag);
+    if (card.mesh && card.mesh[1]){
+      card.mesh[1].material = cardMaterial.material;
+      card.mesh[1].material.markAsDirty(Material.AllDirtyFlag);
+    }
 
 
     let cardStack = place.cards;
@@ -334,6 +341,7 @@ export default class BjCard {
 
     console.log('[BjCard] turnDealerCard: turning card', place.cards[0]);
     // Retourner la première carte (index 0) qui est face cachée
-    this.moveCard(place.cards[0], place.cards[0].mesh[0].position, place.rotation, true);
+    if (place.cards[0] && place.cards[0].mesh[0])
+      this.moveCard(place.cards[0], place.cards[0].mesh[0].position, place.rotation, true);
   }
 }

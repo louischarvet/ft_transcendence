@@ -159,7 +159,8 @@ export default class BjGui {
 
         // Réinitialiser le total des mises
         this.totalBetAmount = 0;
-        (this.ui.getControlByName("TotalBetLabel") as TextBlock).text = `Total Bet: 0 €`;
+        if (this.ui.getControlByName("TotalBetLabel"))
+         (this.ui.getControlByName("TotalBetLabel") as TextBlock).text = `Total Bet: 0 €`;
 
         // Réafficher les boutons de mise
         this.betGuiVisibility(true);
@@ -813,6 +814,8 @@ Gain classique : 1,5 fois la mise."; }
   }
 
   updateBalance(newBalance: number) {
+    if (this.ui.getControlByName("BankLabel") === null)
+      return;
     console.log(`[BjGui] Updating balance from ${this.bankAmount} to ${newBalance}`);
     this.bankAmount = newBalance;
     (this.ui.getControlByName("BankLabel") as TextBlock).text = `Bank: ${this.bankAmount} €`;
