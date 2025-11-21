@@ -12,5 +12,4 @@ COPY . .
 EXPOSE 5173
 
 # Run Vite directly with node instead of npm for proper signal handling
-# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
-CMD ["node", "node_modules/vite/bin/vite.js", "--host"]
+CMD ["node", "vite-wrapper.js"]
