@@ -14,7 +14,7 @@ type WsMessage = {
 function getCardValue(card: string): number {
   // Format backend: "As_of_Spades", "10_of_Hearts", "Jack_of_Diamonds", etc.
   const name = card.split('_of_')[0];
-  console.log('[getCardValue] Card:', card, 'Name:', name);
+  //console.log('[getCardValue] Card:', card, 'Name:', name);
 
   if (name === 'As') return 11; // As vaut 11 par défaut
   if (['Jack', 'Queen', 'King'].includes(name)) return 10;
@@ -76,12 +76,12 @@ function onWsMessage(ev: MessageEvent<string>): void {
       // Le backend génère son propre playerId, on doit l'utiliser
       if (msg.data && msg.data.playerId) {
         state.playerId = msg.data.playerId;
-        console.log('[BjRequest] Updated playerId from backend:', state.playerId);
+        //console.log('[BjRequest] Updated playerId from backend:', state.playerId);
       }
 
       // NOUVEAU: Récupérer la balance initiale du backend (depuis la DB)
       if (msg.data?.balance !== undefined) {
-        console.log(`[BjRequest] Balance initiale reçue depuis DB: ${msg.data.balance}`);
+        //console.log(`[BjRequest] Balance initiale reçue depuis DB: ${msg.data.balance}`);
         dispatch('bj:updateBalance', { balance: msg.data.balance });
       }
 
@@ -95,7 +95,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'betPlaced': {
       // Le backend envoie la nouvelle balance après chaque mise
       if (msg.data && msg.data.playerId === state.playerId && msg.data.balance !== undefined) {
-        console.log(`[BjRequest] Bet placed, nouvelle balance: ${msg.data.balance}`);
+        //console.log(`[BjRequest] Bet placed, nouvelle balance: ${msg.data.balance}`);
         dispatch('bj:updateBalance', { balance: msg.data.balance });
       }
       break;
@@ -103,16 +103,16 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'roundStarted': {
       // Le backend envoie gameState avec les mains des joueurs
       const gameState = msg.data;
-      console.log('[BjRequest] roundStarted data:', JSON.stringify(gameState, null, 2));
-      console.log('[BjRequest] Current state.playerId:', state.playerId);
+      //console.log('[BjRequest] roundStarted data:', JSON.stringify(gameState, null, 2));
+      //console.log('[BjRequest] Current state.playerId:', state.playerId);
 
       // Distribuer les cartes du dealer
-      console.log('[BjRequest] gameState.dealerCards:', gameState?.dealerCards);
+      //console.log('[BjRequest] gameState.dealerCards:', gameState?.dealerCards);
       if (gameState && gameState.dealerCards && gameState.dealerCards.length >= 2) {
-        console.log('[BjRequest] Dealing dealer cards:', gameState.dealerCards);
+        //console.log('[BjRequest] Dealing dealer cards:', gameState.dealerCards);
         // Calculer la valeur de la première carte visible du dealer
         const firstCardValue = getCardValue(gameState.dealerCards[0]);
-        console.log('[BjRequest] Dealer first card value:', firstCardValue);
+        //console.log('[BjRequest] Dealer first card value:', firstCardValue);
         // Distribuer la première carte avec sa valeur
         dealPlace(gameState.dealerCards[0], 'dealer', String(firstCardValue));
         // Distribuer la deuxième carte face cachée (sans valeur)
@@ -123,18 +123,18 @@ function onWsMessage(ev: MessageEvent<string>): void {
 
       if (gameState && gameState.players) {
         // Traiter les cartes initiales de chaque joueur
-        console.log('[BjRequest] Searching for player with id:', state.playerId);
+        //console.log('[BjRequest] Searching for player with id:', state.playerId);
         const player = gameState.players.find((p: any) => p.id === state.playerId);
-        console.log('[BjRequest] Player found:', player);
+        //console.log('[BjRequest] Player found:', player);
 
         if (player && player.hands) {
           Object.entries(player.hands).forEach(([position, handData]: [string, any]) => {
             // Convertir position numérique (1, 2, 3...) en format "p1", "p2", "p3"...
             const positionStr = `p${position}`;
-            console.log('[BjRequest] Dealing to position:', positionStr, 'cards:', handData.cards);
+            //console.log('[BjRequest] Dealing to position:', positionStr, 'cards:', handData.cards);
             if (handData.cards && Array.isArray(handData.cards)) {
               handData.cards.forEach((card: string, index: number) => {
-                console.log(`[BjRequest] Dealing card ${index}: ${card} to position ${positionStr}`);
+                //console.log(`[BjRequest] Dealing card ${index}: ${card} to position ${positionStr}`);
                 dealPlace(card, positionStr, String(handData.value));
               });
             }
@@ -151,7 +151,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (d && d.card && d.position) {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
-        console.log(`[BjRequest] cardDrawn: ${d.card} to position ${positionStr}, value: ${d.value}`);
+        //console.log(`[BjRequest] cardDrawn: ${d.card} to position ${positionStr}, value: ${d.value}`);
         dealPlace(String(d.card), positionStr, String(d.value ?? ''));
       }
       break;
@@ -161,7 +161,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
       if (d && d.card && d.position) {
         // Convertir position numérique en format "p1", "p2", etc.
         const positionStr = `p${d.position}`;
-        console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}, balance: ${d.balance}`);
+        //console.log(`[BjRequest] playerDouble: ${d.card} to position ${positionStr}, new bet: ${d.newBet}, value: ${d.value}, balance: ${d.balance}`);
         // Distribuer la carte
         dealPlace(String(d.card), positionStr, String(d.value ?? ''));
         // Mettre à jour l'affichage de la mise
@@ -170,7 +170,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
         }
         // NOUVEAU: Mettre à jour la balance si c'est notre joueur
         if (d.playerId === state.playerId && d.balance !== undefined) {
-          console.log(`[BjRequest] Double down, nouvelle balance: ${d.balance}`);
+          //console.log(`[BjRequest] Double down, nouvelle balance: ${d.balance}`);
           dispatch('bj:updateBalance', { balance: d.balance });
         }
         // Cacher les boutons car le double a réussi et la main est terminée
@@ -191,7 +191,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'dealerDraw': {
       const dealerData = msg.data;
       if (dealerData && dealerData.card) {
-        console.log('[BjRequest] Dealer draws card:', dealerData.card, 'new value:', dealerData.value);
+        //console.log('[BjRequest] Dealer draws card:', dealerData.card, 'new value:', dealerData.value);
         // Distribuer la nouvelle carte au dealer
         dealPlace(dealerData.card, 'dealer', String(dealerData.value));
       }
@@ -213,7 +213,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
           }
         }
       });
-      console.log('[BjRequest] Round finished, results:', resultMap, 'newBalance:', newBalance);
+      //console.log('[BjRequest] Round finished, results:', resultMap, 'newBalance:', newBalance);
 
       // Mettre à jour la balance si disponible
       if (newBalance !== undefined) {
@@ -232,7 +232,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
         // Highlighter la place active si une position est spécifiée
         if (turnData.position) {
           const positionStr = `p${turnData.position}`;
-          console.log(`[BjRequest] Player turn for position: ${positionStr}`);
+          //console.log(`[BjRequest] Player turn for position: ${positionStr}`);
           dispatch('bj:setActivePlace', { place: positionStr });
         }
       }
@@ -241,7 +241,7 @@ function onWsMessage(ev: MessageEvent<string>): void {
     case 'error': {
       // Ignorer silencieusement les erreurs (ex: double non autorisé)
       // Le joueur peut continuer à jouer avec Hit/Stand
-      console.log('[WS][Blackjack] Error:', msg.data || msg);
+      //console.log('[WS][Blackjack] Error:', msg.data || msg);
       break;
     }
     default:
@@ -254,7 +254,7 @@ export async function connect(params: { gameId: string; playerId: string; player
   state.playerId = params.playerId;
 
   if (!state.ws || state.ws.readyState > 1) {
-    console.log('[BjRequest] Connecting to WebSocket:', WS_URL);
+    //console.log('[BjRequest] Connecting to WebSocket:', WS_URL);
 
     const response = await apiFetch('/api/user/id', { method: 'GET' });
     if (!response.ok) {
@@ -266,7 +266,7 @@ export async function connect(params: { gameId: string; playerId: string; player
     state.joined = false;
     state.queue = [];
     state.ws.onopen = () => {
-      console.log('[BjRequest] WebSocket connected!');
+      //console.log('[BjRequest] WebSocket connected!');
       state.isOpen = true;
       // Toujours joindre la partie en premier
       const joinMessage = {
@@ -278,7 +278,7 @@ export async function connect(params: { gameId: string; playerId: string; player
           mode: 'solo'
         }
       };
-      console.log('[BjRequest] Sending join:', joinMessage);
+      //console.log('[BjRequest] Sending join:', joinMessage);
       sendWs(joinMessage);
     };
     state.ws.onmessage = onWsMessage;
@@ -286,7 +286,7 @@ export async function connect(params: { gameId: string; playerId: string; player
       console.error('[BjRequest] WebSocket error:', err);
     };
     state.ws.onclose = () => {
-      console.log('[BjRequest] WebSocket closed');
+      //console.log('[BjRequest] WebSocket closed');
       state.isOpen = false;
     };
   }
@@ -294,7 +294,7 @@ export async function connect(params: { gameId: string; playerId: string; player
 
 export function disconnect() {
   if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-    console.log('[BjRequest] Disconnecting WebSocket...');
+    //console.log('[BjRequest] Disconnecting WebSocket...');
     state.ws.close(1000, 'Page navigation');
     state.ws = null;
     state.isOpen = false;

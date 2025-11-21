@@ -291,7 +291,7 @@ export default class PgScene {
       if (!this.gameMode)
         return;
       if (this.gameMode.type === "ended") {
-        console.log("Game ended, stopping scene updates. with gameMode :", this.gameMode);
+        //console.log("Game ended, stopping scene updates. with gameMode :", this.gameMode);
         this.game.send({ type: 'ended' });
         this.gui.startedType = null;
         this.gui.started = false;

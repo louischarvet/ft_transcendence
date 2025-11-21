@@ -69,7 +69,7 @@ export default function Blackjack(): HTMLElement {
 
     // Cleanup function
     const cleanup = () => {
-      console.log('[Blackjack] Cleaning up...');
+      //console.log('[Blackjack] Cleaning up...');
 
       // Stop render loop
       bjScene.engine.stopRenderLoop();
@@ -82,7 +82,7 @@ export default function Blackjack(): HTMLElement {
       bjScene.scene.dispose();
       bjScene.engine.dispose();
 
-      console.log('[Blackjack] Cleanup complete');
+      //console.log('[Blackjack] Cleanup complete');
     };
 
     // Store the previous __bjDisconnect if it exists

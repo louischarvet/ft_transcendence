@@ -208,7 +208,7 @@ export async function getHistoryByTournamentID(request, reply) {
 	if (!tournamentData) 
 		return reply.code(200).send({ error : 'No data for this tournament' });
 
-	console.log("TOURNAMENT DATA : ", tournamentData);
+	//console.log("TOURNAMENT DATA : ", tournamentData);
     for (let match of tournamentData) {
         const p1 = await getUserById(match.p1_id, match.p1_type);
         const p2 = await getUserById(match.p2_id, match.p2_type);

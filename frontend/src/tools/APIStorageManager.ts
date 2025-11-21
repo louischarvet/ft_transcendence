@@ -66,7 +66,7 @@ export async function getUserById(id: number, type : string){
 		console.warn("Erreur backend :", response.status);
 		return null;
 	}
-	console.log("reponse getUserById -> ", response);
+	//console.log("reponse getUserById -> ", response);
 	const data = await response.json();
 	return data.user;
 }
@@ -80,7 +80,7 @@ export async function Logout(){
 
 export async function updateInfo(password: string, toUpdate: string, newValue: string){
 
-	console.log("ooooo", password, toUpdate, newValue);
+	//console.log("ooooo", password, toUpdate, newValue);
 
 	const response = await apiFetch(`/api/user/update`, {
 		method: "PUT",
@@ -130,7 +130,7 @@ export async function addNewFriend(friendName: string){
 		method: "POST",
 	});
 
-	console.log("###########################", response);
+	//console.log("###########################", response);
 	return response;
 }
 
@@ -142,7 +142,7 @@ export async function getFriendsList(): Promise<{ friends: { name: string; statu
 
 	// Si le backend renvoie 204 No Content, on retourne []
 	if (response.status === 204) {
-    	console.log("Aucun ami trouvé.");
+    	//console.log("Aucun ami trouvé.");
 		return { friends: [] };
   	};
 
@@ -163,12 +163,12 @@ export async function fetchRefreshToken(){
 	});
 
 	if (response.status === 403) {
-		console.log("Impossible de mettre a jour le refresh token", response);
+		//console.log("Impossible de mettre a jour le refresh token", response);
 		return false;
 	}
 	
 	const user = await response.json();
-	console.log("fetchRefreshToken user -> ", user);
+	//console.log("fetchRefreshToken user -> ", user);
 	return true;
 }
 
@@ -183,9 +183,9 @@ export async function removeFriend(friendId: string){
 	});
 	const json = await response.json();
 
-	console.log("removeFriend resonse -> ", json);
+	//console.log("removeFriend resonse -> ", json);
 	if (!json.error) {
-		console.log("deleteFriend error here");
+		//console.log("deleteFriend error here");
 		return true;
 	}
 	return false;
@@ -226,7 +226,7 @@ export async function asGuest(asPlayer2: Boolean = false) {
     }
 
     const json = await response.json();
-    console.log("#### Response asGuest -> ", json, "####");
+    //console.log("#### Response asGuest -> ", json, "####");
 
     if (json.user) {
         setUser(json.user);
@@ -263,9 +263,9 @@ export async function deleteUser(password : string) {
 	});
 	const json = await response.json();
 
-	console.log("fetch deleteUser here");
+	//console.log("fetch deleteUser here");
 	if (!json.error) {
-		console.log("deleteUser removeItem here");
+		//console.log("deleteUser removeItem here");
 		localStorage.removeItem('user');
 		return true;
 	}
@@ -289,7 +289,7 @@ export async function verifyTwoFactorCode(code: string) {
 	const json = await response.json();
 	if (json.error)
 		return false;
-	console.log("verify2fa -> ", json);
+	//console.log("verify2fa -> ", json);
 	return true;
 }
 
@@ -349,7 +349,7 @@ export async function launchTournament(nbPlayers: number) {
 		body: JSON.stringify({ nbPlayers })
 	});
 	const data = await res.json();
-	console.log("launchTournament data -> ", data);
+	//console.log("launchTournament data -> ", data);
 	if (data.error) return null;
 	return data.Tournament as Tournament;
 }

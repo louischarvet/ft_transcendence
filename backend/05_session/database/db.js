@@ -61,7 +61,7 @@ export async function initDB(fastify) {
     await fastify.decorate('db', db);
 	
     await fastify.addHook('onClose', async (instance) => {
-		console.log("Database closed")
+		//console.log("Database closed")
 		await instance.db.close();
 	});
 }

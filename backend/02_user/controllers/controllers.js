@@ -21,7 +21,7 @@ async function clearCookies(reply) {
 export async function createGuest(request, reply) {
 	const { db } = request.server;
 	const guests = await db.guest.getCol('id');
-	console.log("guests = ", guests);
+	////console.log("guests = ", guests);
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
@@ -211,7 +211,7 @@ export async function deleteGuest(request, reply) {
 	if (!exists)
 		return reply.code(400).send({ error: 'User is not in the database' });
 
-	console.log("joueru a supprimer : ",exists);
+	//console.log("joueru a supprimer : ",exists);
 	await db.guest.delete(exists.name);
 
 	return reply.code(200).send({
@@ -340,7 +340,7 @@ export	async function getUserById(request, reply){
 	if (!userId)
 		return reply.code(400).send({ error : 'Id of user required'});
 	let userInfos;
-	console.log('type', type);
+	//console.log('type', type);
 	if (type === 'ia') {
 		userInfos = {
 			id: 0,
@@ -349,7 +349,7 @@ export	async function getUserById(request, reply){
 		};
 	} else{
 		userInfos = await db[type].getById(userId);
-		console.log('userInfos', userInfos);
+		//console.log('userInfos', userInfos);
 	}
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
@@ -378,7 +378,7 @@ export async function addFriend(request, reply) {
 	const { friendName } = request.params;
 	if (friendName === undefined)
 		return reply.code(400).send({ error: 'friendName is missing' });
-	console.log("friendName", friendName);
+	//console.log("friendName", friendName);
 
 	const friend = await db.registered.getByName(friendName);
 	if (!friend)

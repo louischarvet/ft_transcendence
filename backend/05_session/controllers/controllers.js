@@ -71,7 +71,7 @@ export async function authenticate(db, request, reply) {
     const accessToken = rawToken.split(' ')[1];
 
     if (!accessToken) {
-		console.log('Missing token');
+		//console.log('Missing token');
 		return reply.code(401).send({ error: 'Missing token' });
 	}
     try {
@@ -86,7 +86,7 @@ export async function authenticate(db, request, reply) {
 
         return reply.code(200).send(decoded);
     } catch (err) {
-        console.log("authenticate ERROR: ", err);
+        //console.log("authenticate ERROR: ", err);
         if (err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED')
             return reply.code(401).send({ error: 'Expired access token.' });
         else
@@ -171,7 +171,7 @@ export async function deleteToken(db, request, reply) {
 
         return reply.code(200).send({ message: 'Deleted refresh token.' })
     } catch (err) {
-        console.log("delete ERROR: ", err);
+        //console.log("delete ERROR: ", err);
         if (err.code === 'FST_JWT_EXPIRED')
             return reply.code(401).send({ error: 'Expired access token.' });
         else

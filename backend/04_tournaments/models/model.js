@@ -40,7 +40,7 @@ export async function startTournamentInternal(tournamentId) {
 export async function getTournamentsWonByUser(userId) {
     if (!Number.isInteger(userId) || userId <= 0)
         return [];
-	// console.log(db.)
+	// //console.log(db.)
 	return await db.all( 'SELECT * FROM tournament WHERE winnerId = ?', [userId] );
 };
 

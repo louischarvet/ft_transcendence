@@ -40,8 +40,8 @@ export async function launchTournament(request, reply) {
 
 	// let Tournament = await getTournament(tmpTournament.id);
 	let Tournament = await db.tournament.get('id', tmpTournament.id);
-	console.log("################### TOURNAMENT\n", Tournament,
-				"\n###########################\n");
+	//console.log("################### TOURNAMENT\n", Tournament,
+				// "\n###########################\n");
 	// Tournament = await addPlayerToTournament(Tournament.id, user.id + ':' + user.type + ';');
 	Tournament = await db.tournament.addPlayer(Tournament.id, user.id + ':' + user.type + ';');
 	return reply.code(201).send({ Tournament, message: 'Tournament created. Waiting for players.' });
@@ -52,7 +52,7 @@ export async function endTournament(request, reply, tournamentId, user){
 	// ~schema: tournamentID, winnerID
 	// insert in history
 	// delete in tournament
-	console.log("tournamtentId winnerId0 ", tournamentId, user.id);
+	//console.log("tournamtentId winnerId0 ", tournamentId, user.id);
 	if (tournamentId === 'undefined' || user.id === 'undefined'
 		|| tournamentId === null || user.id === null	)
 		return reply.code(400).send({ error: 'Invalid body' });
@@ -64,10 +64,10 @@ export async function endTournament(request, reply, tournamentId, user){
 	await db.tournament.update('status', 'finished', tournamentId);
 
 	
-	console.log("Tournament begin:", tournament);
+	//console.log("Tournament begin:", tournament);
 	tournament = await db.history.update('winnerID', user.id, tournamentId);
 	tournament = await db.history.update('winnerType', user.type, tournamentId);
-	console.log("Tournament ended:", tournament);
+	//console.log("Tournament ended:", tournament);
 	// on recupere l'historique des matchs depuis le service match
 	tournament = await fetchHistoryMatchForTournament(tournamentId);
 	if (tournament.error)
@@ -108,14 +108,14 @@ export async function startTournament(request, reply){
 	if (!tournament)
 		return reply.code(404).send({ error: 'Tournament not found' });
 	if (tournament.status !== 'waiting') {
-		console.log("Not waiting\n");
+		//console.log("Not waiting\n");
 		return reply.code(400).send({ error: 'Tournament already started or finished' });
 	}
 	if (tournament.creatorId != user.id) {
-		console.log("creatorId not good\n");
+		//console.log("creatorId not good\n");
 		return reply.code(400).send({ error: 'Only creator of tournament can start tournament' });
 	}
-	console.log("tournament -> ",tournament);
+	//console.log("tournament -> ",tournament);
 	// Ajout IA si nécessaire
 	let countIa = 0;
 	for (; tournament.remainingPlaces > 0;) {
@@ -154,7 +154,7 @@ export async function startTournament(request, reply){
 		}
 	}
 
-	console.log("finalPlayers --> ", finalPlayers);
+	//console.log("finalPlayers --> ", finalPlayers);
 	// Création des matchs
 	let matches = [];
 	for (let i = 0; i < finalPlayers.length; i += 2) {
@@ -170,9 +170,9 @@ export async function startTournament(request, reply){
 			return reply.code(400).send({ error: 'Could not create matches for tournament' });
 		tournamentMatchData.push(res.match);
 		m.id = res.match.id;
-		console.log("Created match for tournament:", m);
+		//console.log("Created match for tournament:", m);
 	}
-	console.log("matches for tournament created:", matches);
+	//console.log("matches for tournament created:", matches);
 
 	// Mettre à jour l'historique
 	let matchesString = tournamentMatchData.map(m => m.id).join(';');
@@ -181,7 +181,7 @@ export async function startTournament(request, reply){
 	await db.round.insert(tournamentId, tournament.rounds, matchesString, tournament.players);
 	let updatedTournament = await db.tournament.update('status', 'started', tournamentId);
 
-//	console.log("######################################## STARTTOURNAMENT\n",
+//	//console.log("######################################## STARTTOURNAMENT\n",
 //				"######### updatedTournament\n", updatedTournament,
 //				"\n#########\n######### matches\n", matches,
 //				"\n#########\n",
@@ -218,7 +218,7 @@ async function LogoutPLayers(players) {
 	//ne pas delog le premier (hote)
 	for (let i = 0, n = players.length - 1; i < n; i++) {
 		const [id , type] = players[i].split(':');
-		console.log("id du guest a supprimer :", id);
+		//console.log("id du guest a supprimer :", id);
 		if (type === 'guest' && i > 0)
 			deleteGuest(id);
 		// GERER les login ?
@@ -232,7 +232,7 @@ export async function deleteTournament(request, reply) {
 	if (tournament !== undefined) {
 		const matchs = tournament.matchs.split(';');
 		for (let i = 0, n = matchs.length; i < n; i++) {
-		//	console.log("i = ", i, "\tmatches[i] = ", matchs[i], "\n");
+		//	//console.log("i = ", i, "\tmatches[i] = ", matchs[i], "\n");
 			const res = await fetchDeleteMatch(matchs[i], request.cookies);
 			if (!res.ok)
 				return reply.code(400).send({ error: 'deleteMatch error' });

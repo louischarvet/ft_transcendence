@@ -105,7 +105,7 @@ export default class PgGame {
       await this.delay(this.fps);
       timer += this.fps;
     }
-    console.log("Game ended...");
+    //console.log("Game ended...");
     this.send(this.ws, {type: 'result', data: {left: this.leftScore, right: this.rightScore}});
   }
 

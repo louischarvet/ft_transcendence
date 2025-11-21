@@ -61,7 +61,7 @@ export default function Pong(): HTMLElement {
 
     // Cleanup function
     const cleanup = () => {
-      console.log('[Pong] Cleaning up...');
+      //console.log('[Pong] Cleaning up...');
 
       // Disconnect WebSocket
       if (pgScene.game) {
@@ -82,7 +82,7 @@ export default function Pong(): HTMLElement {
       pgScene.scene.dispose();
       pgScene.engine.dispose();
 
-      console.log('[Pong] Cleanup complete');
+      //console.log('[Pong] Cleanup complete');
     };
 
     // Register cleanup function for router

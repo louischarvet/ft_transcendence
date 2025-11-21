@@ -18,13 +18,13 @@ export default function ContinueAs() {
     guestButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all';
     guestButton.onclick = () => {
-        console.log('Continue as Guest');
+        //console.log('Continue as Guest');
 		asGuest(false)
 			.then( res => {
 				navigate('/select-game');
 			})
 			.catch( (err) => {
-				console.log('Guest connection:', err);
+				//console.log('Guest connection:', err);
 			})
     };
     wrapper.appendChild(guestButton);
@@ -43,7 +43,7 @@ export default function ContinueAs() {
     loginButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all';
     loginButton.onclick = () => {
-        console.log('Go to Login');
+        //console.log('Go to Login');
         navigate('/login');
     };
     wrapper.appendChild(loginButton);
@@ -53,7 +53,7 @@ export default function ContinueAs() {
     registerButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all mt-2';
     registerButton.onclick = () => {
-        console.log('Go to Register');
+        //console.log('Go to Register');
         navigate('/register');
     };
     wrapper.appendChild(registerButton);

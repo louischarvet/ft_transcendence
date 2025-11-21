@@ -662,14 +662,14 @@ export default class PgGui {
 
     const switchToPlayersSetting = (nbOfPlayers: number) => {
       launchTournament(nbOfPlayers).then((tournament) => {
-        console.log("launchTournament data ->", tournament);
+        //console.log("launchTournament data ->", tournament);
         if (!tournament) {
           console.error("Tournament creation failed");
           return;
         }
 
         this.currentTournament = tournament;
-        console.log("Current tournament set to:", this.currentTournament);
+        //console.log("Current tournament set to:", this.currentTournament);
         // Hide size selection
         this.tournament.selectSize.isVisible = false;
         this.tournament.size4.isVisible = false;
@@ -1294,11 +1294,11 @@ export default class PgGui {
         nextMatchButton.alpha = 0.5;
       });
       nextMatchButton.onPointerClickObservable.add(() => {
-        console.log("currentTournament in next button:", this.currentTournament);
+        //console.log("currentTournament in next button:", this.currentTournament);
         if (this.currentTournament == null || !this.currentTournament.matches?.length) return;
-        console.log("matches inside tournament:", this.currentTournament?.matches);
+        //console.log("matches inside tournament:", this.currentTournament?.matches);
         this.currentMatch = this.currentTournament.matches[this.currentMatchIndex];
-        console.log("currentMatch:", this.currentMatch);
+        //console.log("currentMatch:", this.currentMatch);
         if (this.currentMatch == null) return;
         this.result.visibility(false);
         this.panel.winParts.player1.text = "0";
@@ -1359,20 +1359,20 @@ export default class PgGui {
       }
 
       if (this.currentTournament && this.currentMatch) {
-		    console.log("match: ", this.currentMatch);
+		    //console.log("match: ", this.currentMatch);
         nextTournamentMatch(parseInt(this.score.left.text), parseInt(this.score.right.text), this.currentMatch).then((data) => {
           if (!data || !this.currentTournament) {
             this.currentTournament = null;
           } else if (data.message === "All matchs round not finished"){
-            console.log("En attente des autres matchs du round...");
+            //console.log("En attente des autres matchs du round...");
             this.currentMatchIndex++;
           } else if (data.message === "next round") {
-            console.log("before this.currentTournament value:", this.currentTournament);
+            //console.log("before this.currentTournament value:", this.currentTournament);
             this.currentTournament.matches = data.matches;
             this.rounds[++this.currentRoundIndex] = this.currentTournament.matches;
             this.currentMatchIndex = 0;
-            console.log("backend matches:", data.matches || data.matchs);
-            console.log("After this.currentTournament value :", this.currentTournament);
+            //console.log("backend matches:", data.matches || data.matchs);
+            //console.log("After this.currentTournament value :", this.currentTournament);
           } else if (data.message === "Tournament ended") {
             this.currentTournament = null;
             this.currentMatch = null;
@@ -1650,7 +1650,7 @@ export default class PgGui {
             }
           }
         });
-        console.log("Selected AI Modes:", this.watchAI.left.selectedAIMode, this.watchAI.right.selectedAIMode);
+        //console.log("Selected AI Modes:", this.watchAI.left.selectedAIMode, this.watchAI.right.selectedAIMode);
         if (this.watchAI.left.selectedAIMode === "" || this.watchAI.right.selectedAIMode === "") return;
         this.watchAI.visibility(false);
         this.startedType = { type: "watchAI", aiMode1: this.watchAI.left.selectedAIMode, aiMode2: this.watchAI.right.selectedAIMode };
@@ -1660,7 +1660,7 @@ export default class PgGui {
     }
 
     const visibility = (visible: boolean) => {
-      console.log("watchAI visibility:", visible);
+      //console.log("watchAI visibility:", visible);
       Object.values(this.watchAI).forEach((obj) => {
         if (obj && typeof obj === "object" && "isVisible" in obj) {
           obj.isVisible = visible;

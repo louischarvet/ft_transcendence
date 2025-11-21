@@ -95,13 +95,13 @@ export default class BjCard {
   }
 
   async resetDeck() {
-    console.log(`[BjCard] resetDeck called - Deck: ${this.Deck.length}, DiscardTray: ${this.DiscardTray.length}, Cards: ${this.Cards.length}`);
+    //console.log(`[BjCard] resetDeck called - Deck: ${this.Deck.length}, DiscardTray: ${this.DiscardTray.length}, Cards: ${this.Cards.length}`);
 
     // Attendre que toutes les cartes soient chargées (4 decks × 52 cartes = 208 cartes)
     const expectedCards = 208;
     let waitTime = 0;
     while (this.Cards.length < expectedCards && waitTime < 10000) {
-      console.log(`[BjCard] Waiting for cards to load... ${this.Cards.length}/${expectedCards}`);
+      //console.log(`[BjCard] Waiting for cards to load... ${this.Cards.length}/${expectedCards}`);
       await this.delay(100);
       waitTime += 100;
     }
@@ -109,21 +109,21 @@ export default class BjCard {
     if (this.Cards.length < expectedCards) {
       console.warn(`[BjCard] Only ${this.Cards.length}/${expectedCards} cards loaded after ${waitTime}ms`);
     } else {
-      console.log(`[BjCard] All ${this.Cards.length} cards loaded!`);
+      //console.log(`[BjCard] All ${this.Cards.length} cards loaded!`);
     }
 
     const position = new Vector3(-0.5, 1.04, 0.15);
     const rotation = new Vector3(-Math.PI, 0, Math.PI / 3);
     const offset = new Vector3(-0.002, 0, 0);
 
-    console.log(`[BjCard] Before concat - Deck: ${this.Deck.length}, DiscardTray: ${this.DiscardTray.length}`);
+    //console.log(`[BjCard] Before concat - Deck: ${this.Deck.length}, DiscardTray: ${this.DiscardTray.length}`);
     let shuffledCards = this.Deck.concat(this.DiscardTray);
     if (!shuffledCards.length) {
-      console.log(`[BjCard] Using initial Cards array (${this.Cards.length} cards)`);
+      //console.log(`[BjCard] Using initial Cards array (${this.Cards.length} cards)`);
       shuffledCards = this.Cards.slice();
     }
 
-    console.log(`[BjCard] Shuffling ${shuffledCards.length} cards (expected: 208)`);
+    //console.log(`[BjCard] Shuffling ${shuffledCards.length} cards (expected: 208)`);
     for (let i = shuffledCards.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
@@ -136,7 +136,7 @@ export default class BjCard {
 
     // Assign immediately so deck is available during animation
     this.Deck = shuffledCards;
-    console.log(`[BjCard] Deck assigned with ${this.Deck.length} cards, starting animation...`);
+    //console.log(`[BjCard] Deck assigned with ${this.Deck.length} cards, starting animation...`);
 
     // Animate the deck stacking (visual only, doesn't affect gameplay)
     for (let i = this.Deck.length - 1; i >= 0; i--) {
@@ -153,7 +153,7 @@ export default class BjCard {
     }
 
     await this.delay(150);
-    console.log(`[BjCard] resetDeck completed - Deck now has ${this.Deck.length} cards`);
+    //console.log(`[BjCard] resetDeck completed - Deck now has ${this.Deck.length} cards`);
   }
 
   private initPlaces() {
@@ -237,7 +237,7 @@ export default class BjCard {
   private discardTrayPosition = new Vector3(0, 1, 0);
 
   cleanPlaces() {
-    console.log(`[BjCard] cleanPlaces called - Current DiscardTray size: ${this.DiscardTray.length}, Deck size: ${this.Deck.length}`);
+    //console.log(`[BjCard] cleanPlaces called - Current DiscardTray size: ${this.DiscardTray.length}, Deck size: ${this.Deck.length}`);
     let cardsCollected = 0;
 
     Object.values(this.Places).forEach(place => {
@@ -250,7 +250,7 @@ export default class BjCard {
       });
       place.cards = [];
     });
-    console.log(`[BjCard] cleanPlaces done - Collected ${cardsCollected} cards, DiscardTray now: ${this.DiscardTray.length}, Deck: ${this.Deck.length}, Total: ${this.DiscardTray.length + this.Deck.length}`);
+    //console.log(`[BjCard] cleanPlaces done - Collected ${cardsCollected} cards, DiscardTray now: ${this.DiscardTray.length}, Deck: ${this.Deck.length}, Total: ${this.DiscardTray.length + this.Deck.length}`);
   }
 
   async dealPlace(cardName: string, placeName: string) {
@@ -260,7 +260,7 @@ export default class BjCard {
       return;
     }
 
-    console.log(`[BjCard] dealPlace called for ${cardName} to ${placeName}, Deck size: ${this.Deck.length}`);
+    //console.log(`[BjCard] dealPlace called for ${cardName} to ${placeName}, Deck size: ${this.Deck.length}`);
 
     let waitCount = 0;
     while (!this.Deck.length) {
@@ -273,11 +273,11 @@ export default class BjCard {
     }
 
     if (waitCount > 0) {
-      console.log(`[BjCard] Had to wait ${waitCount * 10}ms for deck to be ready`);
+      //console.log(`[BjCard] Had to wait ${waitCount * 10}ms for deck to be ready`);
     }
 
     const card = this.Deck.shift()!;
-    console.log(`[BjCard] Dealing ${cardName}, remaining cards in deck: ${this.Deck.length}`);
+    //console.log(`[BjCard] Dealing ${cardName}, remaining cards in deck: ${this.Deck.length}`);
 
     const cardMaterial = this.CardsMaterials.find(mat => mat.name === cardName);
     if (!cardMaterial) {
@@ -293,11 +293,11 @@ export default class BjCard {
 
     let cardStack = place.cards;
 
-    console.log(`[BjCard] Dealing card to ${placeName}, cardStack.length = ${cardStack.length}`);
+    //console.log(`[BjCard] Dealing card to ${placeName}, cardStack.length = ${cardStack.length}`);
 
     // Utiliser la logique normale pour toutes les positions, y compris le dealer
     const offset = place.stackOffset.scale(cardStack.length);
-    console.log(`[BjCard] Offset for card ${cardStack.length}:`, offset);
+    //console.log(`[BjCard] Offset for card ${cardStack.length}:`, offset);
 
     if (placeName === 'dealer') {
       if (cardStack.length === 0) {
@@ -328,7 +328,7 @@ export default class BjCard {
     // Attendre que les cartes du dealer soient distribuées (max 2 secondes)
     let retries = 20;
     while ((!place.cards || place.cards.length < 1) && retries > 0) {
-      console.log('[BjCard] turnDealerCard: waiting for dealer cards...', place.cards);
+      //console.log('[BjCard] turnDealerCard: waiting for dealer cards...', place.cards);
       await this.delay(100);
       retries--;
     }
@@ -339,7 +339,7 @@ export default class BjCard {
       return;
     }
 
-    console.log('[BjCard] turnDealerCard: turning card', place.cards[0]);
+    //console.log('[BjCard] turnDealerCard: turning card', place.cards[0]);
     // Retourner la première carte (index 0) qui est face cachée
     if (place.cards[0] && place.cards[0].mesh[0])
       this.moveCard(place.cards[0], place.cards[0].mesh[0].position, place.rotation, true);

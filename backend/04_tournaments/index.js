@@ -37,7 +37,7 @@ fastify.register(shutdownPlugin);
 async function start() {
 	try {
 		const address = await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log(`Server listening on ${address}`);
+		//console.log(`Server listening on ${address}`);
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

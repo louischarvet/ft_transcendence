@@ -124,7 +124,7 @@ export default function Profile(): HTMLElement {
 
 		try {
 			const res = await updateAvatar(file);
-			console.log("res", res);
+			//console.log("res", res);
 			//avatarImg.src = `/user/${res.picture}`;
       popUpAlert("Confirm", "Avatar updated successfully!");
 			navigate('/profil');
@@ -151,7 +151,7 @@ export default function Profile(): HTMLElement {
         updateInfo(password, 'email', newEmail)
           .then((res) => {
             popUpAlert("Confirm", "Email updated successfully!");
-            console.log('Update response:', res);
+            //console.log('Update response:', res);
             navigate('/profil');
           })
           .catch(err => {
@@ -172,7 +172,7 @@ export default function Profile(): HTMLElement {
         updateInfo(oldPassword, 'password', newPassword)
           .then((res) => {
             popUpAlert("Confirm", "Password updated successfully!");
-            console.log('Update response:', res);
+            //console.log('Update response:', res);
           })
           .catch(err => {
             popUpAlert("Error", "Error changing password");
@@ -203,7 +203,7 @@ export default function Profile(): HTMLElement {
         if (!response.ok) throw new Error('Failed to delete account');
 
           
-        console.log('Account deleted successfully!');
+        //console.log('Account deleted successfully!');
         navigate('/'); // Retour à la home
       } catch (err) {
         console.error(err);
@@ -221,7 +221,7 @@ export default function Profile(): HTMLElement {
 					// Supprimer les infos d'utilisateur
 					localStorage.removeItem("token");
 					localStorage.removeItem("user");
-					console.log("go to logout");
+					//console.log("go to logout");
 					navigate("/");
 				} else
           popUpAlert("Error", "Error during disconnection");

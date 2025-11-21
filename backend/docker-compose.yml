@@ -40,6 +40,9 @@ services:
       - PORT=3000
     networks:
       - transcendence-net
+    depends_on:
+      twofa-service:
+        condition: service_healthy
     restart: unless-stopped
 
   proxy-service:
