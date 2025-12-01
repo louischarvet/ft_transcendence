@@ -1,6 +1,6 @@
 // src/tools/DeletePopup.ts
 import { navigate } from '../router';
-import { getUserByToken , deleteUser} from './APIStorageManager'
+import {  deleteUser, getUser} from './APIStorageManager'
 export function createDeleteAccount(onConfirm: (email: string, password: string) => void): HTMLElement {
   const overlay = document.createElement('div');
   overlay.className = `
@@ -63,13 +63,8 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
 
   let currentEmail = '';
 
-  getUserByToken().then((response) =>{
-    if (!response || !response.user){
-      return;
-    }
-    const user = response.user;
+    const user = getUser();
     currentEmail = user.email;
-  });
 
   confirmBtn.onclick = () => {
     const email = emailInput.value.trim();
@@ -103,7 +98,7 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
   `;
   cancelBtn.onclick = () => overlay.remove();
 
-  buttonWrapper.appendChild(confirmBtn);
+  buttonWrapper.appendChild(confirmBtn);popup
   buttonWrapper.appendChild(cancelBtn);
   popup.appendChild(buttonWrapper);
 
@@ -114,8 +109,8 @@ export function createDeleteAccount(onConfirm: (email: string, password: string)
 function FinalConfirmation(email: string, password: string) {
   const overlay = document.createElement('div');
   overlay.className = `
-    fixed inset-0 bg-black/70 backdrop-blur-sm
-    flex justify-center items-center z-[60]
+    fixed inset-0 bg-black backdrop-blur-sm
+    flex justify-center items-center z-50
   `;
 
   const popup = document.createElement('div');
@@ -147,7 +142,7 @@ function FinalConfirmation(email: string, password: string) {
   yesBtn.onclick = () => {
     overlay.remove();
     deleteUser(password).then( (res) => {
-      console.log("Res of deleteUser");
+      //console.log("Res of deleteUser");
       if (!res){
         console.error('User delete failed');
         history.back();

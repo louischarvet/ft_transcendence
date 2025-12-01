@@ -20,6 +20,7 @@ export async function authenticateJWT(request, reply) {
 			error: 'Access token missing.'
 		});
 
+	////console.log("acces token ", accessToken);
     const authRes = await fetch('http://session-service:3000/authenticate', {
         method: 'GET',
         headers: {

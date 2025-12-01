@@ -17,15 +17,15 @@ import { initDB } from './database/db.js';
 import { prunePendingRegistered } from './cron/cronFunctions.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
 // CORS configuration
 fastify.register(fastifyCors, {
-    origin: true,
+    origin: 'https://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-	allowedHeaders: ["Content-Type", "Authorization"],
+	allowedHeaders: ["Content-Type", "Authorization", "Cross-Origin-Resource-Policy"],
 	credentials: true
 });
 
@@ -33,8 +33,11 @@ fastify.register(fastifyCors, {
 await fastify.register(fp(initDB));
 
 fastify.register(fastifyStatic, {
-	root: path.join(process.cwd(), 'pictures'),
+	root: path.join(import.meta.dirname, 'pictures'),
 	prefix: '/pictures/',
+	setHeaders: (res) => {
+    	res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  	}
 });
 
 await fastify.register(helmet, {
@@ -66,7 +69,7 @@ fastify.register(shutdownPlugin);
 async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log('User-service listening on port 3000');
+		////console.log('User-service listening on port 3000');
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

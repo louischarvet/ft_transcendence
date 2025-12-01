@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
-import { generateJWT, revokeJWT } from '../authentication/auth.js';
-import { sendCode } from '../authentication/twofa.js';
-import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 import fs from 'fs';
 import path from 'path';
+import { generateJWT, revokeJWT } from '../authentication/auth.js';
+import { sendCode } from '../authentication/twofa.js';
+import { fetchAbortMatch } from './fetchFunctions.js';
+import { checkNameFormat, checkEmailFormat, checkPasswordFormat } from '../common_tools/checkFormat.js';	
 
 const secureCookieOptions = {
 	httpOnly: true,
@@ -13,23 +14,22 @@ const secureCookieOptions = {
 
 async function clearCookies(reply) {
 	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
-	reply.clearCookie('accessToken', { ...secureCookieOptions, path: '/' })
 		.clearCookie('refreshToken', { ...secureCookieOptions, path: '/api/refresh' });
 }
 
 // rout POST /guest
 export async function createGuest(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const guests = await db.guest.getCol('id');
-	console.log("guests = ", guests);
+	////console.log("guests = ", guests);
 	const len = guests.length;
 	const newID = (len ? guests[len - 1].id + 1 : 1);
 	const name = "Guest" + newID;
 	const tmp = request.body.tmp;
 
-    await db.guest.insert({ name: name });
+	await db.guest.insert({ name: name });
 
-    const user = await db.guest.getByName(name);
+	const user = await db.guest.getByName(name);
 	user.verified = true;
 
 	await clearCookies(reply);
@@ -40,7 +40,7 @@ export async function createGuest(request, reply) {
 			...secureCookieOptions,
 			path :'/',
 			path :'/',
-			maxAge: 1800
+			maxAge: 60 * 15
 		})
 		.setCookie('refreshToken', refreshToken, {
 			...secureCookieOptions,
@@ -57,7 +57,7 @@ export async function createGuest(request, reply) {
 
 // route POST /register
 export async function register(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { name, password, email} = request.body;
 
 	if (!await checkNameFormat(name))
@@ -66,7 +66,7 @@ export async function register(request, reply) {
 	if (!await checkEmailFormat(email))
 		return reply.code(400).send({ error: 'Email format is incorrect. It must be a valid email address.' });
 
-    const exists = await db.registered.getByName(name);
+	const exists = await db.registered.getByName(name);
 	if (exists !== undefined)
 		return reply.code(409).send({ error: 'User already exists' });
 	
@@ -78,10 +78,8 @@ export async function register(request, reply) {
 		email: email,
 	});
 
-    const user = await db.registered.getByName(name);
+	const user = await db.registered.getByName(name);
 	delete user.hashedPassword;
-	delete user.email;
-	delete user.telephone;
 
 	const { accessToken } = await sendCode({
 		name: name,
@@ -89,7 +87,7 @@ export async function register(request, reply) {
 		id: user.id
 	});
 	
-    await db.registered.updateCol('status', name, 'pending');
+	await db.registered.updateCol('status', name, 'pending');
 
 	await clearCookies(reply);
 
@@ -107,59 +105,64 @@ export async function register(request, reply) {
 
 // route PUT /login
 export async function logIn(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { name, password, tmp } = request.body;
 
-    const exists = await db.registered.getByName(name);
+	const exists = await db.registered.getByName(name);
 
-	await clearCookies(reply);
+	// await clearCookies(reply);
 	
 	if (exists === undefined)
 		return reply.code(400).send({ error: 'User is not in the database' });
-	if (exists.status !== 'logged_out')
-		return reply.code(409).send({ error: 'User already logged in.' });
+
+//	await fetchAbortTournament(exists);
+//	await fetchAbortMatch(exists);
+	// abort Tournament
 
 	if (await bcrypt.compare(password, exists.hashedPassword)) {
-        await db.registered.updateCol('status', name, 'available');
+		await db.registered.updateCol('status', name, 'available');
 
-        const user = await db.registered.getByName(name);
+		const user = await db.registered.getByName(name);
 		delete user.hashedPassword;
-		delete user.email;
 		
 		user.verified = true;
-
-		const { accessToken, refreshToken } = await generateJWT(user);
-		const body = {
-			user: user,
-			message: 'User ' + name + ' available.',
-		};
-		return reply.code(201)
-			.setCookie('accessToken', accessToken, {
+		if (tmp === undefined || tmp === false) {
+			await clearCookies(reply);
+			
+			const { accessToken, refreshToken } = await generateJWT(user);
+			reply.setCookie('accessToken', accessToken, {
 				...secureCookieOptions,
-				maxAge: 60,
+				maxAge: 60 * 15,
 				path: '/'
 			})
 			.setCookie('refreshToken', refreshToken, {
 				...secureCookieOptions,
 				maxAge: 604800,
 				path: '/api/refresh'
-			})
-			.send(body);
+			});
+		}
+
+		const body = {
+			user: user,
+			message: 'User ' + name + ' available.',
+		};
+
+		return reply.code(201).send(body);
 	} else
 		return reply.code(444).send({ error: 'Bad password' });
 }
 
 // Route PUT /logout
 export async function logOut(request, reply) {
-    const { db } = request.server;
-    const { name, type } = request.user;
+	const { db } = request.server;
+	const { name, type } = request.user;
 	const revRes = await revokeJWT(request.cookies);
 	await clearCookies(reply);
 	if (revRes.status == 200) {
 		if (type == "guest")
-            await db.guest.delete(name);
+			await db.guest.delete(name);
 		else if (type == 'registered')
-            await db.registered.updateCol('status', name, 'logged_out');
+			await db.registered.updateCol('status', name, 'logged_out');
 		
 		return reply.code(201).send({ message: "Successfully logged out."});
 	} else
@@ -168,12 +171,12 @@ export async function logOut(request, reply) {
 
 // Route DELETE /delete
 export async function deleteUser(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { name, type } = request.user;
 
 	const { password} = request.body;
 
-    const exists = await db.registered.getByName(name);
+	const exists = await db.registered.getByName(name);
 	if (!exists)
 		return reply.code(400).send({ error: 'User is not in the database' });
 
@@ -184,9 +187,9 @@ export async function deleteUser(request, reply) {
 	const revRes = await revokeJWT(request.cookies);
 	if (revRes.status == 200) {
 		if (type == "guest")
-            await db.guest.delete(name);
-        else if (type == 'registered')
-            await db.registered.delete(name);
+			await db.guest.delete(name);
+		else if (type == 'registered')
+			await db.registered.delete(name);
 
 		await clearCookies(reply);
 
@@ -199,11 +202,28 @@ export async function deleteUser(request, reply) {
 	}
 }
 
+// Route DELETE /deleteGuest pour tournament
+export async function deleteGuest(request, reply) {
+	const { db } = request.server;
+	const { id} = request.body;
+
+	const exists = await db.guest.getById(id);
+	if (!exists)
+		return reply.code(400).send({ error: 'User is not in the database' });
+
+	//console.log("joueru a supprimer : ",exists);
+	await db.guest.delete(exists.name);
+
+	return reply.code(200).send({
+		message: "User successfully deleted."
+	});
+}
+
 // Route PUT /update
 export async function updateInfo(request, reply) {
-    const { db } = request.server;
-    const { name } = request.user;
-    const currentUser = await db.registered.getByName(name);
+	const { db } = request.server;
+	const { name } = request.user;
+	const currentUser = await db.registered.getByName(name);
 	if (!currentUser)
 		return reply.code(401).send( { error : 'User not Authentified'});
 		
@@ -235,7 +255,7 @@ export async function updateInfo(request, reply) {
 		valueToUpdate = newValue;
 	}
 
-    const updatedUser = await db.registered.updateCol(columnToUpdate, name, valueToUpdate);
+	const updatedUser = await db.registered.updateCol(columnToUpdate, name, valueToUpdate);
 	if (updatedUser)
 		delete updatedUser.hashedPassword;
 
@@ -247,9 +267,14 @@ export async function updateInfo(request, reply) {
 
 // Route PUT /updateAvatar
 export async function updateAvatar(request, reply) {
-    const { db } = request.server;
-    const { name } = request.user;
-    const user = await db.registered.getByName(name);
+	const { db } = request.server;
+	const { name } = request.user;
+
+	let user;
+	if (request.user.type == 'guest')
+		user = await db.guest.getByName(name);
+	else if (request.user.type == 'registered')
+		user = await db.registered.getByName(name);
 
 	if (!user)
 		return reply.code(400).send({ error: 'Unauthorized' });
@@ -262,18 +287,20 @@ export async function updateAvatar(request, reply) {
 	if (!fs.existsSync(uploadDir))
 		fs.mkdirSync(uploadDir, { recursive: true });
 
-	if (user.picture && fs.existsSync(user.picture))
+	if (user.picture && fs.existsSync(user.picture) && user.picture !== './pictures/BG.webp')
 		fs.unlinkSync(user.picture);
 
 	const ext = path.extname(data.filename);
+
 	const fileName = `avatar_${user.id}_${Date.now()}${ext}`;
 	const filePath = path.join(uploadDir, fileName);
 
 	const buffer = await data.toBuffer();
 	fs.writeFileSync(filePath, buffer);
 
-	const relativePath = `/pictures/${fileName}`;
-    await db.registered.updateCol('picture', name, relativePath);
+	const relativePath = `pictures/${fileName}`;
+	await db[request.user.type].updateCol('picture', name, relativePath);
+
 	
 	return reply.code(200).send({
 		message: 'Avatar updated successfully',
@@ -283,15 +310,15 @@ export async function updateAvatar(request, reply) {
 
 // Route GET /id
 export	async function getUserByIdToken(request, reply){
-    const { db } = request.server;
+	const { db } = request.server;
 	const { id, type } = request.user;
 
-    let userInfos;
-    if (type == 'guest')
-        userInfos = await db.guest.getById(id);
-    else if (type == 'registered')
-        userInfos = await db.registered.getById(id);
-        
+	let userInfos;
+	if (type == 'guest')
+		userInfos = await db.guest.getById(id);
+	else if (type == 'registered')
+		userInfos = await db.registered.getById(id);
+		
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 	delete userInfos.hashedPassword;
@@ -303,27 +330,31 @@ export	async function getUserByIdToken(request, reply){
 
 // Route GET /:id
 export	async function getUserById(request, reply){
-    const { db } = request.server;
+	const { db } = request.server;
 	const user = request.params;
+	const { type } = request.body;
 	if (!user)
 		return reply.code(400).send({ error : 'Need param'});
 
 	const userId = request.params.id;
 	if (!userId)
 		return reply.code(400).send({ error : 'Id of user required'});
-
-    let userInfos;
-    if (type == 'guest')
-        userInfos = await db.guest.getById(id);
-    else if (type == 'registered')
-        userInfos = await db.registered.getById(id);
-
+	let userInfos;
+	//console.log('type', type);
+	if (type === 'ia') {
+		userInfos = {
+			id: 0,
+			type: 'ia',
+			name: 'normalAI'
+		};
+	} else{
+		userInfos = await db[type].getById(userId);
+		//console.log('userInfos', userInfos);
+	}
 	if (!userInfos)
 		return reply.code(404).send({ error : 'User not found'});
 
 	delete userInfos.hashedPassword;
-	delete userInfos.email;
-	delete userInfos.friends;
 
 	return reply.code(200).send({
 		user: userInfos
@@ -332,7 +363,7 @@ export	async function getUserById(request, reply){
 
 // Route POST /addfriend/(name)
 export async function addFriend(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const currentUser = request.user;
 	if(request.params.friendName.length > 64)
 		return reply.code(401).send({ error: 'Invalid name' });
@@ -340,17 +371,18 @@ export async function addFriend(request, reply) {
 	if (currentUser.type !== 'registered')
 		return reply.code(400).send({ error: 'Only registered users can add friends' });
 	
-    const user = await db.registered.getByName(currentUser.name);
+	const user = await db.registered.getByName(currentUser.name);
 	if (!user) 
 		return reply.code(400).send({ error: 'User not found' });
 
 	const { friendName } = request.params;
 	if (friendName === undefined)
 		return reply.code(400).send({ error: 'friendName is missing' });
+	//console.log("friendName", friendName);
 
-    const friend = await db.registered.getByName(friendName);
+	const friend = await db.registered.getByName(friendName);
 	if (!friend)
-		return reply.code(404).send({ error: 'Username not found' });
+		return reply.code(400).send({ error: 'Username not found' });
 
 	
 	let friendListString = user.friends || "";
@@ -361,54 +393,54 @@ export async function addFriend(request, reply) {
 
 	const val = friendListString + friend.id + ";";
 
-    const updatedUser = await db.registered.updateCol('friends', user.name, val);
+	const updatedUser = await db.registered.updateCol('friends', user.name, val);
 
 	delete friend.hashedPassword;
-	delete friend.type;
 	delete friend.friends;
 
-	// renvoyer le profil user mis a jour!
-    return reply.code(200).send({user: updatedUser, newFriend : friend,  message: `Friend ${friendName} added.` });
+	return reply.code(200).send({user: updatedUser, newFriend : friend,  message: `Friend ${friendName} added.` });
 }
 
-// Route GET pour recuperer les profiles des amis
+// Route GET /getfriendsprofiles
 export async function getFriendsProfiles(request, reply) {
-    const { db } = request.server;
-    const user = db.registered.getById(request.user.id);
+	const { db } = request.server;
+	const user = await db.registered.getById(request.user.id);
+
 	const { friends } = user;
 	if (friends === undefined || friends === null)
 		return reply.code(204).send({ friends: [], message: "User has no friends" });
-	else {
-		const friendsIDs = await friends.split(';').filter(p => p);
-		let friendsProfiles = new Array();
-		for (let i = 0, n = friendsIDs.length; i < n; i++) {
-            friendsProfiles[i] = await db.registered.getById(friendsIDs[i]);
-			if(!friendsProfiles[i])
-				continue;
-			delete friendsProfiles[i].hashedPassword;
-			delete friendsProfiles[i].email;
-			
-			if (friendsProfiles[i] === undefined)
-				return reply.code(400).send({ error: 'Bad friend ID.' });
-		}
-		return reply.code(200).send({
-			friends: friendsProfiles,
-			message: 'Friends profiles.'
-		});
+
+	const friendsIDs = await friends.split(';').filter(p => p);
+
+	let friendsProfiles = [];
+
+	for (let id of friendsIDs) {
+		const profile = await db.registered.getById(id);
+		if (!profile)
+			continue;
+
+		delete profile.hashedPassword;
+		delete profile.email;
+
+		friendsProfiles.push(profile);
 	}
+	return reply.code(200).send({
+		friends: friendsProfiles,
+		message: 'Friends profiles.'
+	});
 }
 
 export async function deleteFriend(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const friendId = request.body.id;
 	if (!friendId)
 		return reply.code(400).send({ error: 'Need friend id to delete' });
 
-    const friend = await db.registered.getById(friendId);
+	const friend = await db.registered.getById(friendId);
 	if (!friend)
 		return reply.code(404).send({ error: 'Friend user not found' });
 
-    const user = await db.registered.getById(request.user.id);
+	const user = await db.registered.getById(request.user.id);
 	if (!user)
 		return reply.code(401).send({ error: 'User not authenticated' });
 
@@ -423,7 +455,7 @@ export async function deleteFriend(request, reply) {
 
 	const newFriendList = friendList.filter(id => id !== String(friend.id));
 
-    await db.registered.updateCol('friends', user.name, newFriendList.join(";"));
+	await db.registered.updateCol('friends', user.name, newFriendList.join(";"));
 
 	return reply.code(200).send({
 		friends: newFriendList,
@@ -433,9 +465,9 @@ export async function deleteFriend(request, reply) {
 
 // Route GET /find/:name/status
 export async function getUserStatus(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { name } = request.params;
-    const user = await db.registered.getByName(name);
+	const user = await db.registered.getByName(name);
 
 	if (!user)
 		return reply.code(404).send({ error: 'User not found' });
@@ -445,18 +477,18 @@ export async function getUserStatus(request, reply) {
 
 // Route PUT /changestatus
 export async function changeStatus(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { name, status, type } = request.body;
 	if (name === undefined)
 		return reply.code(400).send({ error: 'Name is required' });
 	if (status === undefined)
 		return reply.code(400).send({ error: 'Status is required' });
 	
-    let user;
-    if (type == 'guest')
-        user = await db.guest.updateCol('status', name, status);
-    else if (type == 'registered')
-        user = await db.registered.updateCol('status', name, status);
+	let user;
+	if (type == 'guest')
+		user = await db.guest.updateCol('status', name, status);
+	else if (type == 'registered')
+		user = await db.registered.updateCol('status', name, status);
 
 	delete user.hashedPassword;
 	delete user.telephone;
@@ -467,8 +499,37 @@ export async function changeStatus(request, reply) {
 	});
 }
 
+// Route PUT /updatewallet - Pour mettre à jour le wallet depuis les services de jeu
+export async function updateWallet(request, reply) {
+	const { db } = request.server;
+	const { name, wallet, type } = request.body;
+	if (name === undefined)
+		return reply.code(400).send({ error: 'Name is required' });
+	if (wallet === undefined)
+		return reply.code(400).send({ error: 'Wallet is required' });
+	if (type === undefined)
+		return reply.code(400).send({ error: 'Type is required' });
+
+	let user;
+	if (type == 'guest')
+		user = await db.guest.updateCol('wallet', name, wallet);
+	else if (type == 'registered')
+		user = await db.registered.updateCol('wallet', name, wallet);
+
+	if (!user)
+		return reply.code(404).send({ error: 'User not found' });
+
+	delete user.hashedPassword;
+	delete user.telephone;
+	delete user.email;
+	return reply.code(200).send({
+		user: user,
+		message : 'Wallet updated!',
+	});
+}
+
 export async function updateStats(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const { p1_id, p1_type, p2_id, p2_type, winner_id } = request.body;
 
 	let winner_type, loser_id, loser_type;
@@ -483,41 +544,41 @@ export async function updateStats(request, reply) {
 	}
 
 	if (winner_id > 0) {
-        if (winner_type == 'guest')
-            await db.guest.updateStatsW(winner_type, winner_id);
-        else if (winner_type == 'registered')
-            await db.registered.updateStatsW(winner_type, winner_id);
-    }
+		if (winner_type == 'guest')
+			await db.guest.updateStatsW(winner_id);
+		else if (winner_type == 'registered')
+			await db.registered.updateStatsW(winner_id);
+	}
 
 	if (loser_id > 0) {
-       if (loser_type == 'guest')
-            await db.guest.updateStatsL(loser_type, loser_id);
-        else if (loser_type == 'registered')
-            await db.registered.updateStatsL(loser_type, loser_id);
-    }
+	   if (loser_type == 'guest')
+			await db.guest.updateStatsL(loser_id);
+		else if (loser_type == 'registered')
+			await db.registered.updateStatsL(loser_id);
+	}
 
-    let user1, user2;
-    if (p1_type == 'guest')
-        user1 = await db.guest.getById(p1_id);
-    else if (p1_type == 'registered')
-        user1 = await db.registered.getById(p1_id);
-    else {
-        user1 = {
-            id: 0,
-            type: 'ia'
-        };
-    }
+	let user1, user2;
+	if (p1_type == 'guest')
+		user1 = await db.guest.getById(p1_id);
+	else if (p1_type == 'registered')
+		user1 = await db.registered.getById(p1_id);
+	else {
+		user1 = {
+			id: 0,
+			type: 'ia'
+		};
+	}
 
-    if (p2_type == 'guest')
-        user1 = await db.guest.getById(p2_id);
-    else if (p2_type == 'registered')
-        user2 = await db.registered.getById(p2_id);
-    else {
-        user2 = {
-            id: 0,
-            type: 'ia'
-        };
-    }
+	if (p2_type == 'guest')
+		user2 = await db.guest.getById(p2_id);
+	else if (p2_type == 'registered')
+		user2 = await db.registered.getById(p2_id);
+	else {
+		user2 = {
+			id: 0,
+			type: 'ia'
+		};
+	}
 
 	delete user1.hashedPassword;
 	delete user2.hashedPassword;
@@ -535,7 +596,7 @@ export async function updateStats(request, reply) {
 
 // Route GET / tournament
 export async function getUsersTournament(request, reply) {
-    const { db } = request.server;
+	const { db } = request.server;
 	const listUsers = request.body.ArrayIdAndType;
 	if (!listUsers || listUsers.length === 0)
 		return reply.code(400).send({ error: 'List of users is required' });
@@ -550,11 +611,10 @@ export async function getUsersTournament(request, reply) {
 		else
 			return reply.code(400).send({ error: 'Type of user is not correct' });
 	};
-    const usersInfos = await db.tournament.getUsers(listLogin, listGuests);
+	const usersInfos = await db.tournament.getUsers(listLogin, listGuests);
 	if (!usersInfos || usersInfos.length === 0)
 		return reply.code(404).send({ error: 'Users not found' });
 
-	console.log("usersInfosin in fetchUserTournament : ", usersInfos);
 	usersInfos.registered.forEach(u => {
 		delete u.hashedPassword;
 		delete u.email;
@@ -568,7 +628,7 @@ export async function getUsersTournament(request, reply) {
 
 
 	return reply.code(200).send({
-		users: JSON.stringify(usersInfos),
+		users: usersInfos,
 		message: 'Users found'
 	});
 }

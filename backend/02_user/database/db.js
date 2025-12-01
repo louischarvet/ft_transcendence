@@ -3,6 +3,9 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 
+//pour creer les users de base
+import bcrypt from 'bcrypt'; 
+
 const dbFile = '/usr/src/app/data/users_db';
 
 async function getDB() {
@@ -82,6 +85,7 @@ export async function initDB(fastify) {
 			));
 		},
 		async updateCol(col, name, value) {
+
 			await db.run(
 				`UPDATE ${this.table} SET ${col} = ? WHERE name = ?`,
 				[ value, name ]
@@ -101,7 +105,7 @@ export async function initDB(fastify) {
 			const win_rate = (match_wins / played_matches) * 100;
 			await db.run(
 				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
-				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				played_matches = ?,	win_rate = ? , wallet = (wallet + 50) WHERE id = ?`,
 				[ match_wins, played_matches, win_rate, id ]
 			);
 		},
@@ -174,7 +178,7 @@ export async function initDB(fastify) {
 			const win_rate = (match_wins / played_matches) * 100;
 			await db.run(
 				`UPDATE ${this.table} SET match_wins = ?, wins_streak = (wins_streak + 1),
-				played_matches = ?,	win_rate = ? WHERE id = ?`,
+				played_matches = ?,	win_rate = ? , wallet = (wallet + 50) WHERE id = ?`,
 				[ match_wins, played_matches, win_rate, id ]
 			);
 		},
@@ -206,14 +210,38 @@ export async function initDB(fastify) {
 	db.tournament = {
 		async getUsers(listLogin, listGuests) {
 			const registered = await db.all(
-				`SELECT win_rate , id , type FROM registered WHERE id IN (${listLogin.join(',')})`
+				`SELECT win_rate , id , type , name FROM registered WHERE id IN (${listLogin.join(',')})`
 			);
 			const guests = await db.all(
-				`SELECT win_rate , id , type FROM guest WHERE id IN (${listGuests.join(',')})`
+				`SELECT win_rate , id , type , name FROM guest WHERE id IN (${listGuests.join(',')})`
 			);
 			return { registered, guests };
 		},
 	};
+
+	/*******************/
+	/* USER REGISTERED */
+	/*******************/
+	const defaultUsers = [
+		{ name: "Louis", email: "trijaudnathan@gmail.com" },
+		{ name: "Yan", email: "trijaudnathan@gmail.com" },
+		{ name: "Nathan", email: "trijaudnathan@gmail.com" },
+		{ name: "Baptiste", email: "trijaudnathan@gmail.com" }
+	];
+
+
+	for (const user of defaultUsers) {
+		const exists = await db.get(`SELECT id FROM registered WHERE name = ?`, [user.name]);
+
+		if (!exists) {
+			const hashedPassword = await bcrypt.hash("password123", 10);
+			await db.run(
+				`INSERT INTO registered (name, hashedPassword, email, picture)
+				VALUES (?, ?, ?, "./pictures/BG.webp")`,
+				[user.name, hashedPassword, user.email]
+			);
+		}
+	}
 
     await fastify.decorate('db', db);
 

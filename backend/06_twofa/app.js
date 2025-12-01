@@ -13,11 +13,10 @@ import shutdown from './common_tools/shutdown.js';
 
 await config();
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 fastify.register(cookie);
 
-// CORS configuration
 fastify.register(fastifyCors, {
 	origin: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -52,7 +51,7 @@ fastify.register(shutdown);
 async function start() {
 	try {
 		await fastify.listen({ port: 3000, host: `0.0.0.0` });
-		console.log('2fa-service listening on port 3000');
+		//console.log('2fa-service listening on port 3000');
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

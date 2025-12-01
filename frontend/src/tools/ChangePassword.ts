@@ -37,7 +37,7 @@ export function createChangePassword(onConfirm: (oldPassword: string, newPasswor
 
   // === Inputs ===
   
-  const oldpassInput = createInput('oldpass', 'Enter your actual password');
+  const oldpassInput = createInput('password', 'Enter your actual password');
   const passInput = createInput('password', 'Enter your new password');
   const confirmPassInput = createInput('password', 'Confirm your new password');
   popup.appendChild(oldpassInput);

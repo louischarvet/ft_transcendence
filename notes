@@ -167,3 +167,18 @@ NEW TODO
 DONE	Si pas accetoken dans requete faire reply 401
 DONE	Si pas de refreshToken dans /session/refresh, renvoyer 403
 DONE	Mot de passe incorect (code d'erreur specifique) ->> 444
+
+
+
+
+
+
+
+
+
+
+
+
+user-service        | {"level":50,"time":1762253647060,"pid":1,"hostname":"feb276c2f511","reqId":"req-7","req":{"method":"PUT","url":"/updatestats","hostname":"user-service:3000","remoteAddress":"172.18.0.7","remotePort":58756},"res":{"statusCode":500},"err":{"type":"TypeError","message":"Cannot destructure property 'played_matches' of '(intermediate value)' as it is undefined.","stack":"TypeError: Cannot destructure property 'played_matches' of '(intermediate value)' as it is undefined.\n    at Object.updateStatsW (file:///usr/src/app/database/db.js:168:10)\n    at async Object.updateStats (file:///usr/src/app/controllers/controllers.js:497:13)"},"msg":"Cannot destructure property 'played_matches' of '(intermediate value)' as it is undefined."}
+user-service        | {"level":30,"time":1762253647060,"pid":1,"hostname":"feb276c2f511","reqId":"req-7","res":{"statusCode":500},"responseTime":0.8324129581451416,"msg":"request completed"}
+match-service       | {"level":50,"time":1762253647061,"pid":1,"hostname":"4c6774bad544","reqId":"req-5","req":{"method":"PUT","url":"/finish","hostname":"match-service:3000","remoteAddress":"172.18.0.4","remotePort":35756},"res":{"statusCode":500},"err":{"type":"TypeError","message":"Cannot read properties of undefined (reading 'name')","stack":"TypeError: Cannot read properties of undefined (reading 'name')\n    at fetchChangeStatus (file:///usr/src/app/controllers/fetchFunctions.js:6:22)\n    at Object.finish (file:///usr/src/app/controllers/controllers.js:130:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)"},"msg":"Cannot read properties of undefined (reading 'name')"}

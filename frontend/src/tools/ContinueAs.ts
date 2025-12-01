@@ -1,11 +1,7 @@
 import { navigate } from '../router';
-import { asGuest , checkConnection } from "./APIStorageManager";
+import { asGuest } from "./APIStorageManager";
 
 export default function ContinueAs() {
-	checkConnection().then((connected) => {
-		if (connected)
-			navigate('/select-game');
-	});
     const wrapper = document.createElement('div');
     wrapper.className =
         'flex flex-col justify-center items-center gap-4 p-8 sm:p-16 bg-[#0000000e] rounded-xl backdrop-blur-2xl w-full max-w-md mx-auto';
@@ -22,15 +18,13 @@ export default function ContinueAs() {
     guestButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all';
     guestButton.onclick = () => {
-        console.log('Continue as Guest');
+        //console.log('Continue as Guest');
 		asGuest(false)
 			.then( res => {
-				alert('Connecting guest successfully!');
 				navigate('/select-game');
 			})
 			.catch( (err) => {
-				alert('Error connecting guest.');
-				console.log('Guest connection:', err);
+				//console.log('Guest connection:', err);
 			})
     };
     wrapper.appendChild(guestButton);
@@ -49,7 +43,7 @@ export default function ContinueAs() {
     loginButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all';
     loginButton.onclick = () => {
-        console.log('Go to Login');
+        //console.log('Go to Login');
         navigate('/login');
     };
     wrapper.appendChild(loginButton);
@@ -59,7 +53,7 @@ export default function ContinueAs() {
     registerButton.className =
         'bg-[#646cff] text-white font-bold rounded-full h-12 sm:h-[60px] w-full sm:w-[200px] text-lg sm:text-2xl hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2] transition-all mt-2';
     registerButton.onclick = () => {
-        console.log('Go to Register');
+        //console.log('Go to Register');
         navigate('/register');
     };
     wrapper.appendChild(registerButton);

@@ -2,9 +2,15 @@ import { navigate } from '../router';
 import { createDeleteAccount } from '../tools/DeleteAccount';
 import { createChangePassword } from '../tools/ChangePassword';
 import { createChangeEmail } from '../tools/ChangeEmail';
-import { getUserByToken, updateInfo, getUser, Logout} from '../tools/APIStorageManager';
+import { updateInfo, getUser, Logout, updateAvatar, getUserById} from '../tools/APIStorageManager';
+import { popUpAlert } from '../tools/popup';
+
 export default function Profile(): HTMLElement {
 
+  if (!getUser()) {
+		navigate('/');
+		return document.createElement('div');
+  }
   
   const container = document.createElement('div');
   container.className = 'flex items-center justify-center h-screen bg-gray-300 text-black';
@@ -59,12 +65,12 @@ export default function Profile(): HTMLElement {
   const ratio = createStatCard('Ratio', '1.28');
   const gamesPlayed = createStatCard('Number of game played', '0');
   const wins = createStatCard('Number of victory', '0');
-  const bestStreak = createStatCard('Best win streak', '0');
+//  const bestStreak = createStatCard('Best win streak', '0');
   const wallet = createStatCard('Wallet', '0');
   const currentStreak = createStatCard('Current win streak', '0');
 
   // Ajout dans la grille
-  [ratio, gamesPlayed, wins, bestStreak, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
+  [ratio, gamesPlayed, wins, wallet, currentStreak].forEach(c => statsGrid.appendChild(c));
   statsSection.appendChild(statsGrid);
 
   // Section Profil utilisateur
@@ -73,19 +79,67 @@ export default function Profile(): HTMLElement {
 
   // Avatar
   const avatar = document.createElement('div');
-  avatar.className = 'flex items-center justify-center bg-black rounded-full w-[120px] h-[120px]';
-  const icon = document.createElement('span');
-  icon.textContent = '👤';
-  icon.className = 'text-3xl';
-  avatar.appendChild(icon);
+  avatar.className = 'relative flex items-center justify-center bg-black rounded-full w-[120px] h-[120px] overflow-hidden cursor-pointer group transition hover:scale-105 hover:shadow-xl';
   userSection.appendChild(avatar);
+
+	const currentUser = getUser();
+	if (!currentUser){
+    popUpAlert("Error", "User not found");
+		navigate('/');
+		localStorage.removeItem('user');
+		return container;
+	}
+  // Image reelle de l’avatar
+	const avatarImg = document.createElement('img');
+  	avatarImg.src = currentUser.picture ? `/user/${currentUser.picture}` : '/user/pictures/avatar_1.jpg';
+	avatarImg.alt = 'Avatar';
+	avatarImg.className = 'object-cover w-full h-full bg-red';
+	avatar.appendChild(avatarImg);
+
+	// Overlay de changement
+	const overlay = document.createElement('div');
+	overlay.textContent = 'Change';
+	overlay.className = `
+	absolute inset-0 bg-black/60 text-white text-sm font-semibold
+	flex items-center justify-center opacity-0 group-hover:opacity-100
+	transition-opacity duration-200
+	`;
+	avatar.appendChild(overlay);
+
+	// Input file caché
+	const fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.accept = 'image/*';
+	fileInput.className = 'hidden';
+	userSection.appendChild(fileInput);
+
+	// Au clique sur l'avatar --> ouvre le selecteur de fichier
+	avatar.onclick = () => fileInput.click();
+
+	// Quand un fichier est delectionné
+	fileInput.onchange = async (e) => {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (!file)
+			return;
+
+		try {
+			const res = await updateAvatar(file);
+			//console.log("res", res);
+			//avatarImg.src = `/user/${res.picture}`;
+      popUpAlert("Confirm", "Avatar updated successfully!");
+			navigate('/profil');
+		} catch (err) {
+			console.error('Erreur upload avatar :', err);
+      popUpAlert("Error", "Error uploading avatar");
+		}
+	};
 
   // Pseudo et email du player
   const username = document.createElement('h3');
-  username.textContent = 'Pseudo';
+  username.textContent = getUser().name;
   username.className = 'text-xl font-bold drop-shadow-[0_0_10px_rgba(0,0,0,0.9)]';
   const email = document.createElement('button');
-  email.textContent = 'email@example.com';
+  email.textContent = getUser().email;
   email.className = 'text-sm font-bold bg-green-500 rounded-lg w-[200px] hover:bg-green-600 py-2';
   userSection.appendChild(username);
   if (getUser().type !== 'guest'){
@@ -96,12 +150,12 @@ export default function Profile(): HTMLElement {
       const popup = createChangeEmail(async (password, newEmail) => {
         updateInfo(password, 'email', newEmail)
           .then((res) => {
-            alert('Email updated successfully!');
-            console.log('Update response:', res);
+            popUpAlert("Confirm", "Email updated successfully!");
+            //console.log('Update response:', res);
             navigate('/profil');
           })
           .catch(err => {
-            alert('Error changing email.');
+            popUpAlert("Error", "Error changing email");
             console.error(err);
           });
     });
@@ -117,11 +171,11 @@ export default function Profile(): HTMLElement {
       const popup = createChangePassword(async (oldPassword, newPassword) => {
         updateInfo(oldPassword, 'password', newPassword)
           .then((res) => {
-            alert('Password updated successfully!');
-            console.log('Update response:', res);
+            popUpAlert("Confirm", "Password updated successfully!");
+            //console.log('Update response:', res);
           })
           .catch(err => {
-            alert('Error changing password.');
+            popUpAlert("Error", "Error changing password");
             console.error(err);
           });
     });
@@ -141,7 +195,6 @@ export default function Profile(): HTMLElement {
    if (getUser().type !== 'guest'){
     const popup = createDeleteAccount(async () => {
       try {
-        // 👉 Exemple de requête DELETE vers ton backend :
         const response = await fetch('/api/user/delete', {
           method: 'DELETE',
           credentials: 'include',
@@ -150,11 +203,11 @@ export default function Profile(): HTMLElement {
         if (!response.ok) throw new Error('Failed to delete account');
 
           
-        console.log('Account deleted successfully!');
+        //console.log('Account deleted successfully!');
         navigate('/'); // Retour à la home
       } catch (err) {
         console.error(err);
-        alert('Error deleting account.');
+        popUpAlert("Error", "Error deleting account");
       }
     });
     // Affiche la popup par-dessus tout :
@@ -168,52 +221,54 @@ export default function Profile(): HTMLElement {
 					// Supprimer les infos d'utilisateur
 					localStorage.removeItem("token");
 					localStorage.removeItem("user");
-					console.log("go to logout");
+					//console.log("go to logout");
 					navigate("/");
 				} else
-					alert("Erreur lors de la déconnexion");
+          popUpAlert("Error", "Error during disconnection");
 			})
 			.catch((err) => {
 				console.error("Erreur de connexion au serveur :", err);
-				alert("Erreur lors de la déconnexion");
+        popUpAlert("Error", "Error during disconnection");
 			});
     } catch (err) {
         console.error(err);
-        alert('Error deleting account.');
+        popUpAlert("Error", "Error deleting account");
       }
   }
-  };
+  };currentStreak
 
   // Ajout des sections principales
   profileCard.appendChild(statsSection);
   profileCard.appendChild(userSection);
   container.appendChild(profileCard);
 
-  getUserByToken().then((response) => {
-	console.log("response =\n", response, "#####################");
-    if(!response || !response.user) {
-        navigate('/');
-		return ;
-	}
-	const user = response.user;
-    username.textContent = user.name;
-    email.textContent = user.email;
-    avatar.className = user.picture || './pictures/default.webp';
+	let user = getUser();
+	getUserById(user.id, user.type).then(res => {
+		user = res;
 
-    // --- Stats ---
-    ratio.querySelector('p:nth-child(2)')!.textContent =
-      user.win_rate?.toFixed(2) ?? '0.00';
-    gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
-      user.played_matches ?? '0';
-    wins.querySelector('p:nth-child(2)')!.textContent =
-      user.match_wins ?? '0';
-    bestStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.wins_streak ?? '0';
-    currentStreak.querySelector('p:nth-child(2)')!.textContent =
-      user.currentStreak ?? '0';
-    wallet.querySelector('p:nth-child(2)')!.textContent =
-      `${user.wallet ?? 0} 🪙`;
-  })
+		if (!user) return;
+		
+		username.textContent = user.name;
+		email.textContent = user.email;
+		
+		//avatar.className = user.picture || './pictures/default.webp';
+
+		// --- Stats ---
+		ratio.querySelector('p:nth-child(2)')!.textContent =
+		user.win_rate?.toFixed(2) ?? '0.00';
+		gamesPlayed.querySelector('p:nth-child(2)')!.textContent =
+		user.played_matches ?? '0';
+		wins.querySelector('p:nth-child(2)')!.textContent =
+		user.match_wins ?? '0';
+	//	bestStreak.querySelector('p:nth-child(2)')!.textContent =
+//		user.wins_streak ?? '0';
+		currentStreak.querySelector('p:nth-child(2)')!.textContent =
+		user.wins_streak ?? '0';
+		wallet.querySelector('p:nth-child(2)')!.textContent =
+		`${user.wallet ?? 0} 🪙`;
+	});
+
+	avatarImg.src = user.picture ? `/user/${user.picture}` : '/user/pictures/avatar_1.jpg';
 
   return container;
 }

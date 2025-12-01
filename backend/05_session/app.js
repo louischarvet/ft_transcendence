@@ -13,16 +13,14 @@ import { generateSchema } from './schema/generateSchema.js';
 import { pruneRevokedAccess } from './cron/cron.js';
 import shutdownPlugin from './common_tools/shutdown.js';
 
-// generer secret-key !!!
 const secretKey = (speakeasy.generateSecret({ length: 20 })).base32;
 
-
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: false });
 
 // CORS configuration
 fastify.register(fastifyCors, {
-	origin: true, // Réfléchit le domaine de la requête
-	methods: ['GET', 'POST', 'DELETE'], // Méthodes HTTP autorisées
+	origin: true,
+	methods: ['GET', 'POST', 'DELETE'],
 	allowedHeaders: ["Content-Type", "Authorization"],
 	credentials: true
 });
@@ -59,7 +57,7 @@ fastify.register(shutdownPlugin);
 const start = async () => {
     try {
         await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log('Session-service listening on port 3000');
+		//console.log('Session-service listening on port 3000');
     } catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

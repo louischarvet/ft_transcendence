@@ -1,18 +1,14 @@
 import { navigate } from "../router";
-import { checkConnection, verifyTwoFactorCode, getUser, getTokenAcces} from "./APIStorageManager";
+import { checkConnection, verifyTwoFactorCode, getUser} from "./APIStorageManager";
 
 export default function TwofaVerification(): HTMLElement {
-  checkConnection().then((connected) => {
-    if (connected){
-      console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
-      navigate('/select-game');
-    }
-  });
-
-  if (!getUser() || !getTokenAcces()){
-    console.log("sort ici car par d'user en localstorage || pas de token access");
-    navigate('/');
-  }
+  // checkConnection().then((connected) => {
+  //   if (connected){
+  //     //console.log("sort ici car par d'user en localstorage && token refreshToken deja present");
+  //     navigate('/select-game');
+	// 		return;
+  //   }
+  // });
 
   let code: string = '';
   
@@ -34,11 +30,15 @@ export default function TwofaVerification(): HTMLElement {
   }
   wrapper.appendChild(input);
 
+  const errorMsg = document.createElement('p');
+  errorMsg.className = 'text-red-500 font-semibold';
+  wrapper.appendChild(errorMsg);
+
   const verifyButton = document.createElement('button');
   verifyButton.textContent = 'Verify code';
   verifyButton.className = 'bg-[#646cff] text-white rounded-full h-[35px] w-[90px] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
-  verifyButton.onclick = () => {
-  console.log('2FA Verification:', code);
+  verifyButton.onclick = async () => {
+  //console.log('2FA Verification:', code);
 
   
 		if (!code) {
@@ -48,8 +48,10 @@ export default function TwofaVerification(): HTMLElement {
 		}
 		verifyTwoFactorCode(code).then( (res) => {
 			if (!res){
-				console.error('2FA verification failed');
-				history.back();
+				errorMsg.textContent = 'Invalid 2FA code. Try again.';
+				input.value = '';
+				code = '';
+				input.focus();
 				return;
 			}
 			else

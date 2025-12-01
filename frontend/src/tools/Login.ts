@@ -1,5 +1,7 @@
 import { navigate } from "../router";
-import { checkConnection, login} from "./APIStorageManager";
+import {login} from "./APIStorageManager";
+import { popUpAlert } from "./popup";
+
 
 export default function Login(): HTMLElement {
 
@@ -11,7 +13,7 @@ export default function Login(): HTMLElement {
 	const title = document.createElement('h2');
 	title.textContent = 'Login';
 	title.className = 'text-4xl font-bold text-white';
-	title.onclick = () => navigate('/select-game'); // Retour à la home
+	title.onclick = () => navigate('/select-game');
 
 	wrapper.appendChild(title);
 
@@ -37,26 +39,16 @@ export default function Login(): HTMLElement {
 	loginButton.textContent = 'Login';
 	loginButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
 	loginButton.onclick = () => {
-		console.log('Login Form:', form);
+		// //console.log('Login Form:', form);
 
 		if (!form.name || !form.password){
-			alert("Name and password required");
+			popUpAlert("Error", "Name and password required");
 			return;
 		}
 
-		if (form.password.length < 8) {
-			alert("Password must be at least 8 characters long");
-			return;
-		}
-		if (!/[0-9]/.test(form.password)) {
-			alert("Password must contain a number");
-			return;
-		}
-		
 		login(form.name, form.password).then( (res) => {
 			if (!res.success){
-				alert(res.message);
-				console.error("Login failed:", res.message);
+				popUpAlert("Error", "Login failed");
 				navigate('/login');
 				return;
 			}
@@ -70,7 +62,7 @@ export default function Login(): HTMLElement {
 	registerButton.textContent = 'Or Register';
 	registerButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
 	registerButton.onclick = () => {
-		console.log('Register Form:', form);
+		// //console.log('Register Form:', form);
 		navigate('/register');
 	};
 	buttonsWrapper.appendChild(registerButton);

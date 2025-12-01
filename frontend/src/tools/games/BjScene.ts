@@ -152,6 +152,13 @@ export default class BjScene {
       "100": this.initCoinMaterials("100")
     };
 
+    // Initialiser le deck après le chargement des assets
+    this.assetsManager.onFinish = async (tasks) => {
+      //console.log('[BjScene] Assets loaded, initializing deck...');
+      await this.Cards.resetDeck();
+      //console.log('[BjScene] Deck ready!');
+    };
+
     this.assetsManager.load();
 
     const guiFunctions = {
@@ -161,7 +168,11 @@ export default class BjScene {
       getCoinAreaMesh: this.getCoinAreaMesh.bind(this),
       setCameraToPlace: this.setCameraToPlace.bind(this),
       setCoinMaterial: this.setCoinMaterial.bind(this),
-      hideCoinMesh: this.hideCoinMesh.bind(this)
+      hideCoinMesh: this.hideCoinMesh.bind(this),
+      resetPlaces: this.resetPlaces.bind(this),
+      resetDeck: this.Cards.resetDeck.bind(this.Cards),
+      dealPlace: this.Cards.dealPlace.bind(this.Cards),
+      turnDealerCard: this.Cards.turnDealerCard.bind(this.Cards)
     }
 
     this.gui = new BjGui(canvas.width, canvas.height, guiFunctions);
@@ -387,14 +398,8 @@ export default class BjScene {
       this.Places[place].meshes.ballMesh.material = this.transparentMat;
     });
 
-    await this.Cards.beginDealingCards(this.currentChoosenPlaces);
-    // this.scene.activeCamera = this.Places['p1'].camera!;
-    // this.gui.cardsInteractionsVisibility(true);
-    this.currentChoosenPlaces.forEach(place => {
-      this.Places[place].meshes.placeAreaMesh
-      this.gui.setPlaceCardsValue(place, "7/18");
-    });
-    this.gui.setPlaceCardsValue("dealers", "9/20");
+    // La distribution est désormais pilotée par le backend via les événements BjRequest
+    // On ne lance plus de dealing local ici.
   }
 
   addChoosenPlace(place: string) {
@@ -438,4 +443,5 @@ export default class BjScene {
       place.meshes.coinMesh?.forEach(coin => coin.material = this.transparentMat);
     });
   }
+
 }

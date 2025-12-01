@@ -3,11 +3,33 @@
 import { fetchChangeStatus, fetchUpdateStats, fetchCreateGuest }
 	from './fetchFunctions.js';
 
+export async function getUserById(userID, userType) {
+
+	const res = await fetch(`http://user-service:3000/${userID}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ type: userType }),
+	});
+	if (!res.ok)
+		return null;
+	const data = await res.json();
+	return data.user;
+}
+
 // Route POST pour creer un match contre un joueur inscrit
 export async function registeredMatch(request, reply) {
 	const { db } = request.server;
 	const { name, password } = request.body;
 	const player1 = request.user;
+	
+	if (name === player1.name) {
+		return reply.code(400).send({
+			error: 'You cannot play against yourself!'
+		});
+	}
+
 	const body = JSON.stringify({
 		name: name,
 		password: password,
@@ -115,23 +137,41 @@ export async function finish(request, reply) {
 
 	const { scoreP1, scoreP2, p1_id, p1_type, p2_id, p2_type } = match;
 	const winner_id = scoreP1 > scoreP2 ? p1_id : p2_id;
+	const winner_type = scoreP1 > scoreP2 ? p1_type : p2_type;
+
 	const loser_id = scoreP1 > scoreP2 ? p2_id : p1_id;
+
 	match.winner_id = winner_id;
+	match.winner_type = winner_type;
 	match.loser_id = loser_id;
 
-	if (await db.matches.getByID(match.id) === undefined)
+	if (await db.matches.get('id', match.id) === undefined)
 		return reply.code(400).send({ error: 'There is no match with this ID.' });
 
 	const historyMatch = db.history.insert(match);
-	await db.matches.delete(match.id);
+	await db.matches.delete('id', match.id);
 
-	const { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+	let { user1, user2 } = await fetchUpdateStats(p1_id, p1_type, p2_id, p2_type, winner_id);
+
+	if (match.tournament_id !== 0) {
+		user1 = await fetchChangeStatus({ name: user1.name, type: user1.type }, 'available');
+		user2 = await fetchChangeStatus({ name: user2.name, type: user2.type }, 'available');
+	}
 
 	return reply.code(200).send({
 		user1: user1,
 		user2: user2,
 		match: historyMatch,
 		message: 'Finished match.'
+	});
+}
+
+export async function deleteMatch(request, reply) {
+	const { db } = request.server;
+	const { id } = request.params;
+	db.matches.delete('id', id);
+	return reply.code(200).send({
+		ok: true
 	});
 }
 
@@ -148,6 +188,9 @@ export async function tournamentMatch(request, reply) {
 		tournament_id: tournamentID
 	});
 
+//	await fetchChangeStatus(player1, 'in_game');
+//	await fetchChangeStatus(player2, 'in_game');
+
 	return reply.code(200).send({
 		match: match,
 		message: 'Tournament match created'
@@ -161,35 +204,24 @@ export async function getHistoryByTournamentID(request, reply) {
 	if (!tournamentId)
 		return reply.code(200).send({ error : 'Need tournament Id' });
 	
-	const tournamentData = await db.history.getByTournamentID(tournamentId);
+	let tournamentData = await db.history.getByTournamentID(tournamentId);
 	if (!tournamentData) 
 		return reply.code(200).send({ error : 'No data for this tournament' });
+
+	//console.log("TOURNAMENT DATA : ", tournamentData);
+    for (let match of tournamentData) {
+        const p1 = await getUserById(match.p1_id, match.p1_type);
+        const p2 = await getUserById(match.p2_id, match.p2_type);
+        match.p1_name = p1;
+        match.p2_name = p2;
+    }
 	return reply.code(200).send({ tournamentData });
 }
 
-
-
-
-
-// ?
-
-// Route GET pour récupérer tous les matches
-// route /matches
-// export async function getAllMatchesController(request, reply) {
-// 	const matches = await getAllMatches();
-// 	return reply.code(200).send({ matches });
-// }
-
-// // Route GET pour récupérer un match par son ID
-// // route /matches/:id
-// export async function getMatchById(request, reply) {
-// 	const match = await getMatch(request.params.id);
-// 	return reply.code(200).send({ match });
-// }
-
-// // Route PUT pour mettre à jour le résultat d'un match
-// // route /matches/:id/result
-// export async function updateMatchResultController(request, reply) {
-// 	const match = await updateMatchResult(request.params.id, request.body.scoreP1, request.body.scoreP2, request.body.winner_id);
-// 	return reply.code(200).send({ match });
-// }
+// Route GET pour récupérer un match par son ID
+// route /matches/:id
+export async function getMatchById(request, reply) {
+	const { db } = request.server;
+	const match = await db.matches.get('id', request.params.id);
+	return reply.code(200).send({ match });
+}

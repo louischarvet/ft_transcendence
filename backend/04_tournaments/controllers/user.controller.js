@@ -2,34 +2,49 @@
 
 // Recupere les player d'un tournoi par une liste d'id et de type
 export async function fetchUserTournament(ArrayIdAndType){
-
-	//if (!ArrayIdAndType || !Array.isArray(ArrayIdAndType) || ArrayIdAndType.length === 0)
-    //    return { error: 'ArrayIdAndType is required' };
-	
 	const res = await fetch(`http://user-service:3000/tournament`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ ArrayIdAndType })
 	});
 
-    if (!res.ok) {
-        const error = await res.json();
-        return { error: error.error || 'Users not found' };
-    }
-	const users = await res.json();
-	const usersInfos = JSON.parse(users.users);
+	if (!res.ok) {
+		const error = await res.json();
+		return { error: error.error || 'Users not found' };
+	}
 
-	return (usersInfos);
-	//return JSON.parse(users.users);
+	const users = await res.json();
+	const usersInfos = users.users;
+
+	return usersInfos;
 }
 
 // recupere user par Id
-export async function fetchGetUserById(id){
-	const user = await fetch(`http://user-service:3000/${id}`, { method: 'GET' });
+export async function fetchGetUserById(id, type){
+	const user = await fetch(`http://user-service:3000/${id}`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ type: type })
+	});
 	if(!user.ok)
 		return { error : 'User not found' };
 	const currentUser = await user.json();
 	return currentUser.user;
+}
+
+// supprimer un guest du tournoi
+export async function deleteGuest(id){
+	const user = await fetch(`http://user-service:3000/deleteGuest`, {
+		method: 'DELETE',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ id: id })
+	});
+
+	const message = await user.json();
+	if (message === 'User successfully deleted.')
+		return true;
+
+	return false;
 }
 
 // recupere un guest par son id

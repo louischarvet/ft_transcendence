@@ -1,15 +1,8 @@
 import { navigate } from "../router";
-import { checkConnection, register } from "./APIStorageManager";
+import { register } from "./APIStorageManager";
+import { popUpAlert } from "./popup";
 
 export default function Register(): HTMLElement {
-	if (localStorage.getItem('user')){
-		checkConnection().then((connected) => {
-			if (connected) {
-				navigate('/select-game');
-				return;
-			}
-		});
-	}
 
   const form: { [name: string]: string} = {};
 
@@ -43,43 +36,44 @@ export default function Register(): HTMLElement {
 
   const registerButton = document.createElement('button');
   registerButton.textContent = 'Register';
-  registerButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
+  registerButton.className = 'bg-[#646cff] text-xl text-whaddite rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   registerButton.onclick = () => {
-    console.log('Register Form:', form);
+    //console.log('Register Form:', form);
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword){
-      alert("All fields are required");
+      popUpAlert("Error", "All fields are required");
       return;
     }
 	const nameRegex = /^[A-Za-z][A-Za-z0-9]*$/;
 	if (!nameRegex.test(form.name)) {
-		alert("Invalid name format. It must begin with a letter and contain only alphanumeric characters.");
+    popUpAlert("Error", "Invalid name format. It must begin with a letter and contain only alphanumeric characters.");
 		return;
 	}
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(form.email) || form.email.length < 8) {
-		alert("Invalid email format");
+    popUpAlert("Error", "Invalid email format");
 		return;
 	}
     if (form.password !== form.confirmPassword){
-      alert("The two passwords are different");
+      popUpAlert("Error", "The two passwords are different");
       return;
     }
 	if (form.password.length < 8) {
-		alert("Password must be at least 8 characters long");
+    popUpAlert("Error", "Password must be at least 8 characters long");
 		return;
 	}
 	if (!/[0-9]/.test(form.password)) {
-		alert("Password must contain a number");
+    popUpAlert("Error", "Password must contain a number");
 		return;
 	}
     register(form.name, form.email, form.password).then( (res) => {
 		if (!res.success) {
-			console.error('User creation failed:', res.message);
-			alert(res.message);
+      popUpAlert("Error", "User creation failed, try again");
 		}
-		else
+		else{
+			//console.log('User created successfully : ', res	);
 			navigate('/2fa-verification');
+		}
     })
   };
   buttonsWrapper.appendChild(registerButton);
@@ -88,7 +82,7 @@ export default function Register(): HTMLElement {
   loginButton.textContent = 'Or Login';
   loginButton.className = 'bg-[#646cff] text-xl text-white rounded-full w-[50%] h-[100%] hover:bg-[#535bf2] hover:drop-shadow-[0_0_10px_#535bf2]';
   loginButton.onclick = () => {
-    console.log('Login Form:', form);
+    // //console.log('Login Form:', form);
     navigate('/login');
   };
   buttonsWrapper.appendChild(loginButton);

@@ -12,7 +12,6 @@ RUN apt-get install sqlite3 -y
 
 RUN npm install fastify-cron
 RUN npm install @fastify/cookie
-# RUN npm install @fastify/helmet
 RUN npm install bcrypt
 RUN npm install speakeasy
 

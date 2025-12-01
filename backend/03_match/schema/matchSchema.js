@@ -36,8 +36,23 @@ export const matchSchema = {
 			created_at: { type: 'string' },
 			tournament_id: { type: 'integer', minimum: 0 }
 		},
-		additionalProperties: false,
   	}
+}
+
+export const abortSchema = {
+	$id: 'abortSchema',
+	body: {
+		type: 'object',
+		required: [ 'user_id', 'user_type' ],
+		properties: {
+			user_id: { type: 'integer' },
+			user_type: {
+				type: 'string',
+				enum: [ 'registered', 'guest', 'ia' ]
+			}
+		},
+		additionalProperties: false
+	}
 }
 
 export const tournamentMatchSchema = {
@@ -68,6 +83,6 @@ export const tournamentMatchSchema = {
 			},
 			tournamentID: { type: 'integer' }
 		},
-		additionalProperties: false,
+		additionalProperties: true,
 	}
 }
